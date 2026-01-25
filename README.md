@@ -1,172 +1,172 @@
 # Discord Bot 🤖
 
-Um bot Discord completo com sistema de música, níveis/XP, e ferramentas de moderação.
+A complete Discord bot with music system, levels/XP, and moderation tools.
 
-## Funcionalidades ✨
+## Features ✨
 
-### 🎵 Música
-- Reprodução de YouTube e Spotify
-- Fila de reprodução
-- Controles: play, skip, pause, resume, stop
-- Suporte a playlists (máximo 20 faixas)
-- Case opening com prémios ao tocar música
+### 🎵 Music
+- YouTube and Spotify playback
+- Queue system
+- Controls: play, skip, pause, resume, stop
+- Playlist support (maximum 20 tracks)
+- Case opening with rewards when playing music
 
-### 📊 Sistema de Níveis
-- Progressão de 1 a 500 níveis
-- Ganho de XP por mensagens
+### 📊 Level System
+- Progression from 1 to 500 levels
+- XP gain per message
 - Leaderboard (top 10)
-- Case opening automático ao subir de nível
-- Prémios variados (XP, bônus, etc.)
+- Automatic case opening on level up
+- Various rewards (XP, bonuses, etc.)
 
-### 🛡️ Moderação
-- Comando para limpar mensagens
-- Comando echo (apenas admins)
-- Sistema de regras em JSON (fácil de editar)
+### 🛡️ Moderation
+- Message clearing command
+- Echo command (admins only)
+- JSON-based rules system (easy to edit)
 
-### 🔧 Outros
+### 🔧 Others
 - Ping/pong
-- Informações de utilizador
-- Informações do servidor
-- Help context-aware (mostra diferentes comandos a admins)
+- User information
+- Server information
+- Context-aware help (shows different commands to admins)
 
-## Instalação 🚀
+## Installation 🚀
 
-### Pré-requisitos
+### Prerequisites
 - Python 3.8+
 - FFmpeg
-- Node.js (para yt-dlp)
+- Node.js (for yt-dlp)
 
-### Passo a passo
+### Step by step
 
 ```bash
-# 1. Clone o repositório
+# 1. Clone the repository
 git clone git@github.com:DuarteLacerda/bot-discord.git
 cd bot-discord
 
-# 2. Crie o ficheiro .env
+# 2. Create the .env file
 cp .env.example .env
-# Edite .env e adicione:
-# - DISCORD_BOT_TOKEN (obrigatório)
-# - SPOTIPY_CLIENT_ID (opcional)
-# - SPOTIPY_CLIENT_SECRET (opcional)
+# Edit .env and add:
+# - DISCORD_BOT_TOKEN (required)
+# - SPOTIPY_CLIENT_ID (optional)
+# - SPOTIPY_CLIENT_SECRET (optional)
 
-# 3. Crie a virtual environment
+# 3. Create the virtual environment
 python3 -m venv Venv
 source Venv/bin/activate  # Linux/Mac
-# ou
+# or
 Venv\Scripts\activate  # Windows
 
-# 4. Instale as dependências
+# 4. Install dependencies
 pip install -r requirements.txt
 
-# 5. Corra o bot
+# 5. Run the bot
 python main.py
 ```
 
-## Configuração ⚙️
+## Configuration ⚙️
 
-### Variáveis de Ambiente (.env)
+### Environment Variables (.env)
 ```
-DISCORD_BOT_TOKEN=seu_token_aqui
-SPOTIPY_CLIENT_ID=seu_id_spotify (opcional)
-SPOTIPY_CLIENT_SECRET=seu_secret_spotify (opcional)
+DISCORD_BOT_TOKEN=your_token_here
+SPOTIPY_CLIENT_ID=your_spotify_id (optional)
+SPOTIPY_CLIENT_SECRET=your_spotify_secret (optional)
 ```
 
-### Balanceamento de XP
-Edite o topo de `levels.py`:
+### XP Balancing
+Edit the top of `levels.py`:
 ```python
-XP_POR_CARACTERE = 0.5      # XP por caractere
-NIVEL_MAXIMO = 500           # Nível máximo
-XP_MULTIPLICADOR = 1.15      # Crescimento exponencial
+XP_POR_CARACTERE = 0.5      # XP per character
+NIVEL_MAXIMO = 500           # Maximum level
+XP_MULTIPLICADOR = 1.15      # Exponential growth
 ```
 
-### Editar Regras
-Edite `rules.json` para adicionar/remover regras do servidor. Não precisa reiniciar o bot!
+### Edit Rules
+Edit `rules.json` to add/remove server rules. No need to restart the bot!
 
-## Comandos 📝
+## Commands 📝
 
-### Gerais
-- `l!ping` / `l!pong` - Responde Pong!
-- `l!info` / `l!user [@user]` - Informações do utilizador
-- `l!servidor` / `l!server` - Informações do servidor
-- `l!rules` / `l!regras` - Mostra as regras do servidor
-- `l!help` / `l!ajuda` - Mostra todos os comandos (context-aware)
+### General
+- `l!ping` / `l!pong` - Replies Pong!
+- `l!info` / `l!user [@user]` - User information
+- `l!servidor` / `l!server` - Server information
+- `l!rules` / `l!regras` - Shows server rules
+- `l!help` / `l!ajuda` - Shows all commands (context-aware)
 
-### Música
-- `l!join` / `l!entrar` / `l!j` - Entra no seu canal de voz
-- `l!play` / `l!tocar` / `l!p <termo|link>` - Busca no YouTube ou Spotify
-- `l!ytplay` / `l!ytp <termo>` - Força busca no YouTube
-- `l!splay` / `l!sp <link>` - Toca link de Spotify
-- `l!skip` / `l!pular` / `l!sk` - Pula a faixa atual
-- `l!stop` / `l!parar` / `l!s` - Limpa fila e sai
-- `l!pause` / `l!pausar` / `l!pz` - Pausa
-- `l!resume` / `l!retomar` / `l!r` - Retoma
-- `l!fila` / `l!queue` / `l!q` - Mostra a fila
-- `l!music_cmds` / `l!mc` - Lista comandos de música
+### Music
+- `l!join` / `l!entrar` / `l!j` - Joins your voice channel
+- `l!play` / `l!tocar` / `l!p <term|link>` - Search on YouTube or Spotify
+- `l!ytplay` / `l!ytp <term>` - Force YouTube search
+- `l!splay` / `l!sp <link>` - Plays Spotify link
+- `l!skip` / `l!pular` / `l!sk` - Skips current track
+- `l!stop` / `l!parar` / `l!s` - Clears queue and leaves
+- `l!pause` / `l!pausar` / `l!pz` - Pauses
+- `l!resume` / `l!retomar` / `l!r` - Resumes
+- `l!fila` / `l!queue` / `l!q` - Shows the queue
+- `l!music_cmds` / `l!mc` - Lists music commands
 
-### Níveis
-- `l!nivel` / `l!level [@user]` - Mostra nível e XP
-- `l!rank` / `l!ranking` - Top 10 do servidor
-- `l!addxp` / `l!adicionarxp @user <valor>` - Adiciona XP (apenas admins)
+### Levels
+- `l!nivel` / `l!level [@user]` - Shows level and XP
+- `l!rank` / `l!ranking` - Server top 10
+- `l!addxp` / `l!adicionarxp @user <value>` - Adds XP (admins only)
 
 ### Admins
-- `l!limpar` / `l!clear [quantidade]` - Apaga mensagens do canal
-- `l!escrever` / `l!write <mensagem>` - Eco da mensagem
+- `l!limpar` / `l!clear [amount]` - Deletes messages from channel
+- `l!escrever` / `l!write <message>` - Echoes message
 
-## Executar em Background (Linux)
+## Running in Background (Linux)
 
-### Com systemd
+### With systemd
 ```bash
-# O serviço já está configurado em discord-bot.service
+# The service is already configured in discord-bot.service
 
-# Iniciar
+# Start
 systemctl --user start discord-bot
 
-# Ver status
+# Check status
 systemctl --user status discord-bot
 
-# Ver logs
+# View logs
 journalctl --user -u discord-bot -f
 
-# Auto-start no boot
+# Auto-start on boot
 systemctl --user enable discord-bot
 ```
 
-### Com screen
+### With screen
 ```bash
 screen -S discordbot
 source Venv/bin/activate
 python main.py
-# Pressione Ctrl+A depois D para desligar
+# Press Ctrl+A then D to detach
 
-# Reconectar
+# Reconnect
 screen -r discordbot
 ```
 
-## Estrutura do Projeto 📂
+## Project Structure 📂
 
 ```
 discord-bot/
-├── main.py              # Inicialização do bot
-├── bot_commands.py      # Comandos gerais e help
-├── music.py             # Cog de música
-├── levels.py            # Cog de níveis
+├── main.py              # Bot initialization
+├── bot_commands.py      # General commands and help
+├── music.py             # Music cog
+├── levels.py            # Levels cog
 ├── events.py            # Event listeners
-├── levels_data.json     # Dados de utilizadores (auto-gerado)
-├── rules.json           # Regras do servidor
-├── .env                 # Variáveis de ambiente (NÃO commitar!)
-├── .env.example         # Template do .env
-├── requirements.txt     # Dependências Python
-└── README.md            # Este ficheiro
+├── levels_data.json     # User data (auto-generated)
+├── rules.json           # Server rules
+├── .env                 # Environment variables (DO NOT commit!)
+├── .env.example         # .env template
+├── requirements.txt     # Python dependencies
+└── README.md            # This file
 ```
 
-## Dependências 📦
+## Dependencies 📦
 
 - `discord.py` - Bot framework
-- `python-dotenv` - Gestão de variáveis de ambiente
-- `yt-dlp` - Download de vídeos do YouTube
-- `spotipy` - API do Spotify
-- `PyNaCl` - Suporte de voz
+- `python-dotenv` - Environment variables management
+- `yt-dlp` - YouTube video download
+- `spotipy` - Spotify API
+- `PyNaCl` - Voice support
 
 ## Troubleshooting 🔧
 
@@ -176,25 +176,25 @@ source Venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Bot não toca música
-- Verifique se FFmpeg está instalado: `ffmpeg -version`
-- Certifique-se que está no canal de voz
-- Verifique as permissões do bot
+### Bot doesn't play music
+- Check if FFmpeg is installed: `ffmpeg -version`
+- Make sure you're in a voice channel
+- Check bot permissions
 
-### Spotify não funciona
-- Deixe o .env em branco (usará YouTube como fallback)
-- Ou configure as credenciais do Spotify Developer
+### Spotify doesn't work
+- Leave .env blank (will use YouTube as fallback)
+- Or configure Spotify Developer credentials
 
-## Contribuição 🤝
+## Contributing 🤝
 
-Sinta-se à vontade para sugerir melhorias ou reportar bugs!
+Feel free to suggest improvements or report bugs!
 
-## Licença 📄
+## License 📄
 
-Projeto pessoal. Use livremente.
+Personal project. Use freely.
 
 ---
 
 **Bot Prefix:** `l!`  
-**Versão:** 1.0  
-**Desenvolvido por:** Duarte Lacerda
+**Version:** 1.0  
+**Developed by:** Duarte Lacerda
