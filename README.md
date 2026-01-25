@@ -191,10 +191,11 @@ Feel free to suggest improvements or report bugs!
 
 ## License 📄
 
-Personal project. Use freely.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Use at your own risk. For uncommercial use only.
 
 ---
 
-**Bot Prefix:** `l!`  
+**Bot Prefix:** `L!`  
 **Version:** 1.0  
 **Developed by:** Duarte Lacerda
