@@ -1,0 +1,32 @@
+{
+  "title": "📜 Regras do Servidor",
+  "color": "0xFF5733",
+  "rules": [
+    {
+      "number": 1,
+      "title": "Respeito",
+      "description": "Respeita todos os membros. Sem assédio, insultos ou discriminação."
+    },
+    {
+      "number": 2,
+      "title": "Sem Spam",
+      "description": "Não faças spam de mensagens, links ou convites não autorizados."
+    },
+    {
+      "number": 3,
+      "title": "Conteúdo Adequado",
+      "description": "Mantém o conteúdo apropriado para todas as idades. Sem NSFW."
+    },
+    {
+      "number": 4,
+      "title": "Segue as Guidelines do Discord",
+      "description": "Cumpre os Termos de Serviço e Community Guidelines do Discord."
+    },
+    {
+      "number": 5,
+      "title": "Diverte-te!",
+      "description": "Aproveita e faz parte da comunidade de forma positiva!"
+    }
+  ],
+  "footer": "Última atualização: 22/01/2026"
+}

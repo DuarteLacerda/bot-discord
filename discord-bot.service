@@ -1,0 +1,13 @@
+[Unit]
+Description=Discord Bot (user service)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/l4ce/discord_bot
+ExecStart=/home/l4ce/discord_bot/Venv/bin/python /home/l4ce/discord_bot/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
