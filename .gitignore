@@ -37,6 +37,16 @@ wheels/
 .env
 .env.local
 
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Backups
+*.backup
+levels_data.json.backup
+
 # OS
 .DS_Store
 Thumbs.db

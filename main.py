@@ -1,7 +1,8 @@
 import logging
 import os
-
 import discord
+
+from discord import ui
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 class MyBot(commands.Bot):
     async def setup_hook(self):
         # Carrega extensões antes de conectar
-        for ext in ["bot_commands", "events", "music", "levels", "termo"]:
+        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo"]:
             try:
                 await self.load_extension(ext)
             except Exception:
