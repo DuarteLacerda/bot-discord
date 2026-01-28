@@ -39,6 +39,18 @@ class Database:
             )
         """)
 
+        # Tabela de estatísticas do jogo Termo
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS termo_stats (
+                guild_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                games INTEGER DEFAULT 0,
+                wins INTEGER DEFAULT 0,
+                total_attempts INTEGER DEFAULT 0,
+                PRIMARY KEY (guild_id, user_id)
+            )
+        """)
+
         # Tabela de regras (opcional, para futuro)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS server_config (
@@ -284,6 +296,103 @@ class Database:
         conn.commit()
         conn.close()
         print(f"✅ Migradas {migrated} estatísticas de Guess para SQLite")
+        return True
+
+    # ===== MÉTODOS DO JOGO TERMO =====
+
+    def get_termo_stats(self, guild_id: int, user_id: int) -> Dict:
+        """Lê estatísticas do jogo Termo"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT games, wins, total_attempts FROM termo_stats WHERE guild_id = ? AND user_id = ?",
+            (guild_id, user_id)
+        )
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return {"games": row[0], "wins": row[1], "total_attempts": row[2]}
+
+        return {"games": 0, "wins": 0, "total_attempts": 0}
+
+    def set_termo_stats(self, guild_id: int, user_id: int, games: int, wins: int, total_attempts: int):
+        """Grava estatísticas do jogo Termo"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO termo_stats (guild_id, user_id, games, wins, total_attempts)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET
+                games = excluded.games,
+                wins = excluded.wins,
+                total_attempts = excluded.total_attempts
+            """,
+            (guild_id, user_id, games, wins, total_attempts)
+        )
+        conn.commit()
+        conn.close()
+
+    def get_termo_leaderboard(self, guild_id: int) -> List[Dict]:
+        """Retorna todas as estatísticas do Termo para um servidor"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT user_id, games, wins, total_attempts FROM termo_stats WHERE guild_id = ?",
+            (guild_id,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [
+            {
+                "user_id": row[0],
+                "games": row[1],
+                "wins": row[2],
+                "total_attempts": row[3],
+            }
+            for row in rows
+        ]
+
+    def migrate_termo_from_json(self, json_path: str = "data/game_data.json") -> bool:
+        """Migra estatísticas antigas do Termo (JSON) para SQLite"""
+        if not os.path.exists(json_path):
+            return False
+
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        migrated = 0
+        for guild_id_str, users in data.items():
+            guild_id = int(guild_id_str)
+            for user_id_str, stats in users.items():
+                user_id = int(user_id_str)
+                cursor.execute(
+                    """
+                    INSERT INTO termo_stats (guild_id, user_id, games, wins, total_attempts)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(guild_id, user_id) DO UPDATE SET
+                        games = excluded.games,
+                        wins = excluded.wins,
+                        total_attempts = excluded.total_attempts
+                    """,
+                    (
+                        guild_id,
+                        user_id,
+                        stats.get("games", 0),
+                        stats.get("wins", 0),
+                        stats.get("total_attempts", 0),
+                    ),
+                )
+                migrated += 1
+
+        conn.commit()
+        conn.close()
+        print(f"✅ Migradas {migrated} estatísticas de Termo para SQLite")
         return True
 
 

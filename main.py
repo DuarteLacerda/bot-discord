@@ -16,9 +16,16 @@ class MyBot(commands.Bot):
         # Carrega extensões antes de conectar
         for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo"]:
             try:
+                logging.info(f"Loading extension: {ext}")
                 await self.load_extension(ext)
-            except Exception:
-                logging.exception("Falha ao carregar a extensão %s", ext)
+                logging.info(f"✅ Loaded: {ext}")
+            except Exception as e:
+                logging.exception(f"❌ Falha ao carregar a extensão {ext}: {e}")
+        
+        # Log all loaded commands
+        logging.info(f"Total commands loaded: {len(self.commands)}")
+        for cmd in self.commands:
+            logging.info(f"  - {cmd.name} (aliases: {cmd.aliases})")
 
 
 intents = discord.Intents.default()
@@ -26,6 +33,23 @@ intents.message_content = True
 intents.voice_states = True
 intents.members = True
 bot = MyBot(command_prefix='L!', intents=intents, help_command=None)
+
+@bot.event
+async def on_command_error(ctx, error):
+    """Error handler global para comandos"""
+    logging.error(f"Error in command {ctx.command}: {error}")
+    logging.exception(error)
+    
+    # Send error to channel
+    try:
+        embed = discord.Embed(
+            title="❌ Erro no Comando",
+            description=f"```{str(error)[:500]}```",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+    except:
+        pass
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:

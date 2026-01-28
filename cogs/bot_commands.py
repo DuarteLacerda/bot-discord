@@ -14,10 +14,10 @@ class Basic(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        """Responds with pong"""
+        """Responde com pong"""
         embed = discord.Embed(
             title="🏓 Pong!",
-            description=f"Latency: {self.bot.latency * 1000:.0f}ms",
+            description=f"Latência: {self.bot.latency * 1000:.0f}ms",
             color=discord.Color.green()
         )
         await ctx.send(embed=embed)
@@ -25,7 +25,7 @@ class Basic(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def write(self, ctx, *, message: str):
-        """Echo a message (admin only)"""
+        """Ecoar mensagem (apenas admin)"""
         embed = discord.Embed(
             description=message,
             color=discord.Color.blue()
@@ -36,18 +36,18 @@ class Basic(commands.Cog):
     async def write_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             embed = discord.Embed(
-                title="❌ Permission Denied",
-                description="You need administrator permissions to use this command.",
+                title="❌ Permissão Negada",
+                description="Precisas de permissões de administrador para usar este comando.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
 
     @commands.command()
     async def sum(self, ctx, a: int, b: int):
-        """Add two numbers"""
+        """Somar dois números"""
         result = a + b
         embed = discord.Embed(
-            title="🧮 Sum Result",
+            title="🧮 Resultado da Soma",
             description=f"**{a}** + **{b}** = **{result}**",
             color=discord.Color.blue()
         )
@@ -55,13 +55,13 @@ class Basic(commands.Cog):
 
     @commands.command()
     async def info(self, ctx, member: discord.Member = None):
-        """Show user information"""
+        """Mostrar informações do utilizador"""
         member = member or ctx.author
-        embed = discord.Embed(title="👤 User Information", color=discord.Color.blue())
-        embed.add_field(name="Username", value=member.name, inline=True)
+        embed = discord.Embed(title="👤 Informações do Utilizador", color=discord.Color.blue())
+        embed.add_field(name="Nome de Utilizador", value=member.name, inline=True)
         embed.add_field(name="ID", value=member.id, inline=True)
         embed.add_field(
-            name="Account Created",
+            name="Conta Criada",
             value=member.created_at.strftime("%d/%m/%Y %H:%M:%S"),
             inline=False
         )
@@ -71,13 +71,13 @@ class Basic(commands.Cog):
 
     @commands.command()
     async def guild(self, ctx):
-        """Show server information"""
+        """Mostrar informações do servidor"""
         guild = ctx.guild
-        embed = discord.Embed(title="🏰 Server Information", color=discord.Color.green())
-        embed.add_field(name="Server Name", value=guild.name, inline=True)
-        embed.add_field(name="Members", value=guild.member_count, inline=False)
+        embed = discord.Embed(title="🏰 Informações do Servidor", color=discord.Color.green())
+        embed.add_field(name="Nome do Servidor", value=guild.name, inline=True)
+        embed.add_field(name="Membros", value=guild.member_count, inline=False)
         embed.add_field(
-            name="Created",
+            name="Criado",
             value=guild.created_at.strftime("%d/%m/%Y %H:%M:%S"),
             inline=False
         )
@@ -87,11 +87,11 @@ class Basic(commands.Cog):
     @commands.command(name="clear")
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int = None):
-        """Delete messages from channel (admin only)"""
+        """Apagar mensagens do canal (apenas admin)"""
         if amount is None:
             embed = discord.Embed(
-                title="⚠️ Confirmation",
-                description="Are you sure you want to delete all messages? Type `confirm` in the next 10 seconds.",
+                title="⚠️ Confirmação",
+                description="Tens a certeza que queres apagar todas as mensagens? Escreve `confirm` nos próximos 10 segundos.",
                 color=discord.Color.orange()
             )
             msg = await ctx.send(embed=embed)
@@ -103,8 +103,8 @@ class Basic(commands.Cog):
                 await self.bot.wait_for("message", timeout=10.0, check=check)
                 deleted = await ctx.channel.purge(limit=None)
                 result_embed = discord.Embed(
-                    title="✅ Cleared",
-                    description=f"Deleted **{len(deleted)}** messages.",
+                    title="✅ Apagado",
+                    description=f"Apagadas **{len(deleted)}** mensagens.",
                     color=discord.Color.green()
                 )
                 result_msg = await ctx.send(embed=result_embed)
@@ -112,24 +112,24 @@ class Basic(commands.Cog):
                 await result_msg.delete()
             except asyncio.TimeoutError:
                 timeout_embed = discord.Embed(
-                    title="❌ Cancelled",
-                    description="Operation timed out.",
+                    title="❌ Cancelado",
+                    description="Operação expirou.",
                     color=discord.Color.red()
                 )
                 await msg.edit(embed=timeout_embed)
         else:
             if amount <= 0:
                 embed = discord.Embed(
-                    title="❌ Error",
-                    description="The amount must be positive.",
+                    title="❌ Erro",
+                    description="O valor deve ser positivo.",
                     color=discord.Color.red()
                 )
                 await ctx.send(embed=embed)
                 return
             deleted = await ctx.channel.purge(limit=amount + 1)
             result_embed = discord.Embed(
-                title="✅ Cleared",
-                description=f"Deleted **{len(deleted) - 1}** messages.",
+                title="✅ Apagado",
+                description=f"Apagadas **{len(deleted) - 1}** mensagens.",
                 color=discord.Color.green()
             )
             result_msg = await ctx.send(embed=result_embed)
@@ -140,28 +140,28 @@ class Basic(commands.Cog):
     async def clear_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             embed = discord.Embed(
-                title="❌ Permission Denied",
-                description="You need administrator permissions to use this command.",
+                title="❌ Permissão Negada",
+                description="Precisas de permissões de administrador para usar este comando.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
         elif isinstance(error, commands.BadArgument):
             embed = discord.Embed(
-                title="❌ Invalid Syntax",
-                description="Usage: `l!clear [amount]`",
+                title="❌ Sintaxe Inválida",
+                description="Uso: `l!clear [valor]`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
 
     @commands.command(name="rules")
     async def rules(self, ctx):
-        """Show server rules"""
+        """Mostrar regras do servidor"""
         rules_file = "data/rules.json"
         
         if not os.path.exists(rules_file):
             embed = discord.Embed(
-                title="❌ Error",
-                description="Rules file not found.",
+                title="❌ Erro",
+                description="Ficheiro de regras não encontrado.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -172,7 +172,7 @@ class Basic(commands.Cog):
                 data = json.load(f)
             
             embed = discord.Embed(
-                title=data.get("title", "Server Rules"),
+                title=data.get("title", "Regras do Servidor"),
                 color=int(data.get("color", "0x3498db").replace("0x", ""), 16),
             )
             
@@ -189,127 +189,155 @@ class Basic(commands.Cog):
             await ctx.send(embed=embed)
         except Exception as e:
             embed = discord.Embed(
-                title="❌ Error",
-                description=f"Failed to load rules: {e}",
+                title="❌ Erro",
+                description=f"Falha ao carregar regras: {e}",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
 
     @commands.command(name="help")
     async def help_cmd(self, ctx):
-        """Show all available commands"""
-        prefix = ctx.prefix or "l!"
+        """Mostrar todos os comandos disponíveis"""
+        prefix = ctx.prefix or "L!"
         
         if ctx.author.guild_permissions.administrator:
             general = [
-                ("ping", "responds with pong"),
-                ("write <message>", "echo message (admin only)"),
-                ("sum <a> <b>", "add two numbers"),
-                ("info [@user]", "show user info"),
-                ("guild", "show server info"),
-                ("rules", "show server rules"),
-                ("clear [amount]", "delete messages (admin only)"),
+                ("ping", "responde com pong"),
+                ("write <message>", "ecoar mensagem (apenas admin)"),
+                ("sum <a> <b>", "somar dois números"),
+                ("info [@user]", "mostrar informações do utilizador"),
+                ("guild", "mostrar informações do servidor"),
+                ("rules", "mostrar regras do servidor"),
+                ("clear [amount]", "apagar mensagens (apenas admin)"),
             ]
 
             music = [
-                ("join / connect", "join your voice channel"),
-                ("play / p <term|link>", "play from YouTube or Spotify"),
-                ("skip / sk", "skip current song"),
-                ("stop / s", "stop and leave"),
-                ("pause / pz", "pause"),
-                ("resume / r", "resume"),
-                ("queue / q", "show queue"),
-                ("music", "show music commands"),
+                ("join / connect", "juntar ao canal de voz"),
+                ("play / p <term|link>", "tocar do YouTube ou Spotify"),
+                ("skip / sk", "saltar música atual"),
+                ("stop / s", "parar e sair"),
+                ("pause / pz", "pausar"),
+                ("resume / r", "retomar"),
+                ("queue / q", "mostrar fila"),
+                ("music", "mostrar comandos de música"),
             ]
 
             levels = [
-                ("level [@user]", "show user level and XP"),
-                ("rank", "show top 10 leaderboard"),
-                ("addxp @user <value>", "add XP (admin only)"),
+                ("level [@user]", "mostrar nível e XP do utilizador"),
+                ("rank", "mostrar top 10 do ranking"),
+                ("addxp @user <value>", "adicionar XP (apenas admin)"),
             ]
 
             games = [
-                ("guess", "start a word guessing game"),
-                ("guessexit", "quit current game"),
-                ("guessstats [@user]", "show game statistics"),
-                ("guessrank", "show game leaderboard"),
+                ("termo", "começa um novo jogo de Termo"),
+                ("termo_quit / quit", "sai do jogo atual"),
+                ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
+                ("termo_rank / rank", "mostra o ranking do jogo"),
             ]
 
-            embed = discord.Embed(title="📖 Help (Admin)", color=discord.Color.red())
+            embed = discord.Embed(
+                title="📖 Ajuda (Admin)",
+                description="Para mais informações sobre um comando, usa `L!help`",
+                color=discord.Color.red()
+            )
+            
+            general_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in general)
             embed.add_field(
-                name="General (Admin)",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in general),
+                name="⚙️ Geral (Admin)",
+                value=general_text,
                 inline=False,
             )
+            
+            music_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in music)
             embed.add_field(
-                name="🎵 Music",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in music),
+                name="🎵 Música",
+                value=music_text,
                 inline=False,
             )
+            
+            levels_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in levels)
             embed.add_field(
-                name="📊 Levels",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in levels),
+                name="📊 Níveis",
+                value=levels_text,
                 inline=False,
             )
+            
+            games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
             embed.add_field(
-                name="🎮 Games",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in games),
+                name="🎮 Jogos",
+                value=games_text,
                 inline=False,
             )
+            
+            embed.set_footer(text="Usa ` L!help` para detalhes")
             await ctx.send(embed=embed)
         else:
             general = [
-                ("ping", "responds with pong"),
-                ("sum <a> <b>", "add two numbers"),
-                ("info [@user]", "show user info"),
-                ("guild", "show server info"),
-                ("rules", "show server rules"),
+                ("ping", "responde com pong"),
+                ("sum <a> <b>", "somar dois números"),
+                ("info [@user]", "mostrar informações do utilizador"),
+                ("guild", "mostrar informações do servidor"),
+                ("rules", "mostrar regras do servidor"),
             ]
 
             music = [
-                ("join / connect", "join your voice channel"),
-                ("play / p <term|link>", "play from YouTube or Spotify"),
-                ("skip / sk", "skip current song"),
-                ("stop / s", "stop and leave"),
-                ("pause / pz", "pause"),
-                ("resume / r", "resume"),
-                ("queue / q", "show queue"),
-                ("music", "show music commands"),
+                ("join / connect", "juntar ao canal de voz"),
+                ("play / p <term|link>", "tocar do YouTube ou Spotify"),
+                ("skip / sk", "saltar música atual"),
+                ("stop / s", "parar e sair"),
+                ("pause / pz", "pausar"),
+                ("resume / r", "retomar"),
+                ("queue / q", "mostrar fila"),
+                ("music", "mostrar comandos de música"),
             ]
 
             levels = [
-                ("level [@user]", "show user level and XP"),
-                ("rank", "show top 10 leaderboard"),
+                ("level [@user]", "mostrar nível e XP do utilizador"),
+                ("rank", "mostrar top 10 do ranking"),
             ]
 
             games = [
-                ("guess", "start a word guessing game"),
-                ("guessexit", "quit current game"),
-                ("guessstats [@user]", "show game statistics"),
-                ("guessrank", "show game leaderboard"),
+                ("termo", "começa um novo jogo de Termo"),
+                ("termo_quit / quit", "sai do jogo atual"),
+                ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
+                ("termo_rank / rank", "mostra o ranking do jogo"),
             ]
 
-            embed = discord.Embed(title="📖 Help", color=discord.Color.orange())
+            embed = discord.Embed(
+                title="📖 Ajuda",
+                description="Para mais informações sobre um comando, usa `L!help`",
+                color=discord.Color.blurple()
+            )
+            
+            general_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in general)
             embed.add_field(
-                name="General",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in general),
+                name="⚙️ Geral",
+                value=general_text,
                 inline=False,
             )
+            
+            music_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in music)
             embed.add_field(
-                name="🎵 Music",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in music),
+                name="🎵 Música",
+                value=music_text,
                 inline=False,
             )
+            
+            levels_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in levels)
             embed.add_field(
-                name="📊 Levels",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in levels),
+                name="📊 Níveis",
+                value=levels_text,
                 inline=False,
             )
+            
+            games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
             embed.add_field(
-                name="🎮 Games",
-                value="\n".join(f"• **{prefix}{cmd}** — {desc}" for cmd, desc in games),
+                name="🎮 Jogos",
+                value=games_text,
                 inline=False,
             )
+            
+            embed.set_footer(text="Usa ` L!help` para detalhes")
             await ctx.send(embed=embed)
 
 

@@ -31,10 +31,10 @@ WORDS_FILE = "data/termo_palavras.json"
 GAME_DATA_FILE = "data/game_data.json"
 
 
-class GuessModal(Modal, title="Make Your Guess"):
+class TermoModal(Modal, title="Faz a Tua Tentativa"):
     word = TextInput(
-        label="5-letter Word",
-        placeholder="Enter a 5-letter word...",
+        label="Palavra com 5 letras",
+        placeholder="Escreve uma palavra com 5 letras...",
         min_length=5,
         max_length=5,
         required=True
@@ -47,16 +47,20 @@ class GuessModal(Modal, title="Make Your Guess"):
         self.guild_id = guild_id
     
     async def on_submit(self, interaction: discord.Interaction):
-        """Process the guess when modal is submitted"""
+        """Process the termo when modal is submitted"""
         try:
+            # Defer immediately to avoid timeout
+            await interaction.response.defer()
+            
+            logging.info(f"=== TERMO MODAL SUBMITTED ===")
             attempt = self.word.value.strip().upper()
             logging.info(f"User {self.user_id} submitted: {attempt}")
             
             # Validate attempt
             if not attempt.isalpha():
                 embed = discord.Embed(
-                    title="❌ Invalid Word",
-                    description="Only use letters!",
+                    title="❌ Palavra Inválida",
+                    description="Usa apenas letras!",
                     color=discord.Color.red()
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -65,8 +69,8 @@ class GuessModal(Modal, title="Make Your Guess"):
             # Check if user has active game
             if self.user_id not in self.cog.active_games:
                 embed = discord.Embed(
-                    title="❌ No Active Game",
-                    description="Your game session has expired. Start a new game with `L!guess`",
+                    title="❌ Sem Jogo Ativo",
+                    description="A tua sessão de jogo expirou. Começa um novo jogo com `L!termo`",
                     color=discord.Color.red()
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -84,23 +88,20 @@ class GuessModal(Modal, title="Make Your Guess"):
             })
             
             num_attempts = len(game["attempts"])
-            word_guessed = attempt == secret_word
+            word_termoed = attempt == secret_word
             
-            # Defer and edit the existing game message to avoid clutter
-            await interaction.response.defer()
-
             embed = self.cog._create_game_embed(
                 game["attempts"],
                 num_attempts,
-                word_guessed,
+                word_termoed,
                 secret_word,
                 interaction.user
             )
 
             view = None
-            if not word_guessed and num_attempts < MAX_ATTEMPTS:
-                # Provide the guess button again with the response
-                view = GuessGameView(self.cog, self.user_id, self.guild_id)
+            if not word_termoed and num_attempts < MAX_ATTEMPTS:
+                # Provide the termo button again with the response
+                view = TermoGameView(self.cog, self.user_id, self.guild_id)
 
             game_message = game.get("message")
             if game_message:
@@ -110,7 +111,7 @@ class GuessModal(Modal, title="Make Your Guess"):
                 await interaction.followup.send(embed=embed, view=view)
             
             # Check game end
-            if word_guessed:
+            if word_termoed:
                 # Victory!
                 await asyncio.sleep(0.5)  # Small delay to ensure response was processed
                 await self.cog._give_xp_reward(interaction, num_attempts)
@@ -127,8 +128,8 @@ class GuessModal(Modal, title="Make Your Guess"):
             elif num_attempts >= MAX_ATTEMPTS:
                 # Defeat
                 defeat_embed = discord.Embed(
-                    title="😢 Game Over",
-                    description=f"Better luck next time! The word was: **{secret_word}**",
+                    title="😢 Fim do Jogo",
+                    description=f"Mais sorte na próxima! A palavra era: **{secret_word}**",
                     color=discord.Color.red()
                 )
                 await interaction.channel.send(embed=defeat_embed)
@@ -143,54 +144,65 @@ class GuessModal(Modal, title="Make Your Guess"):
             logging.exception(f"Error in modal submit: {e}")
             try:
                 embed = discord.Embed(
-                    title="❌ Error",
-                    description="An error occurred processing your guess.",
+                    title="❌ Erro",
+                    description=f"Erro ao processar tentativa: {str(e)[:100]}",
                     color=discord.Color.red()
                 )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
-            except:
-                pass
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            except Exception as send_error:
+                logging.exception(f"Could not send error message: {send_error}")
 
 
-class GuessGameView(View):
-    """View with button to open the guess modal"""
+class TermoGameView(View):
+    """View with button to open the termo modal"""
     
-    def __init__(self, cog: 'Guess', user_id: int, guild_id: int):
+    def __init__(self, cog: 'Termo', user_id: int, guild_id: int):
         # Keep the view alive while the bot is up; avoids interaction failures after timeout
         super().__init__(timeout=None)
         self.cog = cog
         self.user_id = user_id
         self.guild_id = guild_id
     
-    @button(label="Make Guess", style=discord.ButtonStyle.primary, emoji="🎯")
-    async def guess_button(self, interaction: discord.Interaction, button: Button):
-        # Check if the button was pressed by the game player
-        if interaction.user.id != self.user_id:
-            embed = discord.Embed(
-                title="❌ Not Your Game",
-                description="This game belongs to someone else!",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-        
+    @button(label="Fazer Tentativa", style=discord.ButtonStyle.primary, emoji="🎯")
+    async def termo_button(self, interaction: discord.Interaction, button: Button):
         try:
-            logging.info(f"Opening modal for user={interaction.user.id} in guild={interaction.guild.id}")
-            # Show the modal
-            modal = GuessModal(self.cog, self.user_id, self.guild_id)
-            await interaction.response.send_modal(modal)
-            logging.info("Modal shown successfully")
+            logging.info(f"=== TERMO BUTTON CLICKED ===")
+            logging.info(f"Button clicker ID: {interaction.user.id}, game player ID: {self.user_id}")
+            
+            # Check if the button was pressed by the game player
+            if interaction.user.id != self.user_id:
+                logging.info(f"Button clicked by wrong user")
+                embed = discord.Embed(
+                    title="❌ Não é o Teu Jogo",
+                    description="Este jogo pertence a outra pessoa!",
+                    color=discord.Color.red()
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            
+            try:
+                logging.info(f"Creating modal for user={interaction.user.id} in guild={interaction.guild.id}")
+                # Show the modal
+                modal = TermoModal(self.cog, self.user_id, self.guild_id)
+                logging.info(f"Modal instance created: {modal}")
+                await interaction.response.send_modal(modal)
+                logging.info("Modal shown successfully")
+            except Exception as e:
+                logging.exception(f"Error showing modal: {e}")
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description=f"Falha ao abrir o formulário: {str(e)}",
+                    color=discord.Color.red()
+                )
+                try:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                except:
+                    logging.exception("Could not send error message")
         except Exception as e:
-            logging.exception(f"Error showing modal: {e}")
-            embed = discord.Embed(
-                title="❌ Error",
-                description="Failed to open guess modal. Try again.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            logging.exception(f"Error in termo_button: {e}")
 
 
-class Guess(commands.Cog):
+class Termo(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.db = Database()
@@ -205,9 +217,9 @@ class Guess(commands.Cog):
             try:
                 with open(WORDS_FILE, "r", encoding="utf-8") as f:
                     self.words = json.load(f)
-                logging.info(f"Loaded {len(self.words)} words for Guess.")
+                logging.info(f"Loaded {len(self.words)} words for Termo.")
             except Exception:
-                logging.exception("Failed to load Guess words.")
+                logging.exception("Failed to load Termo words.")
                 self.words = []
         else:
             logging.warning(f"Words file not found at {WORDS_FILE}")
@@ -216,19 +228,19 @@ class Guess(commands.Cog):
     def _migrate_legacy_data(self):
         """Migra dados antigos em JSON para SQLite, se existirem"""
         try:
-            migrated = self.db.migrate_guess_from_json(GAME_DATA_FILE)
+            migrated = self.db.migrate_termo_from_json(GAME_DATA_FILE)
             if migrated:
-                logging.info("Guess data migrated from JSON to SQLite.")
+                logging.info("Termo data migrated from JSON to SQLite.")
         except Exception:
-            logging.exception("Failed to migrate legacy Guess data.")
+            logging.exception("Failed to migrate legacy Termo data.")
 
     def _get_player_data(self, guild_id: int, user_id: int) -> Dict:
         """Get player data from database"""
-        return self.db.get_guess_stats(guild_id, user_id)
+        return self.db.get_termo_stats(guild_id, user_id)
 
     def _save_player_data(self, guild_id: int, user_id: int, data: Dict):
         """Persist player data to database"""
-        self.db.set_guess_stats(
+        self.db.set_termo_stats(
             guild_id,
             user_id,
             data.get("games", 0),
@@ -239,7 +251,7 @@ class Guess(commands.Cog):
     def _pick_word(self) -> str:
         """Pick a random word from the list"""
         if not self.words:
-            return "guess"  # fallback
+            return "termo"  # fallback
         return random.choice(self.words).upper()
 
     def _check_attempt(self, secret_word: str, attempt: str) -> list:
@@ -273,17 +285,17 @@ class Guess(commands.Cog):
         
         return status
 
-    def _create_game_embed(self, attempts: list, num_attempts: int, word_guessed: bool = False, secret_word: str = "", player: Optional[discord.User] = None) -> discord.Embed:
+    def _create_game_embed(self, attempts: list, num_attempts: int, word_termoed: bool = False, secret_word: str = "", player: Optional[discord.User] = None) -> discord.Embed:
         """Create embed showing game state"""
-        if word_guessed:
+        if word_termoed:
             color = discord.Color.green()
-            title = "🎉 Congratulations! You guessed the word!"
+            title = "🎉 Parabéns! Acertaste a palavra!"
         elif num_attempts >= MAX_ATTEMPTS:
             color = discord.Color.red()
-            title = f"😔 Game Over! The word was: **{secret_word}**"
+            title = f"😔 Fim do Jogo! A palavra era: **{secret_word}**"
         else:
             color = discord.Color.blue()
-            title = f"🎮 Guess - Attempt {num_attempts}/{MAX_ATTEMPTS}"
+            title = f"🎮 Jogo - Tentativa {num_attempts}/{MAX_ATTEMPTS}"
         
         embed = discord.Embed(title=title, color=color)
 
@@ -299,13 +311,13 @@ class Guess(commands.Cog):
                 f"{att['word']} {''.join(att['result'])}"
                 for att in attempts
             ])
-            embed.add_field(name="Attempts", value=history, inline=False)
+            embed.add_field(name="Tentativas", value=history, inline=False)
         
         # Instructions
-        if not word_guessed and num_attempts < MAX_ATTEMPTS:
+        if not word_termoed and num_attempts < MAX_ATTEMPTS:
             embed.add_field(
-                name="How to Play",
-                value=f"Type a word with {WORD_SIZE} letters.\n🟩 = Correct letter\n🟨 = Letter exists but wrong position\n⬜ = Letter not in word",
+                name="Como Jogar",
+                value=f"Escreve uma palavra com {WORD_SIZE} letras.\n🟩 = Letra correta\n🟨 = Letra existe mas posição errada\n⬜ = Letra não está na palavra",
                 inline=False
             )
         
@@ -313,103 +325,132 @@ class Guess(commands.Cog):
 
     async def _give_xp_reward(self, interaction: discord.Interaction, num_attempts: int):
         """Give XP reward based on number of attempts"""
-        xp_gained = XP_REWARDS.get(num_attempts, 25)
-        
-        # Get Levels cog to give XP
-        levels_cog = self.bot.get_cog("Levels")
-        if levels_cog:
-            user_data = levels_cog.db.get_user_data(interaction.guild.id, interaction.user.id)
-            if not user_data:
-                user_data = {"xp": 0, "level": 1, "multiplicador": 1, "msgs_mult": 0}
+        try:
+            xp_gained = XP_REWARDS.get(num_attempts, 25)
+            logging.info(f"Giving {xp_gained} XP to user {interaction.user.id}")
             
-            level_before = user_data["level"]
-            user_data["xp"] += xp_gained
-            level_after = levels_cog._calcular_nivel(user_data["xp"])
-            
-            if level_after > level_before:
-                user_data["level"] = level_after
-            
-            levels_cog.db.set_user_data(interaction.guild.id, interaction.user.id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
-            
-            embed = discord.Embed(
-                title="💰 XP Earned!",
-                description=f"You earned **{xp_gained} XP** for completing the game in {num_attempts} attempts!",
-                color=discord.Color.gold()
-            )
-            try:
+            # Get Levels cog to give XP
+            levels_cog = self.bot.get_cog("Levels")
+            if levels_cog:
+                try:
+                    user_data = levels_cog.db.get_user_data(interaction.guild.id, interaction.user.id)
+                    if not user_data:
+                        user_data = {"xp": 0, "level": 1, "multiplicador": 1, "msgs_mult": 0}
+                    
+                    level_before = user_data["level"]
+                    user_data["xp"] += xp_gained
+                    level_after = levels_cog._calcular_nivel(user_data["xp"])
+                    
+                    if level_after > level_before:
+                        user_data["level"] = level_after
+                    
+                    levels_cog.db.set_user_data(interaction.guild.id, interaction.user.id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
+                    logging.info(f"XP updated for user {interaction.user.id}")
+                    
+                    embed = discord.Embed(
+                        title="💰 XP Ganho!",
+                        description=f"Ganhaste **{xp_gained} XP** por completar o jogo em {num_attempts} tentativas!",
+                        color=discord.Color.gold()
+                    )
+                    try:
+                        await interaction.followup.send(embed=embed)
+                        logging.info(f"XP reward message sent")
+                    except Exception as e:
+                        logging.warning(f"Could not send XP reward message: {e}")
+                        # Fallback to channel send
+                        await interaction.channel.send(embed=embed)
+                except Exception as e:
+                    logging.exception(f"Error updating XP: {e}")
+            else:
+                logging.warning("Levels cog not found")
+                embed = discord.Embed(
+                    title="🎁 Jogo Completo!",
+                    description=f"Completaste o jogo em {num_attempts} tentativas!",
+                    color=discord.Color.blue()
+                )
                 await interaction.followup.send(embed=embed)
-            except:
-                # If followup fails, send to channel instead
-                await interaction.channel.send(embed=embed)
-        else:
+        except Exception as e:
+            logging.exception(f"Error in _give_xp_reward: {e}")
+
+    @commands.command(name="termo")
+    async def termo(self, ctx):
+        """Começa um novo jogo de adivinhação de palavras"""
+        try:
+            logging.info(f"=== TERMO COMMAND STARTED ===")
+            user_id = ctx.author.id
+            logging.info(f"User: {user_id}, Guild: {ctx.guild.id}")
+            
+            # Check if already has an active game
+            if user_id in self.active_games:
+                embed = discord.Embed(
+                    title="❌ Jogo Ativo",
+                    description="Já tens um jogo ativo! Termina-o primeiro ou usa `termoexit` para sair.",
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+                return
+            
+            # Start new game
+            secret_word = self._pick_word()
+            logging.info(f"Secret word: {secret_word}")
+            self.active_games[user_id] = {
+                "word": secret_word,
+                "attempts": [],
+                "channel": ctx.channel,
+                "guild_id": ctx.guild.id,
+                "message": None,
+            }
+            
+            # Create single comprehensive embed with button
             embed = discord.Embed(
-                title="🎁 Game Complete!",
-                description=f"You completed the game in {num_attempts} attempts!",
+                title="🎮 Jogo Iniciado!",
+                description=(
+                    f"Jogo de {ctx.author.mention}. Adivinha uma palavra de {WORD_SIZE} letras em {MAX_ATTEMPTS} tentativas.\n\n"
+                    "**Feedback:**\n🟩 letra correta na posição\n🟨 letra existe mas posição errada\n⬜ letra não está na palavra"
+                ),
                 color=discord.Color.blue()
             )
-            await interaction.followup.send(embed=embed)
-
-    @commands.command(name="guess")
-    async def guess(self, ctx):
-        """Start a new word guessing game"""
-        user_id = ctx.author.id
-        
-        # Check if already has an active game
-        if user_id in self.active_games:
-            embed = discord.Embed(
-                title="❌ Active Game",
-                description="You already have an active game! Finish it first or use `guessexit` to quit.",
-                color=discord.Color.red()
+            embed.add_field(
+                name="Estado",
+                value=f"Tentativas: 0/{MAX_ATTEMPTS}",
+                inline=False
             )
-            await ctx.send(embed=embed)
-            return
-        
-        # Start new game
-        secret_word = self._pick_word()
-        self.active_games[user_id] = {
-            "word": secret_word,
-            "attempts": [],
-            "channel": ctx.channel,
-            "guild_id": ctx.guild.id,
-            "message": None,
-        }
-        
-        # Create single comprehensive embed with button
-        embed = discord.Embed(
-            title="🎮 Guess Game Started!",
-            description=(
-                f"Jogo de {ctx.author.mention}. Adivinha uma palavra de {WORD_SIZE} letras em {MAX_ATTEMPTS} tentativas.\n\n"
-                "**Feedback:**\n🟩 letra certa no sítio\n🟨 letra existe mas posição errada\n⬜ letra não está na palavra"
-            ),
-            color=discord.Color.blue()
-        )
-        embed.add_field(
-            name="Status",
-            value=f"Attempts: 0/{MAX_ATTEMPTS}",
-            inline=False
-        )
-        embed.add_field(
-            name="How to Play",
-            value="Usa o botão abaixo para enviar as tuas tentativas.",
-            inline=False
-        )
-        embed.set_footer(text="Apenas o dono do jogo pode usar o botão. Usa 'L!guessexit' para sair.")
-        
-        # Create view with button
-        view = GuessGameView(self, user_id, ctx.guild.id)
-        msg = await ctx.send(embed=embed, view=view)
-        # Keep reference to edit later instead of spamming new messages
-        self.active_games[user_id]["message"] = msg
+            embed.add_field(
+                name="Como Jogar",
+                value="Usa o botão abaixo para enviar as tuas tentativas.",
+                inline=False
+            )
+            embed.set_footer(text="Apenas o dono do jogo pode usar o botão. Usa 'L!termoexit' para sair.")
+            
+            # Create view with button
+            view = TermoGameView(self, user_id, ctx.guild.id)
+            logging.info("About to send game message")
+            msg = await ctx.send(embed=embed, view=view)
+            logging.info(f"Game message sent: {msg.id}")
+            # Keep reference to edit later instead of spamming new messages
+            self.active_games[user_id]["message"] = msg
+            logging.info(f"=== TERMO COMMAND COMPLETED ===")
+        except Exception as e:
+            logging.exception(f"Error in termo command: {e}")
+            try:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description=f"Erro ao iniciar jogo: {str(e)}",
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+            except:
+                pass
 
-    @commands.command(name="guessexit")
-    async def guess_exit(self, ctx):
-        """Quit the current game"""
+    @commands.command(name="termo_quit")
+    async def termo_exit(self, ctx):
+        """Sai do jogo atual"""
         user_id = ctx.author.id
         
         if user_id not in self.active_games:
             embed = discord.Embed(
-                title="❌ No Active Game",
-                description="You don't have any active game.",
+                title="❌ Sem Jogo Ativo",
+                description="Não tens nenhum jogo ativo.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -419,15 +460,15 @@ class Guess(commands.Cog):
         del self.active_games[user_id]
         
         embed = discord.Embed(
-            title="😔 Game Quit",
-            description=f"You quit the game. The word was: **{word}**",
+            title="😔 Jogo Cancelado",
+            description=f"Cancelaste o jogo. A palavra era: **{word}**",
             color=discord.Color.orange()
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="guessstats")
-    async def guess_stats(self, ctx, member: discord.Member = None):
-        """Show game statistics for a player"""
+    @commands.command(name="termo_stats")
+    async def termo_stats(self, ctx, member: discord.Member = None):
+        """Mostra as estatísticas do jogo de um jogador"""
         member = member or ctx.author
         
         data = self._get_player_data(ctx.guild.id, member.id)
@@ -438,8 +479,8 @@ class Guess(commands.Cog):
         
         if games == 0:
             embed = discord.Embed(
-                title="📊 Game Statistics",
-                description=f"{member.mention} hasn't played Guess yet!",
+                title="📊 Estatísticas do Jogo",
+                description=f"{member.mention} ainda não jogou!",
                 color=discord.Color.blue()
             )
             await ctx.send(embed=embed)
@@ -449,29 +490,29 @@ class Guess(commands.Cog):
         avg_attempts = total_attempts / wins if wins > 0 else 0
         
         embed = discord.Embed(
-            title=f"📊 Game Statistics - {member.display_name}",
+            title=f"📊 Estatísticas do Jogo - {member.display_name}",
             color=discord.Color.blue()
         )
-        embed.add_field(name="🎮 Games", value=str(games), inline=True)
-        embed.add_field(name="🏆 Wins", value=str(wins), inline=True)
-        embed.add_field(name="📈 Win Rate", value=f"{win_rate:.1f}%", inline=True)
+        embed.add_field(name="🎮 Jogos", value=str(games), inline=True)
+        embed.add_field(name="🏆 Vitórias", value=str(wins), inline=True)
+        embed.add_field(name="📈 Taxa de Vitória", value=f"{win_rate:.1f}%", inline=True)
         
         if wins > 0:
-            embed.add_field(name="🎯 Average Attempts", value=f"{avg_attempts:.1f}", inline=True)
+            embed.add_field(name="🎯 Média de Tentativas", value=f"{avg_attempts:.1f}", inline=True)
         
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         
         await ctx.send(embed=embed)
 
-    @commands.command(name="guessrank")
-    async def guess_rank(self, ctx):
-        """Show game leaderboard on the server"""
-        guild_stats = [s for s in self.db.get_guess_leaderboard(ctx.guild.id) if s["games"] > 0]
+    @commands.command(name="termo_rank")
+    async def termo_rank(self, ctx):
+        """Mostra o ranking do jogo no servidor"""
+        guild_stats = [s for s in self.db.get_termo_leaderboard(ctx.guild.id) if s["games"] > 0]
 
         if not guild_stats:
             embed = discord.Embed(
-                title="📊 Game Leaderboard",
-                description="No game statistics yet on this server!",
+                title="📊 Ranking do Jogo",
+                description="Ainda não há estatísticas de jogo neste servidor!",
                 color=discord.Color.blue()
             )
             await ctx.send(embed=embed)
@@ -485,7 +526,7 @@ class Guess(commands.Cog):
         ranking = sorted(guild_stats, key=sort_key, reverse=True)
 
         embed = discord.Embed(
-            title="🏆 Game Leaderboard",
+            title="🏆 Ranking do Jogo",
             color=discord.Color.gold()
         )
 
@@ -496,7 +537,7 @@ class Guess(commands.Cog):
                 member = await ctx.guild.fetch_member(user_id)
                 name = member.display_name
             except:
-                name = f"User {user_id}"
+                name = f"Utilizador {user_id}"
             
             wins = data["wins"]
             games = data["games"]
@@ -507,7 +548,7 @@ class Guess(commands.Cog):
             
             embed.add_field(
                 name=f"{medal} {name}",
-                value=f"🏆 {wins} wins | 📈 {win_rate:.0f}% | 🎯 {avg:.1f} avg",
+                value=f"🏆 {wins} vitórias | 📈 {win_rate:.0f}% | 🎯 {avg:.1f} méd",
                 inline=False
             )
         
@@ -515,4 +556,4 @@ class Guess(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Guess(bot))
+    await bot.add_cog(Termo(bot))
