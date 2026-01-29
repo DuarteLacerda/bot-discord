@@ -28,8 +28,8 @@ class Events(commands.Cog):
         logging.exception("Error during command: %s", error)
         try:
             embed = discord.Embed(
-                title="❌ Error",
-                description="An error occurred while executing this command. Try again shortly.",
+                title="❌ Erro",
+                description="Ocorreu um erro ao executar o comando. Tenta novamente em breve.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)

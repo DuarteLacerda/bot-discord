@@ -152,8 +152,8 @@ class Levels(commands.Cog):
         member = member or ctx.author
         if not ctx.guild:
             embed = discord.Embed(
-                title="❌ Error",
-                description="This command is only available in servers.",
+                title="❌ Erro",
+                description="Este comando está disponível apenas em servidores.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -173,26 +173,26 @@ class Levels(commands.Cog):
         xp_no_nivel = xp_atual - xp_acumulado
         xp_necessario = self._xp_para_proximo_nivel(nivel) if nivel < NIVEL_MAXIMO else 0
 
-        embed = discord.Embed(title=f"📊 Level of {member.display_name}", color=discord.Color.gold())
-        embed.add_field(name="Level", value=f"{nivel}/{NIVEL_MAXIMO}", inline=True)
-        embed.add_field(name="Total XP", value=f"{xp_atual}", inline=True)
+        embed = discord.Embed(title=f"📊 Nível de {member.display_name}", color=discord.Color.gold())
+        embed.add_field(name="Nível", value=f"{nivel}/{NIVEL_MAXIMO}", inline=True)
+        embed.add_field(name="XP Total", value=f"{xp_atual}", inline=True)
         
         # Show active multiplier
         if user_data.get("multiplicador", 1) > 1 and user_data.get("msgs_mult", 0) > 0:
             embed.add_field(
-                name="⚡ Active Multiplier",
-                value=f"{user_data['multiplicador']}x ({user_data['msgs_mult']} msgs left)",
+                name="⚡ Multiplicador Ativo",
+                value=f"{user_data['multiplicador']}x ({user_data['msgs_mult']} msgs restantes)",
                 inline=False,
             )
         
         if nivel < NIVEL_MAXIMO:
             embed.add_field(
-                name="Progress",
-                value=f"{xp_no_nivel}/{xp_necessario} XP for level {nivel + 1}",
+                name="Progresso",
+                value=f"{xp_no_nivel}/{xp_necessario} XP para nível {nivel + 1}",
                 inline=False,
             )
         else:
-            embed.add_field(name="Status", value="🏆 Maximum Level Reached!", inline=False)
+            embed.add_field(name="Estado", value="🏆 Nível Máximo Alcançado!", inline=False)
 
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         await ctx.send(embed=embed)
@@ -202,8 +202,8 @@ class Levels(commands.Cog):
         """Show top 10 leaderboard"""
         if not ctx.guild:
             embed = discord.Embed(
-                title="❌ Error",
-                description="This command is only available in servers.",
+                title="❌ Erro",
+                description="Este comando está disponível apenas em servidores.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -213,7 +213,7 @@ class Levels(commands.Cog):
         if not ranking:
             embed = discord.Embed(
                 title="🏆 Top 10",
-                description="No level data available on this server.",
+                description="Sem dados de níveis neste servidor.",
                 color=discord.Color.blue()
             )
             await ctx.send(embed=embed)
@@ -223,10 +223,10 @@ class Levels(commands.Cog):
         lines = []
         for i, (user_id, level, xp) in enumerate(ranking, 1):
             member = ctx.guild.get_member(user_id)
-            name = member.display_name if member else f"User {user_id}"
-            lines.append(f"{i}. **{name}** - Level {level} ({xp} XP)")
+            name = member.display_name if member else f"Utilizador {user_id}"
+            lines.append(f"{i}. **{name}** - Nível {level} ({xp} XP)")
 
-        embed.description = "\n".join(lines) if lines else "No users in ranking."
+        embed.description = "\n".join(lines) if lines else "Sem utilizadores no ranking."
         await ctx.send(embed=embed)
 
     @commands.command(name="addxp")
@@ -235,8 +235,8 @@ class Levels(commands.Cog):
         """Add XP to a user (admin only)"""
         if not ctx.guild:
             embed = discord.Embed(
-                title="❌ Error",
-                description="This command is only available in servers.",
+                title="❌ Erro",
+                description="Este comando está disponível apenas em servidores.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -244,8 +244,8 @@ class Levels(commands.Cog):
         
         if xp <= 0:
             embed = discord.Embed(
-                title="❌ Error",
-                description="XP value must be positive.",
+                title="❌ Erro",
+                description="O valor de XP deve ser positivo.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -264,10 +264,10 @@ class Levels(commands.Cog):
         
         self.db.set_user_data(ctx.guild.id, member.id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
         
-        level_up_text = f"\nNew level: **{nivel_novo}**!" if nivel_novo > nivel_anterior else ""
+        level_up_text = f"\nNovo nível: **{nivel_novo}**!" if nivel_novo > nivel_anterior else ""
         embed = discord.Embed(
-            title="✅ XP Added",
-            description=f"Added **{xp} XP** to {member.mention}.{level_up_text}",
+            title="✅ XP Adicionado",
+            description=f"Adicionados **{xp} XP** a {member.mention}.{level_up_text}",
             color=discord.Color.green()
         )
         await ctx.send(embed=embed)
@@ -276,22 +276,22 @@ class Levels(commands.Cog):
     async def addxp_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             embed = discord.Embed(
-                title="❌ Permission Denied",
-                description="You need administrator permissions to use this command.",
+                title="❌ Permissão Negada",
+                description="Precisas de permissões de administrador para usar este comando.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
         elif isinstance(error, commands.MemberNotFound):
             embed = discord.Embed(
-                title="❌ Error",
-                description="Member not found.",
+                title="❌ Erro",
+                description="Utilizador não encontrado.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
         elif isinstance(error, commands.BadArgument):
             embed = discord.Embed(
-                title="❌ Error",
-                description="Usage: `l!addxp @user amount`",
+                title="❌ Erro",
+                description="Uso: `l!addxp @user quantidade`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)

@@ -144,8 +144,8 @@ class Music(commands.Cog):
     async def _ensure_voice(self, ctx: commands.Context) -> Optional[discord.VoiceClient]:
         if not ctx.author.voice or not ctx.author.voice.channel:
             embed = discord.Embed(
-                title="❌ Error",
-                description="You need to be in a voice channel.",
+                title="❌ Erro",
+                description="Precisas estar num canal de voz.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -155,16 +155,16 @@ class Music(commands.Cog):
         permissions = channel.permissions_for(ctx.guild.me)
         if not permissions.connect:
             embed = discord.Embed(
-                title="❌ Permission Denied",
-                description="I don't have permission to join your voice channel.",
+                title="❌ Permissão Negada",
+                description="Não tenho permissão para entrar no teu canal de voz.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
             return None
         if not permissions.speak:
             embed = discord.Embed(
-                title="❌ Permission Denied",
-                description="I don't have permission to speak in your voice channel.",
+                title="❌ Permissão Negada",
+                description="Não tenho permissão para falar no teu canal de voz.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)

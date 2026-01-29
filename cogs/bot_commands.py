@@ -69,8 +69,8 @@ class Basic(commands.Cog):
         embed.set_thumbnail(url=avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def guild(self, ctx):
+    @commands.command(aliases=["guild"])
+    async def server(self, ctx):
         """Mostrar informações do servidor"""
         guild = ctx.guild
         embed = discord.Embed(title="🏰 Informações do Servidor", color=discord.Color.green())
@@ -206,7 +206,7 @@ class Basic(commands.Cog):
                 ("write <message>", "ecoar mensagem (apenas admin)"),
                 ("sum <a> <b>", "somar dois números"),
                 ("info [@user]", "mostrar informações do utilizador"),
-                ("guild", "mostrar informações do servidor"),
+                ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
                 ("clear [amount]", "apagar mensagens (apenas admin)"),
             ]
@@ -233,6 +233,11 @@ class Basic(commands.Cog):
                 ("termo_quit / quit", "sai do jogo atual"),
                 ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
                 ("termo_rank / rank", "mostra o ranking do jogo"),
+            ]
+
+            code = [
+                ("code / desafio", "começa um novo desafio de programação"),
+                ("stats_code", "mostra estatísticas dos desafios"),
             ]
 
             embed = discord.Embed(
@@ -269,6 +274,13 @@ class Basic(commands.Cog):
                 inline=False,
             )
             
+            code_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in code)
+            embed.add_field(
+                name="💻 Desafios de Código",
+                value=code_text,
+                inline=False,
+            )
+            
             embed.set_footer(text="Usa ` L!help` para detalhes")
             await ctx.send(embed=embed)
         else:
@@ -276,7 +288,7 @@ class Basic(commands.Cog):
                 ("ping", "responde com pong"),
                 ("sum <a> <b>", "somar dois números"),
                 ("info [@user]", "mostrar informações do utilizador"),
-                ("guild", "mostrar informações do servidor"),
+                ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
             ]
 
@@ -301,6 +313,11 @@ class Basic(commands.Cog):
                 ("termo_quit / quit", "sai do jogo atual"),
                 ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
                 ("termo_rank / rank", "mostra o ranking do jogo"),
+            ]
+
+            code = [
+                ("code / desafio", "começa um novo desafio de programação"),
+                ("stats_code", "mostra estatísticas dos desafios"),
             ]
 
             embed = discord.Embed(
@@ -334,6 +351,13 @@ class Basic(commands.Cog):
             embed.add_field(
                 name="🎮 Jogos",
                 value=games_text,
+                inline=False,
+            )
+            
+            code_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in code)
+            embed.add_field(
+                name="💻 Desafios de Código",
+                value=code_text,
                 inline=False,
             )
             

@@ -1,0 +1,528 @@
+{
+  "python": {
+    "facil": [
+      {
+        "titulo": "Soma de Dois Números",
+        "descricao": "Cria uma função que recebe dois números e retorna a sua soma.",
+        "exemplo": "soma(5, 3) → 8",
+        "dica": "Usa o operador + para somar"
+      },
+      {
+        "titulo": "Par ou Ímpar",
+        "descricao": "Cria uma função que verifica se um número é par ou ímpar.",
+        "exemplo": "eh_par(4) → True\neh_par(7) → False",
+        "dica": "Usa o operador módulo (%) para verificar o resto da divisão por 2"
+      },
+      {
+        "titulo": "Inverter String",
+        "descricao": "Cria uma função que inverte uma string.",
+        "exemplo": "inverter('hello') → 'olleh'",
+        "dica": "Podes usar slicing [::-1]"
+      },
+      {
+        "titulo": "Contar Vogais",
+        "descricao": "Cria uma função que conta o número de vogais numa string.",
+        "exemplo": "contar_vogais('python') → 1",
+        "dica": "Percorre a string e verifica se cada letra está em 'aeiou'"
+      },
+      {
+        "titulo": "Maior de Três",
+        "descricao": "Cria uma função que retorna o maior de três números.",
+        "exemplo": "maior(5, 3, 8) → 8",
+        "dica": "Usa max() ou comparações com if/else"
+      },
+      {
+        "titulo": "Fatorial",
+        "descricao": "Cria uma função que calcula o fatorial de um número.",
+        "exemplo": "fatorial(5) → 120",
+        "dica": "5! = 5 × 4 × 3 × 2 × 1"
+      },
+      {
+        "titulo": "Celsius para Fahrenheit",
+        "descricao": "Converte temperatura de Celsius para Fahrenheit.",
+        "exemplo": "celsius_para_fahrenheit(0) → 32.0",
+        "dica": "F = (C × 9/5) + 32"
+      },
+      {
+        "titulo": "Contar Palavras",
+        "descricao": "Cria uma função que conta o número de palavras numa frase.",
+        "exemplo": "contar_palavras('Olá mundo Python') → 3",
+        "dica": "Usa split() para dividir a string em palavras"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Número Primo",
+        "descricao": "Cria uma função que verifica se um número é primo.",
+        "exemplo": "eh_primo(7) → True\neh_primo(8) → False",
+        "dica": "Um número primo só é divisível por 1 e por ele mesmo"
+      },
+      {
+        "titulo": "Fibonacci",
+        "descricao": "Cria uma função que retorna o n-ésimo número da sequência de Fibonacci.",
+        "exemplo": "fibonacci(6) → 8",
+        "dica": "Fibonacci: 0, 1, 1, 2, 3, 5, 8, 13..."
+      },
+      {
+        "titulo": "Anagrama",
+        "descricao": "Cria uma função que verifica se duas strings são anagramas.",
+        "exemplo": "eh_anagrama('listen', 'silent') → True",
+        "dica": "Ordena as letras de ambas as strings e compara"
+      },
+      {
+        "titulo": "Palíndromo",
+        "descricao": "Cria uma função que verifica se uma string é um palíndromo (lê-se igual de trás para frente).",
+        "exemplo": "eh_palindromo('arara') → True",
+        "dica": "Compara a string com a sua versão invertida"
+      },
+      {
+        "titulo": "Dois Números que Somam",
+        "descricao": "Dada uma lista e um alvo, encontra dois números que somam o alvo.",
+        "exemplo": "dois_soma([2, 7, 11, 15], 9) → [0, 1]",
+        "dica": "Usa um dicionário para guardar valores já vistos"
+      },
+      {
+        "titulo": "Rotação de Array",
+        "descricao": "Roda um array k posições para a direita.",
+        "exemplo": "rodar([1,2,3,4,5], 2) → [4,5,1,2,3]",
+        "dica": "Usa slicing ou módulo para calcular as novas posições"
+      },
+      {
+        "titulo": "Contagem de Caracteres",
+        "descricao": "Cria um dicionário com a frequência de cada caractere numa string.",
+        "exemplo": "contar_chars('hello') → {'h':1, 'e':1, 'l':2, 'o':1}",
+        "dica": "Usa um dicionário ou Counter do módulo collections"
+      },
+      {
+        "titulo": "Merge de Listas Ordenadas",
+        "descricao": "Une duas listas ordenadas numa única lista ordenada.",
+        "exemplo": "merge([1,3,5], [2,4,6]) → [1,2,3,4,5,6]",
+        "dica": "Usa dois ponteiros para percorrer ambas as listas"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Maior Subsequência Comum",
+        "descricao": "Dadas duas strings, encontra o comprimento da maior subsequência comum.",
+        "exemplo": "lcs('AGGTAB', 'GXTXAYB') → 4 (GTAB)",
+        "dica": "Usa programação dinâmica com uma matriz 2D"
+      },
+      {
+        "titulo": "Problema das N-Rainhas",
+        "descricao": "Coloca N rainhas num tabuleiro NxN de forma que nenhuma ataque outra.",
+        "exemplo": "n_rainhas(4) → [['.Q..', '...Q', 'Q...', '..Q.']]",
+        "dica": "Usa backtracking para explorar todas as possibilidades"
+      },
+      {
+        "titulo": "Validar Árvore Binária de Busca",
+        "descricao": "Verifica se uma árvore binária é uma árvore binária de busca válida.",
+        "exemplo": "Nó esquerdo < raiz < nó direito",
+        "dica": "Usa recursão com limites mínimo e máximo"
+      },
+      {
+        "titulo": "Problema da Mochila",
+        "descricao": "Dado um conjunto de itens com pesos e valores, maximiza o valor sem exceder a capacidade.",
+        "exemplo": "mochila([10,20,30], [60,100,120], 50) → 220",
+        "dica": "Usa programação dinâmica com matriz 2D"
+      },
+      {
+        "titulo": "Expressões Regulares Matching",
+        "descricao": "Implementa matching de padrões com '.' e '*' (similar a regex).",
+        "exemplo": "match('aa', 'a*') → True",
+        "dica": "Usa recursão ou programação dinâmica"
+      },
+      {
+        "titulo": "Trapping Rain Water",
+        "descricao": "Calcula quanta água fica presa entre barras de diferentes alturas.",
+        "exemplo": "trap([0,1,0,2,1,0,1,3,2]) → 6",
+        "dica": "Usa dois ponteiros ou stack para encontrar limites"
+      }
+    ]
+  },
+  "javascript": {
+    "facil": [
+      {
+        "titulo": "Soma de Array",
+        "descricao": "Cria uma função que soma todos os elementos de um array.",
+        "exemplo": "somaArray([1, 2, 3, 4]) → 10",
+        "dica": "Usa reduce() ou um loop for"
+      },
+      {
+        "titulo": "Encontrar Máximo",
+        "descricao": "Cria uma função que encontra o maior número num array.",
+        "exemplo": "maximo([1, 5, 3, 9, 2]) → 9",
+        "dica": "Usa Math.max() ou percorre o array"
+      },
+      {
+        "titulo": "Duplicar Array",
+        "descricao": "Cria uma função que duplica todos os valores de um array.",
+        "exemplo": "duplicar([1, 2, 3]) → [2, 4, 6]",
+        "dica": "Usa map() para transformar cada elemento"
+      },
+      {
+        "titulo": "Reverter Array",
+        "descricao": "Cria uma função que inverte um array sem usar reverse().",
+        "exemplo": "reverter([1, 2, 3]) → [3, 2, 1]",
+        "dica": "Usa um loop e constrói um novo array ou troca elementos"
+      },
+      {
+        "titulo": "Filtrar Pares",
+        "descricao": "Cria uma função que retorna apenas os números pares de um array.",
+        "exemplo": "filtrarPares([1, 2, 3, 4, 5]) → [2, 4]",
+        "dica": "Usa filter() com uma função que verifica n % 2 === 0"
+      },
+      {
+        "titulo": "Primeira Letra Maiúscula",
+        "descricao": "Capitaliza a primeira letra de cada palavra numa string.",
+        "exemplo": "capitalize('hello world') → 'Hello World'",
+        "dica": "Usa split(), map() e charAt() ou slice()"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Remover Duplicados",
+        "descricao": "Cria uma função que remove elementos duplicados de um array.",
+        "exemplo": "removerDuplicados([1, 2, 2, 3, 4, 4]) → [1, 2, 3, 4]",
+        "dica": "Usa Set ou filter() com indexOf()"
+      },
+      {
+        "titulo": "FizzBuzz",
+        "descricao": "Imprime números de 1 a 100, mas para múltiplos de 3 imprime 'Fizz', para 5 imprime 'Buzz' e para ambos 'FizzBuzz'.",
+        "exemplo": "1, 2, Fizz, 4, Buzz, Fizz, 7, 8, Fizz, Buzz, 11, Fizz, 13, 14, FizzBuzz...",
+        "dica": "Verifica primeiro se é divisível por 15, depois por 3 e 5"
+      },
+      {
+        "titulo": "Achatamento de Array",
+        "descricao": "Cria uma função que achata um array aninhado em qualquer profundidade.",
+        "exemplo": "achatar([1, [2, [3, 4]]]) → [1, 2, 3, 4]",
+        "dica": "Usa recursão ou flat() do ES2019"
+      },
+      {
+        "titulo": "Agrupar Por Propriedade",
+        "descricao": "Agrupa objetos num array por uma propriedade específica.",
+        "exemplo": "groupBy([{age:20},{age:20},{age:30}], 'age') → {20:[...], 30:[...]}",
+        "dica": "Usa reduce() para construir o objeto agrupado"
+      },
+      {
+        "titulo": "Throttle Function",
+        "descricao": "Implementa uma função throttle que limita quantas vezes uma função pode ser chamada.",
+        "exemplo": "throttle(func, 1000) → permite func executar no máximo 1x por segundo",
+        "dica": "Usa uma flag e setTimeout para controlar execuções"
+      },
+      {
+        "titulo": "Curry Function",
+        "descricao": "Implementa uma função que transforma f(a,b,c) em f(a)(b)(c).",
+        "exemplo": "curry(soma)(1)(2)(3) → 6",
+        "dica": "Retorna funções aninhadas que acumulam argumentos"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Debounce Function",
+        "descricao": "Implementa uma função debounce que atrasa a execução de uma função até que tenha passado um certo tempo sem ser chamada.",
+        "exemplo": "debounce(func, 1000) → atrasa a execução de func por 1 segundo",
+        "dica": "Usa setTimeout e clearTimeout"
+      },
+      {
+        "titulo": "Deep Clone",
+        "descricao": "Cria uma função que faz um clone profundo de um objeto (incluindo objetos aninhados).",
+        "exemplo": "deepClone({a: 1, b: {c: 2}}) → novo objeto independente",
+        "dica": "Usa recursão para objetos aninhados e cuida de arrays e datas"
+      },
+      {
+        "titulo": "Promise.all Implementation",
+        "descricao": "Implementa a tua própria versão de Promise.all.",
+        "exemplo": "myPromiseAll([p1, p2, p3]) → resolve quando todas resolverem",
+        "dica": "Retorna uma Promise que conta resoluções e lida com rejeições"
+      },
+      {
+        "titulo": "Event Emitter",
+        "descricao": "Cria uma classe EventEmitter com métodos on, emit e off.",
+        "exemplo": "emitter.on('event', callback); emitter.emit('event', data);",
+        "dica": "Usa um Map ou objeto para guardar listeners por evento"
+      },
+      {
+        "titulo": "Implementar bind()",
+        "descricao": "Implementa a tua própria versão da função bind().",
+        "exemplo": "myBind(func, context, ...args) → função com contexto fixo",
+        "dica": "Retorna uma função que usa apply() com o contexto e argumentos"
+      }
+    ]
+  },
+  "java": {
+    "facil": [
+      {
+        "titulo": "Classe Pessoa",
+        "descricao": "Cria uma classe Pessoa com atributos nome e idade, e um método apresentar().",
+        "exemplo": "pessoa.apresentar() → 'Olá, sou João e tenho 25 anos'",
+        "dica": "Usa private para atributos e getters/setters"
+      },
+      {
+        "titulo": "Calculadora Simples",
+        "descricao": "Cria uma classe com métodos para somar, subtrair, multiplicar e dividir.",
+        "exemplo": "calc.somar(5, 3) → 8",
+        "dica": "Cria métodos static ou uma instância da classe"
+      },
+      {
+        "titulo": "Classe Retângulo",
+        "descricao": "Cria uma classe Retangulo com métodos para calcular área e perímetro.",
+        "exemplo": "rect.area() → largura * altura",
+        "dica": "Usa constructor para inicializar largura e altura"
+      },
+      {
+        "titulo": "String Reversa",
+        "descricao": "Inverte uma string usando StringBuilder.",
+        "exemplo": "reverter('java') → 'avaj'",
+        "dica": "Usa StringBuilder.reverse() ou loop manual"
+      },
+      {
+        "titulo": "Contar Ocorrências",
+        "descricao": "Conta quantas vezes um elemento aparece num array.",
+        "exemplo": "contar([1,2,2,3], 2) → 2",
+        "dica": "Usa um loop for ou enhanced for"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "ArrayList vs Array",
+        "descricao": "Cria um programa que demonstra as diferenças entre Array e ArrayList.",
+        "exemplo": "Adiciona, remove e manipula elementos em ambos",
+        "dica": "ArrayList é dinâmico, Array tem tamanho fixo"
+      },
+      {
+        "titulo": "Ordenação de Objetos",
+        "descricao": "Cria uma lista de objetos Estudante e ordena por nota usando Comparable ou Comparator.",
+        "exemplo": "Ordena estudantes por nota decrescente",
+        "dica": "Implementa Comparable ou usa lambda com sort()"
+      },
+      {
+        "titulo": "HashMap de Frequências",
+        "descricao": "Usa HashMap para contar a frequência de palavras numa string.",
+        "exemplo": "'hello world hello' → {hello:2, world:1}",
+        "dica": "Usa getOrDefault() ou compute() para atualizar contagens"
+      },
+      {
+        "titulo": "Interface Funcional",
+        "descricao": "Cria uma interface funcional e usa-a com lambda expressions.",
+        "exemplo": "@FunctionalInterface com método único",
+        "dica": "Interface com apenas um método abstrato"
+      },
+      {
+        "titulo": "Stream API",
+        "descricao": "Usa Stream API para filtrar, mapear e coletar dados de uma lista.",
+        "exemplo": "lista.stream().filter().map().collect()",
+        "dica": "Combina filter(), map() e collect(Collectors.toList())"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Thread-Safe Singleton",
+        "descricao": "Implementa o padrão Singleton garantindo thread-safety.",
+        "exemplo": "Apenas uma instância da classe existe em toda a aplicação",
+        "dica": "Usa synchronized ou enum para garantir thread-safety"
+      },
+      {
+        "titulo": "Producer-Consumer",
+        "descricao": "Implementa o padrão Producer-Consumer usando threads e BlockingQueue.",
+        "exemplo": "Produtor adiciona itens, consumidor remove",
+        "dica": "Usa BlockingQueue para sincronização thread-safe"
+      },
+      {
+        "titulo": "Custom Annotation Processor",
+        "descricao": "Cria uma anotação customizada e processa-a usando reflection.",
+        "exemplo": "@MyAnnotation que pode ser lida em runtime",
+        "dica": "Usa @Retention(RUNTIME) e reflection API"
+      },
+      {
+        "titulo": "Generic LRU Cache",
+        "descricao": "Implementa uma cache LRU (Least Recently Used) genérica.",
+        "exemplo": "Cache com capacidade máxima que remove itens menos usados",
+        "dica": "Usa LinkedHashMap com removeEldestEntry"
+      }
+    ]
+  },
+  "cpp": {
+    "facil": [
+      {
+        "titulo": "Swap de Variáveis",
+        "descricao": "Cria uma função que troca os valores de duas variáveis usando referências.",
+        "exemplo": "swap(a, b) → valores de a e b são trocados",
+        "dica": "Usa & para passar por referência"
+      },
+      {
+        "titulo": "Ponteiros Básicos",
+        "descricao": "Cria um programa que demonstra o uso de ponteiros para modificar uma variável.",
+        "exemplo": "Usa * e & para trabalhar com ponteiros",
+        "dica": "& obtém o endereço, * acede ao valor"
+      },
+      {
+        "titulo": "Struct de Ponto",
+        "descricao": "Cria uma struct Point2D com x e y, e uma função para calcular distância.",
+        "exemplo": "distancia(p1, p2) → sqrt((x2-x1)² + (y2-y1)²)",
+        "dica": "Usa sqrt() da biblioteca <cmath>"
+      },
+      {
+        "titulo": "Pass by Reference vs Value",
+        "descricao": "Demonstra a diferença entre passar por valor e por referência.",
+        "exemplo": "void func(int x) vs void func(int& x)",
+        "dica": "Referência usa &, valor cria cópia"
+      },
+      {
+        "titulo": "Array Dinâmico",
+        "descricao": "Aloca um array dinamicamente com new e liberta com delete[].",
+        "exemplo": "int* arr = new int[size]; ... delete[] arr;",
+        "dica": "Sempre usa delete[] para arrays"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Classe Vector",
+        "descricao": "Implementa uma classe Vector dinâmica simples com métodos push_back, pop_back e size.",
+        "exemplo": "Simula std::vector de forma simplificada",
+        "dica": "Usa alocação dinâmica com new/delete"
+      },
+      {
+        "titulo": "Sobrecarga de Operadores",
+        "descricao": "Cria uma classe Complex para números complexos com sobrecarga de operadores +, -, *.",
+        "exemplo": "Complex a(1, 2); Complex b(3, 4); a + b;",
+        "dica": "Usa operator+ como método ou função friend"
+      },
+      {
+        "titulo": "Template de Função",
+        "descricao": "Cria um template de função que funciona com qualquer tipo.",
+        "exemplo": "template<typename T> T max(T a, T b)",
+        "dica": "Usa template<typename T> antes da declaração"
+      },
+      {
+        "titulo": "Linked List",
+        "descricao": "Implementa uma linked list simples com insert, delete e display.",
+        "exemplo": "Node* head; insert(), delete(), display()",
+        "dica": "Cada nó tem data e um ponteiro para o próximo"
+      },
+      {
+        "titulo": "Copy Constructor",
+        "descricao": "Implementa um copy constructor profundo para uma classe com ponteiros.",
+        "exemplo": "MyClass(const MyClass& other) → deep copy",
+        "dica": "Aloca nova memória e copia dados"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Smart Pointer",
+        "descricao": "Implementa um smart pointer simples (similar a unique_ptr) usando RAII.",
+        "exemplo": "Gere automaticamente a memória sem memory leaks",
+        "dica": "Usa destrutor, construtor de movimento e delete no copy constructor"
+      },
+      {
+        "titulo": "Memory Pool",
+        "descricao": "Implementa um memory pool para alocações rápidas de objetos de tamanho fixo.",
+        "exemplo": "Pre-aloca blocos de memória e reutiliza",
+        "dica": "Mantém uma free list de blocos disponíveis"
+      },
+      {
+        "titulo": "Thread Pool",
+        "descricao": "Implementa um thread pool que distribui tarefas entre múltiplas threads.",
+        "exemplo": "Queue de tarefas processadas por worker threads",
+        "dica": "Usa std::thread, mutex e condition_variable"
+      },
+      {
+        "titulo": "Move Semantics",
+        "descricao": "Implementa move constructor e move assignment operator para uma classe.",
+        "exemplo": "MyClass(MyClass&& other) noexcept",
+        "dica": "Usa std::move() e transfere recursos em vez de copiar"
+      }
+    ]
+  },
+  "csharp": {
+    "facil": [
+      {
+        "titulo": "Propriedades Auto-implementadas",
+        "descricao": "Cria uma classe Produto com propriedades auto-implementadas Nome e Preco.",
+        "exemplo": "public string Nome { get; set; }",
+        "dica": "Usa { get; set; } para criar propriedades"
+      },
+      {
+        "titulo": "LINQ Básico",
+        "descricao": "Usa LINQ para filtrar uma lista de números pares.",
+        "exemplo": "var pares = numeros.Where(n => n % 2 == 0);",
+        "dica": "Usa Where() para filtrar"
+      },
+      {
+        "titulo": "List vs Array",
+        "descricao": "Demonstra as diferenças entre List<T> e arrays em C#.",
+        "exemplo": "List<int> vs int[] → List é dinâmica",
+        "dica": "List tem Add(), Remove(), enquanto array tem tamanho fixo"
+      },
+      {
+        "titulo": "String Interpolation",
+        "descricao": "Usa string interpolation e formatação em C#.",
+        "exemplo": "$\"Nome: {nome}, Idade: {idade}\"",
+        "dica": "Usa $ antes da string e {} para variáveis"
+      },
+      {
+        "titulo": "Null Coalescing",
+        "descricao": "Usa operadores ?? e ??= para lidar com nulls.",
+        "exemplo": "string nome = input ?? \"default\";",
+        "dica": "?? retorna o segundo valor se o primeiro for null"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Async/Await",
+        "descricao": "Cria um método assíncrono que simula uma operação demorada e usa await.",
+        "exemplo": "public async Task<string> ObterDadosAsync()",
+        "dica": "Usa Task, async e await"
+      },
+      {
+        "titulo": "Extension Methods",
+        "descricao": "Cria um extension method para a classe string que conta palavras.",
+        "exemplo": "'hello world'.ContarPalavras() → 2",
+        "dica": "Método static numa classe static com parâmetro this"
+      },
+      {
+        "titulo": "Delegates e Events",
+        "descricao": "Cria um evento customizado usando delegates.",
+        "exemplo": "public event EventHandler OnChange;",
+        "dica": "Define delegate, cria evento e invoca-o quando necessário"
+      },
+      {
+        "titulo": "LINQ Join",
+        "descricao": "Usa LINQ para fazer join entre duas listas.",
+        "exemplo": "users.Join(orders, u => u.Id, o => o.UserId, ...)",
+        "dica": "Usa Join() ou query syntax com join"
+      },
+      {
+        "titulo": "IEnumerable Custom",
+        "descricao": "Implementa IEnumerable<T> numa classe customizada.",
+        "exemplo": "Permite usar foreach na tua classe",
+        "dica": "Implementa GetEnumerator() e retorna um IEnumerator"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Generic Repository Pattern",
+        "descricao": "Implementa um padrão Repository genérico com operações CRUD.",
+        "exemplo": "Repository<T> com métodos Add, Update, Delete, GetById",
+        "dica": "Usa generics <T> e interfaces"
+      },
+      {
+        "titulo": "Reflection API",
+        "descricao": "Usa reflection para criar objetos e invocar métodos dinamicamente.",
+        "exemplo": "typeof(MyClass).GetMethod(\"Execute\").Invoke(obj, params)",
+        "dica": "Usa Type.GetType(), GetMethod(), Activator.CreateInstance()"
+      },
+      {
+        "titulo": "Custom Middleware ASP.NET",
+        "descricao": "Cria um middleware customizado para o pipeline ASP.NET Core.",
+        "exemplo": "public async Task InvokeAsync(HttpContext context)",
+        "dica": "Implementa InvokeAsync e usa app.UseMiddleware<T>()"
+      },
+      {
+        "titulo": "Expression Trees",
+        "descricao": "Usa Expression Trees para construir queries dinamicamente.",
+        "exemplo": "Expression<Func<T, bool>> predicate = x => x.Id == id;",
+        "dica": "Usa Expression.Lambda e Expression.Parameter"
+      }
+    ]
+  }
+}

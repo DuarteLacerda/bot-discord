@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class MyBot(commands.Bot):
     async def setup_hook(self):
         # Carrega extensões antes de conectar
-        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo"]:
+        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo", "cogs.code_challenges"]:
             try:
                 logging.info(f"Loading extension: {ext}")
                 await self.load_extension(ext)
