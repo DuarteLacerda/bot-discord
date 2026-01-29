@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import shutil
 from typing import Any, Dict, List, Optional
 
 import discord
@@ -21,11 +22,16 @@ load_dotenv()
 
 FFMPEG_OPTIONS = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-    "options": "-vn",
+    "options": "-vn -b:a 128k -bufsize 512k",
+}
+
+FFMPEG_TONE_OPTIONS = {
+    "before_options": "-f lavfi",
+    "options": "-t 2 -vn",
 }
 
 YTDL_OPTS = {
-    "format": "bestaudio[ext=webm]/bestaudio/best",
+    "format": "bestaudio[acodec=opus]/bestaudio[ext=webm]/bestaudio/best",
     "quiet": True,
     "noplaylist": False,
     "playlistend": 100,
@@ -33,6 +39,8 @@ YTDL_OPTS = {
     "skip_download": True,
     "no_warnings": True,
     "ignoreerrors": True,
+    "source_address": "0.0.0.0",
+    "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
 }
 
 
@@ -125,18 +133,30 @@ class Music(commands.Cog):
             tracks = []
             for entry in info["entries"]:
                 if entry and entry.get("url") and entry.get("title"):
+                    webpage_url = entry.get("webpage_url") or entry.get("original_url")
+                    if not webpage_url and entry.get("url") and not str(entry.get("url")).startswith(("http://", "https://")):
+                        webpage_url = f"https://www.youtube.com/watch?v={entry.get('url')}"
                     tracks.append({
                         "title": entry.get("title", "Unknown"),
-                        "webpage_url": entry.get("webpage_url"),
+                        "webpage_url": webpage_url,
                         "url": entry.get("url"),
                     })
             return tracks if tracks else []
         
         return [{
             "title": info.get("title", "Unknown"),
-            "webpage_url": info.get("webpage_url"),
+            "webpage_url": info.get("webpage_url") or info.get("original_url"),
             "url": info.get("url"),
         }]
+
+    def _get_text_channel(self, guild: discord.Guild, channel_id: Optional[int]) -> Optional[discord.TextChannel]:
+        if channel_id:
+            channel = self.bot.get_channel(channel_id)
+            if isinstance(channel, discord.TextChannel):
+                return channel
+        if guild.system_channel and isinstance(guild.system_channel, discord.TextChannel):
+            return guild.system_channel
+        return None
 
     def _get_queue(self, guild_id: int) -> List[Dict[str, Any]]:
         return self.queues.setdefault(guild_id, [])
@@ -150,6 +170,21 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
             return None
+
+        if not discord.opus.is_loaded():
+            try:
+                discord.opus.load_opus("libopus.so.0")
+            except Exception:
+                try:
+                    discord.opus.load_opus("libopus.so")
+                except Exception:
+                    embed = discord.Embed(
+                        title="❌ Erro",
+                        description="A biblioteca Opus não está disponível. Instala o libopus para tocar áudio.",
+                        color=discord.Color.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return None
         
         channel = ctx.author.voice.channel
         permissions = channel.permissions_for(ctx.guild.me)
@@ -196,22 +231,132 @@ class Music(commands.Cog):
         vc = guild.voice_client
         if not vc:
             return
+
+        text_channel = self._get_text_channel(guild, track.get("requested_channel_id"))
+
+        if not shutil.which("ffmpeg"):
+            if text_channel:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="FFmpeg não está instalado ou não está no PATH. Instala o ffmpeg para tocar áudio.",
+                    color=discord.Color.red()
+                )
+                await text_channel.send(embed=embed)
+            return
         
         if not track.get("url"):
             logging.warning("Track without URL, skipping: %s", track.get("title"))
             await self._play_next(guild)
             return
+
+        stream_url = track.get("url")
+        if stream_url and not str(stream_url).startswith(("http://", "https://")):
+            stream_url = None
+
+        if not stream_url and not track.get("webpage_url") and track.get("url"):
+            candidate = track.get("url")
+            if candidate and not str(candidate).startswith(("http://", "https://")):
+                track["webpage_url"] = f"https://www.youtube.com/watch?v={candidate}"
+
+        if not stream_url and track.get("webpage_url"):
+            try:
+                info = await self._extract_info(track["webpage_url"])
+                stream_url = info.get("url")
+                track["title"] = info.get("title", track.get("title", "Unknown"))
+                track["webpage_url"] = info.get("webpage_url", track.get("webpage_url"))
+            except Exception as e:
+                logging.exception("Failed to resolve stream URL", exc_info=e)
+                if text_channel:
+                    embed = discord.Embed(
+                        title="❌ Erro",
+                        description="Não foi possível obter o stream da música.",
+                        color=discord.Color.red()
+                    )
+                    await text_channel.send(embed=embed)
+                await self._play_next(guild)
+                return
+
+        if not stream_url:
+            logging.warning("Stream URL not resolved for: %s", track.get("title"))
+            if text_channel:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="Não foi possível tocar esta música.",
+                    color=discord.Color.red()
+                )
+                await text_channel.send(embed=embed)
+            await self._play_next(guild)
+            return
         
         self.current[guild.id] = track
-        source = discord.FFmpegPCMAudio(track["url"], **FFMPEG_OPTIONS)
+        try:
+            source = await discord.FFmpegOpusAudio.from_probe(stream_url, **FFMPEG_OPTIONS)
+        except Exception as e:
+            logging.exception("FFmpeg probe error", exc_info=e)
+            try:
+                source = discord.FFmpegPCMAudio(stream_url, **FFMPEG_OPTIONS)
+            except Exception as inner:
+                logging.exception("FFmpeg error", exc_info=inner)
+                if text_channel:
+                    embed = discord.Embed(
+                        title="❌ Erro",
+                        description="Ocorreu um erro ao iniciar o áudio. Verifica o ffmpeg e o link.",
+                        color=discord.Color.red()
+                    )
+                    await text_channel.send(embed=embed)
+                await self._play_next(guild)
+                return
 
         def after_play(err):
             if err:
                 logging.exception("Playback error", exc_info=err)
+                if text_channel:
+                    asyncio.run_coroutine_threadsafe(
+                        text_channel.send(
+                            embed=discord.Embed(
+                                title="❌ Erro",
+                                description="Falha ao tocar a música. A tentar a próxima...",
+                                color=discord.Color.red()
+                            )
+                        ),
+                        self.bot.loop
+                    )
             asyncio.run_coroutine_threadsafe(self._play_next(guild), self.bot.loop)
 
         vc.play(source, after=after_play)
         logging.info("Now playing: %s", track.get("title"))
+        asyncio.create_task(self._verify_playback(guild, track, text_channel))
+
+    async def _verify_playback(
+        self,
+        guild: discord.Guild,
+        track: Dict[str, Any],
+        text_channel: Optional[discord.TextChannel]
+    ):
+        await asyncio.sleep(2)
+        vc = guild.voice_client
+        if not vc:
+            return
+        if not vc.is_playing() and not vc.is_paused():
+            logging.warning("Playback did not start for: %s", track.get("title"))
+            if text_channel:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="Não foi possível iniciar o áudio. Diagnóstico abaixo:",
+                    color=discord.Color.red()
+                )
+                me = guild.me or guild.get_member(self.bot.user.id)
+                perms = vc.channel.permissions_for(me) if me and vc.channel else None
+                embed.add_field(name="Canal", value=vc.channel.name if vc.channel else "(desconhecido)", inline=False)
+                embed.add_field(name="Conectado", value=str(bool(vc.is_connected())), inline=True)
+                embed.add_field(name="Opus", value=str(bool(discord.opus.is_loaded())), inline=True)
+                embed.add_field(name="FFmpeg", value=str(bool(shutil.which("ffmpeg"))), inline=True)
+                if perms:
+                    embed.add_field(name="Permissões", value=f"connect={perms.connect}, speak={perms.speak}", inline=False)
+                if track.get("webpage_url"):
+                    embed.add_field(name="URL", value=track.get("webpage_url"), inline=False)
+                await text_channel.send(embed=embed)
+            await self._play_next(guild)
 
     # ===== COMMANDS =====
 
@@ -273,6 +418,8 @@ class Music(commands.Cog):
             return
         
         queue = self._get_queue(ctx.guild.id)
+        for t in tracks:
+            t["requested_channel_id"] = ctx.channel.id
         queue.extend(tracks)
         
         if len(tracks) == 1:
@@ -314,6 +461,31 @@ class Music(commands.Cog):
             title="⏭️ Skipped",
             description="Skipping to next song...",
             color=discord.Color.green()
+        )
+        await ctx.send(embed=embed)
+
+    @commands.command(name="testtone", aliases=["tone"])
+    async def testtone(self, ctx):
+        """Play a short test tone to validate voice output"""
+        vc = await self._ensure_voice(ctx)
+        if not vc:
+            return
+        try:
+            source = discord.FFmpegPCMAudio("sine=frequency=1000:duration=2", **FFMPEG_TONE_OPTIONS)
+        except Exception as e:
+            logging.exception("FFmpeg tone error", exc_info=e)
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Não foi possível gerar o tom de teste.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+        vc.play(source)
+        embed = discord.Embed(
+            title="🔊 Teste de Áudio",
+            description="A tocar um tom de 2 segundos.",
+            color=discord.Color.blue()
         )
         await ctx.send(embed=embed)
 
@@ -451,6 +623,7 @@ class Music(commands.Cog):
             ("**resume** / r", "Resume playback"),
             ("**stop** / s", "Stop and disconnect"),
             ("**queue** / q", "Show queue"),
+            ("**testtone** / tone", "Play a 2s test tone"),
         ]
         
         for cmd, desc in commands_list:
