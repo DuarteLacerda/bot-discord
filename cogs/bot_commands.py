@@ -375,6 +375,16 @@ class Basic(commands.Cog):
                 ("termo_rank", "mostra o ranking do Termo"),
             ]
 
+            quick_games = [
+                ("ppt <pedra|papel|tesoura>", "joga pedra, papel ou tesoura"),
+                ("dado [lados]", "rola um dado de N lados"),
+                ("moeda", "atira uma moeda ao ar"),
+                ("escolher <op1> <op2> ...", "deixa o bot escolher por ti"),
+                ("8ball <pergunta>", "faz uma pergunta à bola mágica"),
+                ("adivinhar <número>", "adivinha o número entre 1 e 10"),
+                ("jogos", "mostra todos os jogos disponíveis"),
+            ]
+
             code = [
                 ("code / desafio", "começa um novo desafio de programação"),
                 ("stats_code", "mostra estatísticas dos desafios"),
@@ -409,8 +419,15 @@ class Basic(commands.Cog):
             
             games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
             embed.add_field(
-                name="🎮 Jogos",
+                name="🎮 Jogos - Termo",
                 value=games_text,
+                inline=False,
+            )
+            
+            quick_games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in quick_games)
+            embed.add_field(
+                name="🎲 Jogos Rápidos",
+                value=quick_games_text,
                 inline=False,
             )
             
@@ -421,7 +438,6 @@ class Basic(commands.Cog):
                 inline=False,
             )
             
-            embed.set_footer(text="Usa L!help para detalhes")
             await ctx.send(embed=embed)
         else:
             general = [
@@ -455,6 +471,16 @@ class Basic(commands.Cog):
                 ("termo_quit / quit", "sai do jogo atual"),
                 ("termo_stats / stats [@user]", "mostra as estatísticas do Termo"),
                 ("termo_rank", "mostra o ranking do Termo"),
+            ]
+
+            quick_games = [
+                ("ppt <pedra|papel|tesoura>", "joga pedra, papel ou tesoura"),
+                ("dado [lados]", "rola um dado de N lados"),
+                ("moeda", "atira uma moeda ao ar"),
+                ("escolher <op1> <op2> ...", "deixa o bot escolher por ti"),
+                ("8ball <pergunta>", "faz uma pergunta à bola mágica"),
+                ("adivinhar <número>", "adivinha o número entre 1 e 10"),
+                ("jogos", "mostra todos os jogos disponíveis"),
             ]
 
             code = [
@@ -491,8 +517,15 @@ class Basic(commands.Cog):
             
             games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
             embed.add_field(
-                name="🎮 Jogos",
+                name="🎮 Jogos - Termo",
                 value=games_text,
+                inline=False,
+            )
+            
+            quick_games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in quick_games)
+            embed.add_field(
+                name="🎲 Jogos Rápidos",
+                value=quick_games_text,
                 inline=False,
             )
             
@@ -503,7 +536,6 @@ class Basic(commands.Cog):
                 inline=False,
             )
             
-            embed.set_footer(text="Usa L!help para detalhes")
             await ctx.send(embed=embed)
 
 
