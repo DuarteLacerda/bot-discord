@@ -1,12 +1,30 @@
 import logging
 import os
 import discord
+import sys
+import fcntl
 
 from discord import ui
 from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Prevenir múltiplas instâncias do bot
+LOCK_FILE = "/tmp/discord_bot.lock"
+
+def acquire_lock():
+    """Adquire um lock exclusivo para garantir apenas uma instância do bot"""
+    try:
+        lock_file = open(LOCK_FILE, 'w')
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return lock_file
+    except IOError:
+        logging.error("❌ Já existe uma instância do bot a correr. Abortando...")
+        sys.exit(1)
+
+# Adquirir lock no início
+lock_file = acquire_lock()
 
 logging.basicConfig(level=logging.DEBUG)
 

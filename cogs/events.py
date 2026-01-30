@@ -89,9 +89,6 @@ class Events(commands.Cog):
                     except Exception as e:
                         logging.error(f"Erro ao enviar auto-resposta: {e}")
                     break
-        
-        # Permite que outros comandos sejam processados
-        await self.bot.process_commands(message)
 
     @commands.Cog.listener()
     async def on_error(self, event_method, *args, **kwargs):
