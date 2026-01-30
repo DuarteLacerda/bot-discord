@@ -5,7 +5,7 @@ A complete Discord bot with music system, levels/XP, and moderation tools.
 ## Features ✨
 
 ### 🎵 Music
-- YouTube and Spotify playback
+- YouTube playback
 - Queue system
 - Controls: play, skip, pause, resume, stop
 - Playlist support (maximum 20 tracks)
@@ -17,6 +17,13 @@ A complete Discord bot with music system, levels/XP, and moderation tools.
 - Leaderboard (top 10)
 - Automatic case opening on level up
 - Various rewards (XP, bonuses, etc.)
+
+### 💬 Auto-Responses
+- Automatic detection of Portuguese slang (from Portugal)
+- Gaming terminology responses
+- Multiple random responses per keyword
+- Accent-insensitive detection (works with "bué" or "bue")
+- Easy to customize via JSON file
 
 ### 🛡️ Moderation
 - Message clearing command
@@ -47,8 +54,7 @@ cd bot-discord
 cp .env.example .env
 # Edit .env and add:
 # - DISCORD_BOT_TOKEN (required)
-# - SPOTIPY_CLIENT_ID (optional)
-# - SPOTIPY_CLIENT_SECRET (optional)
+# - AUTO_ROLE_NAME (optional)
 
 # 3. Create the virtual environment
 python3 -m venv Venv
@@ -66,14 +72,14 @@ python main.py
 ## Configuration ⚙️
 
 ### Environment Variables (.env)
-```
+```env
 DISCORD_BOT_TOKEN=your_token_here
-SPOTIPY_CLIENT_ID=your_spotify_id (optional)
-SPOTIPY_CLIENT_SECRET=your_spotify_secret (optional)
+
+AUTO_ROLE_NAME=Your Role Name
 ```
 
 ### XP Balancing
-Edit the top of `levels.py`:
+Edit the top of `cogs/levels.py`:
 ```python
 XP_POR_CARACTERE = 0.5      # XP per character
 NIVEL_MAXIMO = 500           # Maximum level
@@ -81,37 +87,75 @@ XP_MULTIPLICADOR = 1.15      # Exponential growth
 ```
 
 ### Edit Rules
-Edit `rules.json` to add/remove server rules. No need to restart the bot!
+Edit `data/rules.json` to add/remove server rules. No need to restart the bot!
+
+### Auto-Responses
+Edit `data/auto_responses.json` to customize slang responses:
+```json
+{
+    "bué": [
+        "Isso é bué fixe mesmo",
+        "Bué mesmo, como sempre."
+    ],
+    "gg": [
+        "GG! Boa partida, bro",
+        "GG well played!"
+    ]
+}
+```
+The bot automatically responds when it detects these keywords in messages (case and accent insensitive).
 
 ## Commands 📝
 
 ### General
-- `l!ping` / `l!pong` - Replies Pong!
-- `l!info` / `l!user [@user]` - User information
-- `l!servidor` / `l!server` - Server information
-- `l!rules` / `l!regras` - Shows server rules
-- `l!help` / `l!ajuda` - Shows all commands (context-aware)
+- `l!ping` - Shows bot latency
+- `l!sum <a> <b>` - Adds two numbers
+- `l!tempo` / `l!weather` / `l!clima <city>` - Shows current weather for a city
+- `l!hora` / `l!time` / `l!horario` / `l!timezone <city>` - Shows current time for a city
+- `l!traduzir` / `l!translate` / `l!tr <dest> <text>` - Translates text between languages
+- `l!info [@user]` - User information
+- `l!server` / `l!guild` - Server information
+- `l!rules` - Shows server rules
+- `l!help` - Shows all commands (context-aware)
 
 ### Music
-- `l!join` / `l!entrar` / `l!j` - Joins your voice channel
-- `l!play` / `l!tocar` / `l!p <term|link>` - Search on YouTube or Spotify
-- `l!ytplay` / `l!ytp <term>` - Force YouTube search
-- `l!splay` / `l!sp <link>` - Plays Spotify link
-- `l!skip` / `l!pular` / `l!sk` - Skips current track
-- `l!stop` / `l!parar` / `l!s` - Clears queue and leaves
-- `l!pause` / `l!pausar` / `l!pz` - Pauses
-- `l!resume` / `l!retomar` / `l!r` - Resumes
-- `l!fila` / `l!queue` / `l!q` - Shows the queue
-- `l!music_cmds` / `l!mc` - Lists music commands
+- `l!join` / `l!connect` - Joins your voice channel
+- `l!play` / `l!p <term|link>` - Plays from YouTube or Spotify
+- `l!skip` / `l!sk` - Skips current track
+- `l!stop` / `l!s` - Stops and leaves
+- `l!pause` / `l!pz` - Pauses
+- `l!resume` / `l!r` - Resumes
+- `l!queue` / `l!q` - Shows the queue
+- `l!testtone` / `l!tone` - Tests audio with a tone
+- `l!music` - Shows music commands
 
 ### Levels
-- `l!nivel` / `l!level [@user]` - Shows level and XP
-- `l!rank` / `l!ranking` - Server top 10
-- `l!addxp` / `l!adicionarxp @user <value>` - Adds XP (admins only)
+- `l!level [@user]` - Shows level and XP
+- `l!rank` - Server top 10 leaderboard
+- `l!addxp @user <value>` - Adds XP (admins only)
 
-### Admins
-- `l!limpar` / `l!clear [amount]` - Deletes messages from channel
-- `l!escrever` / `l!write <message>` - Echoes message
+### Termo Game
+- `l!termo` - Starts a new Termo game (Portuguese Wordle)
+- `l!termo_quit` - Exits current game
+- `l!termo_stats [@user]` - Shows Termo statistics
+- `l!termo_rank` - Shows Termo ranking
+
+### Quick Games
+- `l!ppt` / `l!pedrapapeltesoura` / `l!rps <rock|paper|scissors>` - Plays rock, paper, scissors
+- `l!dado` / `l!dice` / `l!roll [sides]` - Rolls a dice with N sides
+- `l!moeda` / `l!coin` / `l!flip` - Flips a coin
+- `l!escolher` / `l!choose` / `l!pick <op1> <op2> ...` - Lets the bot choose for you
+- `l!8ball` / `l!bola8` / `l!pergunta <question>` - Ask the magic 8-ball
+- `l!adivinhar` / `l!guess` / `l!numero <number>` - Guess the number between 1 and 10
+- `l!jogos` / `l!games` / `l!listarjogos` - Shows all available games
+
+### Code Challenges
+- `l!code` / `l!desafio` / `l!challenge` / `l!coding` - Starts a programming challenge
+- `l!stats_code` - Shows code challenge statistics
+
+### Admin Commands
+- `l!write <message>` - Echoes message (admins only)
+- `l!clear [amount]` - Deletes messages from channel (admins only)
 
 ## Running in Background (Linux)
 
@@ -148,13 +192,21 @@ screen -r discordbot
 ```
 discord-bot/
 ├── main.py              # Bot initialization
-├── bot_commands.py      # General commands and help
-├── music.py             # Music cog
-├── levels.py            # Levels cog
-├── events.py            # Event listeners
-├── levels_data.json     # User data (auto-generated)
-├── rules.json           # Server rules
-├── .env                 # Environment variables (DO NOT commit!)
+├── cogs/
+│   ├── bot_commands.py  # General commands and help
+│   ├── music.py         # Music cog
+│   ├── levels.py        # Levels cog
+│   ├── events.py        # Event listeners and auto-responses
+│   ├── termo.py         # Termo game
+│   ├── code_challenges.py # Coding challenges
+│   └── games.py         # Games
+├── data/
+│   ├── auto_responses.json # Slang auto-responses
+│   ├── rules.json       # Server rules
+│   ├── termo_palavras.json # Termo words
+│   └── code_challenges.json # Challenge data
+├── database/            # Database module
+├── utils/               # Utility components
 ├── .env.example         # .env template
 ├── requirements.txt     # Python dependencies
 └── README.md            # This file
@@ -162,11 +214,16 @@ discord-bot/
 
 ## Dependencies 📦
 
-- `discord.py` - Bot framework
+- `discord.py` - Discord bot framework
 - `python-dotenv` - Environment variables management
-- `yt-dlp` - YouTube video download
-- `spotipy` - Spotify API
-- `PyNaCl` - Voice support
+- `yt-dlp` - YouTube video downloader
+- `PyNaCl` - Voice support for Discord
+- `aiohttp` - Async HTTP client
+- `deep-translator` - Text translation
+- `langdetect` - Language detection
+- `mcstatus` - Minecraft server status
+- `a2s` - Source engine query protocol
+- `audioop-lts` - Audio processing
 
 ## Troubleshooting 🔧
 
@@ -179,11 +236,20 @@ pip install -r requirements.txt
 ### Bot doesn't play music
 - Check if FFmpeg is installed: `ffmpeg -version`
 - Make sure you're in a voice channel
-- Check bot permissions
+- Check bot permissions in voice channels
 
-### Spotify doesn't work
-- Leave .env blank (will use YouTube as fallback)
-- Or configure Spotify Developer credentials
+### Translation doesn't work
+- Check if internet connection is available
+- Verify language codes are correct (e.g., 'en', 'pt', 'es')
+
+### Database errors
+- Ensure the `database/` directory has write permissions
+- Check if Discord bot has proper guild permissions
+
+### Bot doesn't respond to auto-responses
+- Verify `data/auto_responses.json` is properly formatted
+- Check if bot has message permissions in the channel
+- Ensure the keywords are in the JSON file
 
 ## Contributing 🤝
 
@@ -192,10 +258,9 @@ Feel free to suggest improvements or report bugs!
 ## License 📄
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-Use at your own risk. For uncommercial use only.
 
 ---
 
 **Bot Prefix:** `L!`  
-**Version:** 1.0  
+**Version:** 2.0  
 **Developed by:** Duarte Lacerda

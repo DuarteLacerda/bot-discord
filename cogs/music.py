@@ -8,12 +8,6 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-try:
-    import spotipy
-    from spotipy.oauth2 import SpotifyClientCredentials
-except ImportError:
-    spotipy = None
-
 import yt_dlp
 
 from utils.components import MusicPlayerView
@@ -44,19 +38,10 @@ YTDL_OPTS = {
 }
 
 
-def _build_spotify_client() -> Optional[Any]:
-    client_id = os.getenv("SPOTIPY_CLIENT_ID")
-    client_secret = os.getenv("SPOTIPY_CLIENT_SECRET")
-    if not client_id or not client_secret or spotipy is None:
-        return None
-    return spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
-
-
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.ytdl = yt_dlp.YoutubeDL(YTDL_OPTS)
-        self.spotify = _build_spotify_client()
         self.queues: Dict[int, List[Dict[str, Any]]] = {}
         self.current: Dict[int, Dict[str, Any]] = {}
 
@@ -69,53 +54,6 @@ class Music(commands.Cog):
 
     # ===== UTILITIES =====
 
-    def _is_spotify_track(self, query: str) -> bool:
-        q = query.strip().lower()
-        if q.startswith("spotify:track:"):
-            return True
-        return "open.spotify.com" in q and "/track/" in q
-    
-    def _is_spotify_playlist(self, query: str) -> bool:
-        q = query.strip().lower()
-        if q.startswith("spotify:playlist:"):
-            return True
-        return "open.spotify.com" in q and "/playlist/" in q
-
-    async def _spotify_to_query(self, url: str) -> str:
-        if not self.spotify:
-            return url
-        try:
-            track_id = url.split("track/")[-1].split("?")[0] if "track/" in url else url.split(":")[-1]
-            data = self.spotify.track(track_id)
-            name = data.get("name")
-            artists = ", ".join(a["name"] for a in data.get("artists", []))
-            return f"{name} {artists} audio"
-        except Exception:
-            logging.exception("Spotify fallback")
-            return url
-    
-    async def _spotify_playlist_to_queries(self, url: str) -> List[str]:
-        if not self.spotify:
-            raise ValueError("Spotify credentials not configured. Set SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET in .env")
-        
-        try:
-            playlist_id = url.split("playlist/")[-1].split("?")[0] if "playlist/" in url else url.split(":")[-1]
-            results = self.spotify.playlist_tracks(playlist_id, limit=100)
-            tracks = results["items"]
-            
-            queries = []
-            for item in tracks:
-                if item and item.get("track"):
-                    track = item["track"]
-                    name = track.get("name", "")
-                    artists = ", ".join(a["name"] for a in track.get("artists", []))
-                    queries.append(f"{name} {artists} audio")
-            
-            return queries
-        except Exception:
-            logging.exception("Spotify playlist error")
-            raise ValueError("Could not fetch Spotify playlist. Check the link and credentials.")
-
     async def _extract_info(self, search: str) -> Dict[str, Any]:
         loop = asyncio.get_event_loop()
         
@@ -125,9 +63,10 @@ class Music(commands.Cog):
         return await loop.run_in_executor(None, lambda: self.ytdl.extract_info(search, download=False))
 
     async def _resolve_track(self, query: str) -> List[Dict[str, Any]]:
-        if self._is_spotify_track(query):
-            query = await self._spotify_to_query(query)
         info = await self._extract_info(query)
+        
+        if not info:
+            return []
         
         if "entries" in info:
             tracks = []
@@ -374,7 +313,7 @@ class Music(commands.Cog):
 
     @commands.command(name="play", aliases=["p"])
     async def play(self, ctx, *, query: str):
-        """Play song from YouTube or Spotify"""
+        """Play song from YouTube"""
         # Check if user is in AFK channel
         if ctx.author.voice and ctx.guild.afk_channel and ctx.author.voice.channel == ctx.guild.afk_channel:
             embed = discord.Embed(
@@ -617,7 +556,7 @@ class Music(commands.Cog):
         
         commands_list = [
             ("**join** / connect / j", "Juntar ao teu canal de voz"),
-            ("**play** / p <pesquisa>", "Tocar do YouTube ou Spotify"),
+            ("**play** / p <pesquisa>", "Tocar do YouTube"),
             ("**skip** / sk", "Saltar música atual"),
             ("**pause** / pz", "Pausar reprodução"),
             ("**resume** / r", "Retomar reprodução"),
