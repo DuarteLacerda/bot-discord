@@ -1,6 +1,8 @@
 import asyncio
 import json
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import discord
 import aiohttp
@@ -97,6 +99,54 @@ class Basic(commands.Cog):
                 "time": current.get("time"),
             }
 
+    async def _fetch_time(self, city: str):
+        geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+        time_url = "https://api.open-meteo.com/v1/forecast"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                geo_url,
+                params={"name": city, "count": 1, "language": "pt", "format": "json"},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Falha ao consultar geocoding")
+                geo_data = await resp.json()
+
+            results = geo_data.get("results") or []
+            if not results:
+                return None
+
+            place = results[0]
+            lat = place.get("latitude")
+            lon = place.get("longitude")
+            location = ", ".join(
+                part
+                for part in [place.get("name"), place.get("admin1"), place.get("country")]
+                if part
+            )
+
+            async with session.get(
+                time_url,
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "current": "temperature_2m",
+                    "timezone": "auto",
+                },
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Falha ao consultar horário")
+                time_data = await resp.json()
+
+            current = time_data.get("current") or {}
+            return {
+                "location": location,
+                "time": current.get("time"),
+                "timezone": time_data.get("timezone"),
+            }
+
     @commands.command()
     async def ping(self, ctx):
         """Responde com pong"""
@@ -184,6 +234,65 @@ class Basic(commands.Cog):
             embed.add_field(name="Temperatura", value=f"{temperature:.1f}{unit}", inline=True)
         if data.get("time"):
             embed.set_footer(text=f"Atualizado dia {data['time']}")
+        await ctx.send(embed=embed)
+
+    @commands.command(name="hora", aliases=["time", "horario", "timezone"])
+    async def hora(self, ctx, *, city: str = None):
+        """Mostra a hora atual de uma cidade"""
+        if not city:
+            embed = discord.Embed(
+                title="❌ Sintaxe Inválida",
+                description="Uso: `L!hora <cidade>`",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        try:
+            data = await self._fetch_time(city)
+        except Exception as e:
+            embed = discord.Embed(
+                title="❌ Erro ao obter horário",
+                description=f"Falha ao consultar o serviço de horário: {e}",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if not data:
+            embed = discord.Embed(
+                title="🔎 Cidade não encontrada",
+                description="Não consegui encontrar essa cidade. Tenta novamente com outro nome.",
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        raw_time = data.get("time")
+        display_time = raw_time or "—"
+        tz_name = data.get("timezone")
+
+        if tz_name:
+            try:
+                now_local = datetime.now(ZoneInfo(tz_name))
+                display_time = now_local.strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                pass
+
+        if display_time == raw_time and raw_time:
+            try:
+                display_time = datetime.fromisoformat(raw_time).strftime("%d/%m/%Y %H:%M")
+            except ValueError:
+                display_time = raw_time
+
+        embed = discord.Embed(
+            title="🕒 Hora Atual",
+            description=data.get("location", city),
+            color=discord.Color.blue()
+        )
+        embed.add_field(name="Hora local", value=display_time, inline=False)
+        if tz_name:
+            embed.set_footer(text=f"Fuso horário: {tz_name}")
         await ctx.send(embed=embed)
 
     @commands.command(name="traduzir", aliases=["translate", "tr"])
@@ -477,6 +586,7 @@ class Basic(commands.Cog):
                 ("write <message>", "ecoar mensagem (apenas admin)"),
                 ("sum <a> <b>", "somar dois números"),
                 ("tempo <cidade>", "mostra o tempo atual de uma cidade"),
+                ("hora <cidade>", "mostra a hora atual de uma cidade"),
                 ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
@@ -578,6 +688,7 @@ class Basic(commands.Cog):
                 ("ping", "responde com pong"),
                 ("sum <a> <b>", "somar dois números"),
                 ("tempo <cidade>", "mostra o tempo atual de uma cidade"),
+                ("hora <cidade>", "mostra a hora atual de uma cidade"),
                 ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
