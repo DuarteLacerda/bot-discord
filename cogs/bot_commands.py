@@ -8,7 +8,7 @@ import discord
 import aiohttp
 from discord.ext import commands
 
-from utils.components import ConfirmView
+from utils.components import ConfirmView, PaginatedView
 
 
 class Basic(commands.Cog):
@@ -579,6 +579,29 @@ class Basic(commands.Cog):
     async def help_cmd(self, ctx):
         """Mostrar todos os comandos disponíveis"""
         prefix = ctx.prefix or "L!"
+
+        def build_embeds(title: str, color: discord.Color, sections: list):
+            embeds = []
+            for section_title, commands_list in sections:
+                embed = discord.Embed(
+                    title=title,
+                    description="Para mais informações sobre um comando, usa `L!help`",
+                    color=color,
+                )
+                section_text = "\n".join(
+                    f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in commands_list
+                )
+                embed.add_field(
+                    name=section_title,
+                    value=section_text or "(sem comandos)",
+                    inline=False,
+                )
+                embeds.append(embed)
+
+            total = len(embeds)
+            for index, embed in enumerate(embeds, start=1):
+                embed.set_footer(text=f"Página {index}/{total}")
+            return embeds
         
         if ctx.author.guild_permissions.administrator:
             general = [
@@ -633,56 +656,18 @@ class Basic(commands.Cog):
                 ("code / desafio", "começa um novo desafio de programação"),
                 ("stats_code", "mostra estatísticas dos desafios"),
             ]
+            sections = [
+                ("⚙️ Geral (Admin)", general),
+                ("🎵 Música", music),
+                ("📊 Níveis", levels),
+                ("🎮 Jogos - Termo", games),
+                ("🎲 Jogos Rápidos", quick_games),
+                ("💻 Desafios de Código", code),
+            ]
 
-            embed = discord.Embed(
-                title="📖 Ajuda (Admin)",
-                description="Para mais informações sobre um comando, usa `L!help`",
-                color=discord.Color.red()
-            )
-            
-            general_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in general)
-            embed.add_field(
-                name="⚙️ Geral (Admin)",
-                value=general_text,
-                inline=False,
-            )
-            
-            music_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in music)
-            embed.add_field(
-                name="🎵 Música",
-                value=music_text,
-                inline=False,
-            )
-            
-            levels_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in levels)
-            embed.add_field(
-                name="📊 Níveis",
-                value=levels_text,
-                inline=False,
-            )
-            
-            games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
-            embed.add_field(
-                name="🎮 Jogos - Termo",
-                value=games_text,
-                inline=False,
-            )
-            
-            quick_games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in quick_games)
-            embed.add_field(
-                name="🎲 Jogos Rápidos",
-                value=quick_games_text,
-                inline=False,
-            )
-            
-            code_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in code)
-            embed.add_field(
-                name="💻 Desafios de Código",
-                value=code_text,
-                inline=False,
-            )
-            
-            await ctx.send(embed=embed)
+            embeds = build_embeds("📖 Ajuda (Admin)", discord.Color.red(), sections)
+            view = PaginatedView(embeds)
+            await ctx.send(embed=embeds[0], view=view)
         else:
             general = [
                 ("ping", "responde com pong"),
@@ -733,56 +718,18 @@ class Basic(commands.Cog):
                 ("code / desafio", "começa um novo desafio de programação"),
                 ("stats_code", "mostra estatísticas dos desafios"),
             ]
+            sections = [
+                ("⚙️ Geral", general),
+                ("🎵 Música", music),
+                ("📊 Níveis", levels),
+                ("🎮 Jogos - Termo", games),
+                ("🎲 Jogos Rápidos", quick_games),
+                ("💻 Desafios de Código", code),
+            ]
 
-            embed = discord.Embed(
-                title="📖 Ajuda",
-                description="Para mais informações sobre um comando, usa `L!help`",
-                color=discord.Color.blurple()
-            )
-            
-            general_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in general)
-            embed.add_field(
-                name="⚙️ Geral",
-                value=general_text,
-                inline=False,
-            )
-            
-            music_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in music)
-            embed.add_field(
-                name="🎵 Música",
-                value=music_text,
-                inline=False,
-            )
-            
-            levels_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in levels)
-            embed.add_field(
-                name="📊 Níveis",
-                value=levels_text,
-                inline=False,
-            )
-            
-            games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in games)
-            embed.add_field(
-                name="🎮 Jogos - Termo",
-                value=games_text,
-                inline=False,
-            )
-            
-            quick_games_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in quick_games)
-            embed.add_field(
-                name="🎲 Jogos Rápidos",
-                value=quick_games_text,
-                inline=False,
-            )
-            
-            code_text = "\n".join(f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in code)
-            embed.add_field(
-                name="💻 Desafios de Código",
-                value=code_text,
-                inline=False,
-            )
-            
-            await ctx.send(embed=embed)
+            embeds = build_embeds("📖 Ajuda", discord.Color.blurple(), sections)
+            view = PaginatedView(embeds)
+            await ctx.send(embed=embeds[0], view=view)
 
 
 async def setup(bot: commands.Bot):

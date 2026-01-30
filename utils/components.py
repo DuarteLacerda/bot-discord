@@ -83,22 +83,34 @@ class PaginatedView(discord.ui.View):
         self.embeds = embeds
         self.current_page = 0
         self.message = None
+        self._sync_buttons()
+
+    def _sync_buttons(self):
+        if hasattr(self, "previous"):
+            self.previous.disabled = self.current_page == 0
     
     @discord.ui.button(label="◀ Previous", style=discord.ButtonStyle.grey)
     async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.current_page > 0:
             self.current_page -= 1
+            self._sync_buttons()
             await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
         else:
             await interaction.response.defer()
     
     @discord.ui.button(label="▶ Next", style=discord.ButtonStyle.grey)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not self.embeds:
+            await interaction.response.defer()
+            return
+
         if self.current_page < len(self.embeds) - 1:
             self.current_page += 1
-            await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
         else:
-            await interaction.response.defer()
+            self.current_page = 0
+
+        self._sync_buttons()
+        await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
     
     @discord.ui.button(label="Close", style=discord.ButtonStyle.danger)
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
