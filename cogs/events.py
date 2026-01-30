@@ -8,7 +8,8 @@ from discord.ext import commands
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.auto_role_name = os.getenv("AUTO_ROLE_NAME", "zｚＺ") # Nome do cargo a ser atribuído automaticamente
+        # Nome do cargo a ser atribuído automaticamente
+        self.auto_role_name = os.getenv("AUTO_ROLE_NAME", "zｚＺ").strip()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -45,15 +46,29 @@ class Events(commands.Cog):
         if self.auto_role_name:
             role = discord.utils.get(member.guild.roles, name=self.auto_role_name)
             if role:
-                try:
-                    await member.add_roles(role, reason="Auto role para novo membro")
-                    logging.info(f"✅ Cargo '{self.auto_role_name}' atribuído a {member.name}")
-                except Exception as e:
-                    logging.error(f"Erro ao atribuir cargo '{self.auto_role_name}': {e}")
+                me = member.guild.me or member.guild.get_member(self.bot.user.id)
+                if not me:
+                    logging.warning("⚠️ Não foi possível obter o membro do bot no servidor")
+                elif not me.guild_permissions.manage_roles:
+                    logging.warning("⚠️ O bot não tem permissão para Gerenciar Cargos")
+                elif role.managed:
+                    logging.warning(f"⚠️ O cargo '{self.auto_role_name}' é gerenciado e não pode ser atribuído")
+                elif role >= me.top_role:
+                    logging.warning(
+                        f"⚠️ O cargo '{self.auto_role_name}' está acima (ou igual) ao cargo do bot"
+                    )
+                else:
+                    try:
+                        await member.add_roles(role, reason="Auto role para novo membro")
+                        logging.info(f"✅ Cargo '{self.auto_role_name}' atribuído a {member.name}")
+                    except Exception as e:
+                        logging.error(f"Erro ao atribuir cargo '{self.auto_role_name}': {e}")
             else:
                 logging.warning(
                     f"⚠️ Cargo '{self.auto_role_name}' não encontrado no servidor '{member.guild.name}'"
                 )
+        else:
+            logging.warning("⚠️ AUTO_ROLE_NAME não definido; nenhum cargo será atribuído")
 
         # Tenta enviar mensagem no canal #welcome, caso contrário no #general
         channel = discord.utils.get(member.guild.text_channels, name="welcome") or \
