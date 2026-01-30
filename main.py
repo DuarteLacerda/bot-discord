@@ -21,6 +21,12 @@ class MyBot(commands.Bot):
                 logging.info(f"✅ Loaded: {ext}")
             except Exception as e:
                 logging.exception(f"❌ Falha ao carregar a extensão {ext}: {e}")
+
+        try:
+            synced = await self.tree.sync()
+            logging.info(f"✅ Synced {len(synced)} app commands")
+        except Exception as e:
+            logging.exception(f"❌ Falha ao sincronizar app commands: {e}")
         
         # Log all loaded commands
         logging.info(f"Total commands loaded: {len(self.commands)}")

@@ -147,6 +147,74 @@ class Basic(commands.Cog):
                 "timezone": time_data.get("timezone"),
             }
 
+    @staticmethod
+    def _split_host_port(address: str):
+        address = address.strip()
+        if address.startswith("[") and "]" in address:
+            host, rest = address[1:].split("]", 1)
+            if rest.startswith(":") and rest[1:].isdigit():
+                return host, int(rest[1:])
+            return host, None
+
+        if ":" in address:
+            host, port = address.rsplit(":", 1)
+            if port.isdigit():
+                return host, int(port)
+
+        return address, None
+
+    async def _query_minecraft(self, host: str, port: int | None):
+        def _lookup():
+            from mcstatus import JavaServer
+
+            targets = []
+            if port is None:
+                targets.append(host)
+                targets.append(f"{host}:25565")
+            else:
+                targets.append(f"{host}:{port}")
+
+            last_error = None
+            for target in targets:
+                try:
+                    server = JavaServer.lookup(target)
+                    status = server.status()
+                    try:
+                        latency = server.ping()
+                    except Exception:
+                        latency = getattr(status, "latency", None)
+
+                    description = getattr(status, "description", None)
+                    return {
+                        "type": "Minecraft",
+                        "players": getattr(status.players, "online", None),
+                        "max_players": getattr(status.players, "max", None),
+                        "version": getattr(status.version, "name", None),
+                    }
+                except Exception as exc:
+                    last_error = exc
+                    continue
+
+            raise last_error
+
+        return await asyncio.to_thread(_lookup)
+
+    async def _query_source(self, host: str, port: int):
+        def _lookup():
+            import a2s
+
+            info = a2s.info((host, port), timeout=3.0)
+            return {
+                "type": "Source",
+                "players": getattr(info, "player_count", None),
+                "max_players": getattr(info, "max_players", None),
+                "game": getattr(info, "game", None),
+                "map": getattr(info, "map_name", None),
+                "name": getattr(info, "server_name", None),
+            }
+
+        return await asyncio.to_thread(_lookup)
+
     @commands.command()
     async def ping(self, ctx):
         """Responde com pong"""
@@ -575,6 +643,79 @@ class Basic(commands.Cog):
             )
             await ctx.send(embed=embed)
 
+    @commands.hybrid_command(name="serverstatus", description="Verifica o status de servidores de jogos")
+    @discord.app_commands.describe(ip="IP/domínio com porta opcional (ex: 1.2.3.4:25565)")
+    async def serverstatus_cmd(self, ctx, ip: str):
+        if ctx.interaction:
+            await ctx.defer()
+
+        host, port = self._split_host_port(ip)
+
+        candidates = []
+        if port is None:
+            candidates.append(("minecraft", host, None))
+            candidates.append(("source", host, 27015))
+        else:
+            candidates.append(("minecraft", host, port))
+            candidates.append(("source", host, port))
+
+        result = None
+
+        for server_type, host, port in candidates:
+            try:
+                if server_type == "minecraft":
+                    result = await self._query_minecraft(host, port)
+                else:
+                    result = await self._query_source(host, port)
+                result["host"] = host
+                result["port"] = port
+                break
+            except Exception:
+                continue
+
+        if not result:
+            embed = discord.Embed(
+                title="🖥️ Status do Servidor",
+                description="Não foi possível contactar o servidor. Verifica o IP/porta.",
+                color=discord.Color.red(),
+            )
+            embed.add_field(name="Endereço", value=ip, inline=False)
+            await ctx.send(embed=embed)
+            return
+
+        embed = discord.Embed(
+            title="🖥️ Status do Servidor",
+            color=discord.Color.green(),
+        )
+        embed.add_field(name="Tipo", value=result.get("type", "Desconhecido"), inline=True)
+        address = result["host"] if result.get("port") is None else f"{result['host']}:{result['port']}"
+        embed.add_field(name="Endereço", value=address, inline=True)
+
+        players = result.get("players")
+        max_players = result.get("max_players")
+        if players is not None and max_players is not None:
+            embed.add_field(name="Jogadores", value=f"{players}/{max_players}", inline=True)
+
+        if result.get("type") == "Minecraft":
+            if result.get("version"):
+                embed.add_field(name="Versão", value=result["version"], inline=True)
+            if result.get("motd"):
+                motd = result["motd"]
+                if len(motd) > 200:
+                    motd = motd[:197] + "..."
+                embed.add_field(name="MOTD", value=motd, inline=False)
+            if result.get("latency") is not None:
+                embed.add_field(name="Latência", value=f"{int(result['latency'])} ms", inline=True)
+        else:
+            if result.get("game"):
+                embed.add_field(name="Jogo", value=result["game"], inline=True)
+            if result.get("map"):
+                embed.add_field(name="Mapa", value=result["map"], inline=True)
+            if result.get("name"):
+                embed.add_field(name="Nome", value=result["name"], inline=False)
+
+        await ctx.send(embed=embed)
+
     @commands.command(name="help")
     async def help_cmd(self, ctx):
         """Mostrar todos os comandos disponíveis"""
@@ -614,6 +755,7 @@ class Basic(commands.Cog):
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
+                ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
                 ("clear [amount]", "apagar mensagens do canal (apenas admin)"),
             ]
 
@@ -678,6 +820,7 @@ class Basic(commands.Cog):
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
+                ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
             ]
 
             music = [
