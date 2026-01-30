@@ -212,27 +212,28 @@ class Basic(commands.Cog):
             ]
 
             music = [
-                ("join / connect", "juntar ao canal de voz"),
+                ("join / connect / j", "juntar ao canal de voz"),
                 ("play / p <term|link>", "tocar do YouTube ou Spotify"),
                 ("skip / sk", "saltar música atual"),
                 ("stop / s", "parar e sair"),
                 ("pause / pz", "pausar"),
                 ("resume / r", "retomar"),
                 ("queue / q", "mostrar fila"),
+                ("testtone / tone", "testar áudio com tom"),
                 ("music", "mostrar comandos de música"),
             ]
 
             levels = [
                 ("level [@user]", "mostrar nível e XP do utilizador"),
-                ("rank", "mostrar top 10 do ranking"),
+                ("rank", "mostrar top 10 do ranking de XP"),
                 ("addxp @user <value>", "adicionar XP (apenas admin)"),
             ]
 
             games = [
                 ("termo", "começa um novo jogo de Termo"),
                 ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
-                ("termo_rank / rank", "mostra o ranking do jogo"),
+                ("termo_stats / stats [@user]", "mostra as estatísticas do Termo"),
+                ("termo_rank", "mostra o ranking do Termo"),
             ]
 
             code = [
@@ -281,7 +282,7 @@ class Basic(commands.Cog):
                 inline=False,
             )
             
-            embed.set_footer(text="Usa ` L!help` para detalhes")
+            embed.set_footer(text="Usa L!help para detalhes")
             await ctx.send(embed=embed)
         else:
             general = [
@@ -293,26 +294,27 @@ class Basic(commands.Cog):
             ]
 
             music = [
-                ("join / connect", "juntar ao canal de voz"),
+                ("join / connect / j", "juntar ao canal de voz"),
                 ("play / p <term|link>", "tocar do YouTube ou Spotify"),
                 ("skip / sk", "saltar música atual"),
                 ("stop / s", "parar e sair"),
                 ("pause / pz", "pausar"),
                 ("resume / r", "retomar"),
                 ("queue / q", "mostrar fila"),
+                ("testtone / tone", "testar áudio com tom"),
                 ("music", "mostrar comandos de música"),
             ]
 
             levels = [
                 ("level [@user]", "mostrar nível e XP do utilizador"),
-                ("rank", "mostrar top 10 do ranking"),
+                ("rank", "mostrar top 10 do ranking de XP"),
             ]
 
             games = [
                 ("termo", "começa um novo jogo de Termo"),
                 ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "mostra as estatísticas do jogo"),
-                ("termo_rank / rank", "mostra o ranking do jogo"),
+                ("termo_stats / stats [@user]", "mostra as estatísticas do Termo"),
+                ("termo_rank", "mostra o ranking do Termo"),
             ]
 
             code = [
@@ -361,7 +363,7 @@ class Basic(commands.Cog):
                 inline=False,
             )
             
-            embed.set_footer(text="Usa ` L!help` para detalhes")
+            embed.set_footer(text="Usa L!help para detalhes")
             await ctx.send(embed=embed)
 
 
