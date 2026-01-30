@@ -53,6 +53,144 @@ class Basic(commands.Cog):
         )
         await ctx.send(embed=embed)
 
+    @commands.command(name="traduzir", aliases=["translate", "tr"])
+    async def traduzir(self, ctx, *args):
+        """Traduz texto entre idiomas"""
+        try:
+            from deep_translator import GoogleTranslator, MyMemoryTranslator
+        except Exception:
+            embed = discord.Embed(
+                title="❌ Tradução Indisponível",
+                description="A dependência `deep-translator` não está instalada.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        try:
+            from langdetect import detect
+        except Exception:
+            detect = None
+
+        if len(args) < 2:
+            embed = discord.Embed(
+                title="❌ Sintaxe Inválida",
+                description=(
+                    "Uso: `L!traduzir <idioma_destino> <texto>`\n"
+                    "Ou:  `L!traduzir <idioma_origem> <idioma_destino> <texto>`"
+                ),
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        mm_supported = MyMemoryTranslator(source="en-GB", target="pt-PT").get_supported_languages(as_dict=True)
+        mm_supported_names = set(mm_supported.keys())
+        mm_supported_codes = set(mm_supported.values())
+
+        def normalize_mymemory_lang(token: str):
+            token_lower = token.lower()
+
+            if token_lower in mm_supported_names:
+                return mm_supported[token_lower]
+            if token in mm_supported_codes:
+                return token
+
+            preferred = {
+                "en": "en-US",
+                "pt": "pt-PT",
+                "es": "es-ES",
+                "fr": "fr-FR",
+                "de": "de-DE",
+                "it": "it-IT",
+            }
+            if token_lower in preferred and preferred[token_lower] in mm_supported_codes:
+                return preferred[token_lower]
+
+            for code in mm_supported_codes:
+                if code.lower().startswith(f"{token_lower}-"):
+                    return code
+            return None
+
+        def normalize_google_lang(code: str):
+            return code.split("-")[0] if code else code
+
+        def is_lang(token: str) -> bool:
+            token_lower = token.lower()
+            return token_lower in mm_supported_names or token in mm_supported_codes
+
+        if len(args) >= 3 and is_lang(args[0]) and is_lang(args[1]):
+            source_lang = args[0]
+            target_lang = args[1]
+            text = " ".join(args[2:])
+        else:
+            source_lang = "auto"
+            target_lang = args[0]
+            text = " ".join(args[1:])
+
+        target_code = normalize_mymemory_lang(target_lang)
+        if not target_code:
+            embed = discord.Embed(
+                title="❌ Idioma Inválido",
+                description=(
+                    "Idioma de destino inválido. Usa um código suportado (ex.: `en`, `pt`, `es`)."
+                ),
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        source_code = normalize_mymemory_lang(source_lang) if source_lang != "auto" else None
+        if source_lang != "auto" and not source_code:
+            embed = discord.Embed(
+                title="❌ Idioma Inválido",
+                description=(
+                    "Idioma de origem inválido. Usa um código suportado (ex.: `pt`, `en`)."
+                ),
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if source_lang == "auto":
+            if detect:
+                try:
+                    detected = detect(text)
+                    source_code = normalize_mymemory_lang(detected) or detected
+                except Exception:
+                    source_code = None
+
+        translated = None
+        engine = "MyMemory"
+        try:
+            if not source_code:
+                raise ValueError("source language not detected")
+            translated = MyMemoryTranslator(source=source_code, target=target_code).translate(text)
+        except Exception as e:
+            try:
+                engine = "Google"
+                g_source = normalize_google_lang(source_code) if source_code else "auto"
+                g_target = normalize_google_lang(target_code) if target_code else target_lang
+                translated = GoogleTranslator(source=g_source, target=g_target).translate(text)
+            except Exception as e2:
+                embed = discord.Embed(
+                    title="❌ Erro na Tradução",
+                    description=f"Falha ao traduzir: {e2}",
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+                return
+
+        embed = discord.Embed(
+            title="🌍 Tradução",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="Texto Original", value=text, inline=False)
+        embed.add_field(name="Texto Traduzido", value=translated, inline=False)
+        used_source = source_code or source_lang
+        embed.set_footer(text=f"{used_source} → {target_code} via {engine}")
+        await ctx.send(embed=embed)
+
     @commands.command()
     async def info(self, ctx, member: discord.Member = None):
         """Mostrar informações do utilizador"""
@@ -205,10 +343,11 @@ class Basic(commands.Cog):
                 ("ping", "responde com pong"),
                 ("write <message>", "ecoar mensagem (apenas admin)"),
                 ("sum <a> <b>", "somar dois números"),
+                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
-                ("clear [amount]", "apagar mensagens (apenas admin)"),
+                ("clear [amount]", "apagar mensagens do canal (apenas admin)"),
             ]
 
             music = [
@@ -226,7 +365,7 @@ class Basic(commands.Cog):
             levels = [
                 ("level [@user]", "mostrar nível e XP do utilizador"),
                 ("rank", "mostrar top 10 do ranking de XP"),
-                ("addxp @user <value>", "adicionar XP (apenas admin)"),
+                ("addxp @user <value>", "adicionar XP"),
             ]
 
             games = [
@@ -288,6 +427,7 @@ class Basic(commands.Cog):
             general = [
                 ("ping", "responde com pong"),
                 ("sum <a> <b>", "somar dois números"),
+                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
