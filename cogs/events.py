@@ -8,7 +8,7 @@ from discord.ext import commands
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.auto_role_name = os.getenv("AUTO_ROLE_NAME", "")
+        self.auto_role_name = os.getenv("AUTO_ROLE_NAME", "zｚＺ") # Nome do cargo a ser atribuído automaticamente
 
     @commands.Cog.listener()
     async def on_ready(self):
