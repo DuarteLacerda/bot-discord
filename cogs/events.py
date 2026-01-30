@@ -1,5 +1,8 @@
+import json
 import logging
 import os
+import random
+import unicodedata
 
 import discord
 from discord.ext import commands
@@ -10,6 +13,29 @@ class Events(commands.Cog):
         self.bot = bot
         # Nome do cargo a ser atribuído automaticamente
         self.auto_role_name = os.getenv("AUTO_ROLE_NAME", "zｚＺ").strip()
+        
+        # Carrega as respostas automáticas do JSON
+        self.auto_responses = self._load_auto_responses()
+    
+    def _load_auto_responses(self) -> dict:
+        """Carrega o dicionário de gírias e respostas automáticas do JSON"""
+        json_path = os.path.join(os.path.dirname(__file__), "..", "data", "auto_responses.json")
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                logging.info(f"✅ Auto-respostas carregadas: {len(data)} gírias")
+                return data
+        except FileNotFoundError:
+            logging.warning(f"⚠️ Ficheiro {json_path} não encontrado. Auto-respostas desativadas.")
+            return {}
+        except json.JSONDecodeError as e:
+            logging.error(f"❌ Erro ao ler JSON de auto-respostas: {e}")
+            return {}
+    
+    def _remove_accents(self, text: str) -> str:
+        """Remove acentos de uma string"""
+        nfd = unicodedata.normalize('NFD', text)
+        return ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -21,6 +47,51 @@ class Events(commands.Cog):
             name="L!help"
         )
         await self.bot.change_presence(activity=activity, status=discord.Status.online)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        """Detecta gírias nas mensagens e responde automaticamente"""
+        # Ignora mensagens do próprio bot
+        if message.author.bot:
+            return
+        
+        # Converte a mensagem para minúsculas para comparação
+        message_lower = message.content.lower()
+        message_no_accents = self._remove_accents(message_lower)
+        
+        # Divide a mensagem em palavras (separadas por espaços, vírgulas, etc.)
+        import re
+        words = re.findall(r'\b\w+\b', message_lower)
+        words_no_accents = re.findall(r'\b\w+\b', message_no_accents)
+        
+        # Verifica se alguma gíria está na mensagem (com ou sem acentos)
+        for slang, responses in self.auto_responses.items():
+            slang_lower = slang.lower()
+            slang_no_accents = self._remove_accents(slang_lower)
+            
+            # Para gírias multi-palavra (ex: "na boa"), procura na mensagem completa
+            if ' ' in slang_lower:
+                if slang_lower in message_lower or slang_no_accents in message_no_accents:
+                    response = random.choice(responses)
+                    try:
+                        await message.channel.send(response)
+                        logging.info(f"✅ Auto-resposta enviada para gíria '{slang}' no canal {message.channel.name}")
+                    except Exception as e:
+                        logging.error(f"Erro ao enviar auto-resposta: {e}")
+                    break
+            # Para gírias de uma palavra, verifica se é uma palavra completa
+            else:
+                if slang_lower in words or slang_no_accents in words_no_accents:
+                    response = random.choice(responses)
+                    try:
+                        await message.channel.send(response)
+                        logging.info(f"✅ Auto-resposta enviada para gíria '{slang}' no canal {message.channel.name}")
+                    except Exception as e:
+                        logging.error(f"Erro ao enviar auto-resposta: {e}")
+                    break
+        
+        # Permite que outros comandos sejam processados
+        await self.bot.process_commands(message)
 
     @commands.Cog.listener()
     async def on_error(self, event_method, *args, **kwargs):
