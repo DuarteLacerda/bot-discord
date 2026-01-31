@@ -18,12 +18,23 @@ A complete Discord bot with music system, levels/XP, and moderation tools.
 - Automatic case opening on level up
 - Various rewards (XP, bonuses, etc.)
 
+### 🌤️ Weather & Time
+- Current weather for any city worldwide
+- Local time for any city
+- 7-day weather forecast with detailed information
+- Temperature, precipitation, and wind speed data
+
 ### 💬 Auto-Responses
 - Automatic detection of Portuguese slang (from Portugal)
 - Gaming terminology responses
 - Multiple random responses per keyword
 - Accent-insensitive detection (works with "bué" or "bue")
 - Easy to customize via JSON file
+
+### 🎮 Games
+- **Termo**: Portuguese Wordle with statistics and rankings
+- **Quick Games**: Rock-paper-scissors, dice, coin flip, 8-ball, number guessing
+- **Code Challenges**: Programming challenges to practice coding
 
 ### 🛡️ Moderation
 - Message clearing command
@@ -35,6 +46,8 @@ A complete Discord bot with music system, levels/XP, and moderation tools.
 - User information
 - Server information
 - Context-aware help (shows different commands to admins)
+- Text translation between languages
+- Server status (Minecraft/CS:GO)
 
 ## Installation 🚀
 
@@ -107,55 +120,62 @@ The bot automatically responds when it detects these keywords in messages (case 
 
 ## Commands 📝
 
-### General
-- `l!ping` - Shows bot latency
-- `l!sum <a> <b>` - Adds two numbers
-- `l!tempo` / `l!weather` / `l!clima <city>` - Shows current weather for a city
-- `l!hora` / `l!time` / `l!horario` / `l!timezone <city>` - Shows current time for a city
-- `l!traduzir` / `l!translate` / `l!tr <dest> <text>` - Translates text between languages
-- `l!info [@user]` - User information
-- `l!server` / `l!guild` - Server information
-- `l!rules` - Shows server rules
-- `l!help` - Shows all commands (context-aware)
+### ⚙️ Basic
+- `L!ping` - Shows bot latency
+- `L!sum <a> <b>` - Adds two numbers
 
-### Music
-- `l!join` / `l!connect` - Joins your voice channel
-- `l!play` / `l!p <term|link>` - Plays from YouTube or Spotify
-- `l!skip` / `l!sk` - Skips current track
-- `l!stop` / `l!s` - Stops and leaves
-- `l!pause` / `l!pz` - Pauses
-- `l!resume` / `l!r` - Resumes
-- `l!queue` / `l!q` - Shows the queue
-- `l!testtone` / `l!tone` - Tests audio with a tone
-- `l!music` - Shows music commands
+### ℹ️ Information
+- `L!info [@user]` - User information
+- `L!server` / `L!guild` - Server information
+- `L!rules` - Shows server rules
+- `L!serverstatus <ip>` - Minecraft/CS:GO server status
 
-### Levels
-- `l!level [@user]` - Shows level and XP
-- `l!rank` - Server top 10 leaderboard
-- `l!addxp @user <value>` - Adds XP (admins only)
+### 🌤️ Weather
+- `L!tempo` / `L!weather` / `L!clima <city>` - Shows current weather for a city
+- `L!hora` / `L!time` / `L!horario` / `L!timezone <city>` - Shows current time for a city
+- `L!previsao` / `L!previsão` / `L!forecast <city>` - 7-day weather forecast
 
-### Termo Game
-- `l!termo` - Starts a new Termo game (Portuguese Wordle)
-- `l!termo_quit` - Exits current game
-- `l!termo_stats [@user]` - Shows Termo statistics
-- `l!termo_rank` - Shows Termo ranking
+### 🔧 Utilities
+- `L!traduzir` / `L!translate` / `L!tr <dest> <text>` - Translates text between languages
 
-### Quick Games
-- `l!ppt` / `l!pedrapapeltesoura` / `l!rps <rock|paper|scissors>` - Plays rock, paper, scissors
-- `l!dado` / `l!dice` / `l!roll [sides]` - Rolls a dice with N sides
-- `l!moeda` / `l!coin` / `l!flip` - Flips a coin
-- `l!escolher` / `l!choose` / `l!pick <op1> <op2> ...` - Lets the bot choose for you
-- `l!8ball` / `l!bola8` / `l!pergunta <question>` - Ask the magic 8-ball
-- `l!adivinhar` / `l!guess` / `l!numero <number>` - Guess the number between 1 and 10
-- `l!jogos` / `l!games` / `l!listarjogos` - Shows all available games
+### 🎵 Music
+- `L!join` / `L!connect` / `L!j` - Joins your voice channel
+- `L!play` / `L!p <term|link>` - Plays from YouTube or Spotify
+- `L!skip` / `L!sk` - Skips current track
+- `L!stop` / `L!s` - Stops and leaves
+- `L!pause` / `L!pz` - Pauses
+- `L!resume` / `L!r` - Resumes
+- `L!queue` / `L!q` - Shows the queue
+- `L!testtone` / `L!tone` - Tests audio with a tone
+- `L!music` - Shows music commands
 
-### Code Challenges
-- `l!code` / `l!desafio` / `l!challenge` / `l!coding` - Starts a programming challenge
-- `l!stats_code` - Shows code challenge statistics
+### 📊 Levels
+- `L!level [@user]` - Shows level and XP
+- `L!rank` - Server top 10 leaderboard
 
-### Admin Commands
-- `l!write <message>` - Echoes message (admins only)
-- `l!clear [amount]` - Deletes messages from channel (admins only)
+### 🎮 Termo Game
+- `L!termo` - Starts a new Termo game (Portuguese Wordle)
+- `L!termo_quit` / `L!quit` - Exits current game
+- `L!termo_stats` / `L!stats [@user]` - Shows Termo statistics
+- `L!termo_rank` - Shows Termo ranking
+
+### 🎲 Quick Games
+- `L!ppt` / `L!pedrapapeltesoura` / `L!rps <rock|paper|scissors>` - Rock, paper, scissors
+- `L!dado` / `L!dice` / `L!roll [sides]` - Rolls a dice with N sides
+- `L!moeda` / `L!coin` / `L!flip` - Flips a coin
+- `L!escolher` / `L!choose` / `L!pick <op1> <op2> ...` - Lets the bot choose for you
+- `L!8ball` / `L!bola8` / `L!pergunta <question>` - Ask the magic 8-ball
+- `L!adivinhar` / `L!guess` / `L!numero <number>` - Guess the number between 1 and 10
+- `L!jogos` / `L!games` / `L!listarjogos` - Shows all available games
+
+### 💻 Code Challenges
+- `L!code` / `L!desafio` / `L!challenge` / `L!coding` - Starts a programming challenge
+- `L!stats_code` - Shows code challenge statistics
+
+### 👑 Admin Commands
+- `L!write <message>` - Echoes message
+- `L!clear [amount]` - Deletes messages from channel
+- `L!addxp @user <value>` - Adds XP to a user
 
 ## Running in Background (Linux)
 

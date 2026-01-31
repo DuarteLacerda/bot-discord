@@ -147,6 +147,66 @@ class Basic(commands.Cog):
                 "timezone": time_data.get("timezone"),
             }
 
+    async def _fetch_forecast(self, city: str):
+        """Obtém previsão meteorológica para os próximos 7 dias"""
+        geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+        forecast_url = "https://api.open-meteo.com/v1/forecast"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                geo_url,
+                params={"name": city, "count": 1, "language": "pt", "format": "json"},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Falha ao consultar geocoding")
+                geo_data = await resp.json()
+
+            results = geo_data.get("results") or []
+            if not results:
+                return None
+
+            place = results[0]
+            lat = place.get("latitude")
+            lon = place.get("longitude")
+            location = ", ".join(
+                part
+                for part in [place.get("name"), place.get("admin1"), place.get("country")]
+                if part
+            )
+
+            async with session.get(
+                forecast_url,
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max",
+                    "timezone": "auto",
+                },
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Falha ao consultar previsão")
+                forecast_data = await resp.json()
+
+            daily = forecast_data.get("daily") or {}
+            daily_units = forecast_data.get("daily_units") or {}
+            
+            return {
+                "location": location,
+                "dates": daily.get("time", []),
+                "weather_codes": daily.get("weather_code", []),
+                "temp_max": daily.get("temperature_2m_max", []),
+                "temp_min": daily.get("temperature_2m_min", []),
+                "precipitation": daily.get("precipitation_sum", []),
+                "wind_speed": daily.get("wind_speed_10m_max", []),
+                "units": {
+                    "temp": daily_units.get("temperature_2m_max", "°C"),
+                    "precipitation": daily_units.get("precipitation_sum", "mm"),
+                    "wind": daily_units.get("wind_speed_10m_max", "km/h"),
+                }
+            }
+
     @staticmethod
     def _split_host_port(address: str):
         address = address.strip()
@@ -361,6 +421,74 @@ class Basic(commands.Cog):
         embed.add_field(name="Hora local", value=display_time, inline=False)
         if tz_name:
             embed.set_footer(text=f"Fuso horário: {tz_name}")
+        await ctx.send(embed=embed)
+
+    @commands.command(name="previsao", aliases=["forecast", "previsão"])
+    async def previsao(self, ctx, *, city: str = None):
+        """Mostra a previsão meteorológica para os próximos 7 dias"""
+        if not city:
+            embed = discord.Embed(
+                title="❌ Sintaxe Inválida",
+                description="Uso: `L!previsao <cidade>`",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        try:
+            data = await self._fetch_forecast(city)
+        except Exception as e:
+            embed = discord.Embed(
+                title="❌ Erro ao obter previsão",
+                description=f"Falha ao consultar o serviço de meteorologia: {e}",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if not data:
+            embed = discord.Embed(
+                title="🔎 Cidade não encontrada",
+                description="Não consegui encontrar essa cidade. Tenta novamente com outro nome.",
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        dates = data.get("dates", [])
+        weather_codes = data.get("weather_codes", [])
+        temp_max = data.get("temp_max", [])
+        temp_min = data.get("temp_min", [])
+        precipitation = data.get("precipitation", [])
+        wind_speed = data.get("wind_speed", [])
+        units = data.get("units", {})
+
+        embed = discord.Embed(
+            title="📅 Previsão para 7 Dias",
+            description=data.get("location", city),
+            color=discord.Color.blue()
+        )
+
+        # Adicionar previsão para cada dia
+        for i in range(min(7, len(dates))):
+            try:
+                date_str = dates[i]
+                date_obj = datetime.fromisoformat(date_str)
+                day_name = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"][date_obj.weekday()]
+                formatted_date = f"{day_name}, {date_obj.strftime('%d/%m')}"
+            except:
+                formatted_date = dates[i]
+
+            weather_desc = self._weather_description(weather_codes[i]) if i < len(weather_codes) else "—"
+            t_max = f"{temp_max[i]:.1f}{units.get('temp', '°C')}" if i < len(temp_max) else "—"
+            t_min = f"{temp_min[i]:.1f}{units.get('temp', '°C')}" if i < len(temp_min) else "—"
+            precip = f"{precipitation[i]:.1f}{units.get('precipitation', 'mm')}" if i < len(precipitation) else "—"
+            wind = f"{wind_speed[i]:.1f}{units.get('wind', 'km/h')}" if i < len(wind_speed) else "—"
+
+            field_value = f"**{weather_desc}**\n🌡️ {t_min} - {t_max}\n💧 Precipitação: {precip}\n💨 Vento: {wind}"
+            embed.add_field(name=formatted_date, value=field_value, inline=True)
+
+        embed.set_footer(text="Fonte: Open-Meteo")
         await ctx.send(embed=embed)
 
     @commands.command(name="traduzir", aliases=["translate", "tr"])
@@ -745,18 +873,32 @@ class Basic(commands.Cog):
             return embeds
         
         if ctx.author.guild_permissions.administrator:
-            general = [
+            basic = [
                 ("ping", "responde com pong"),
-                ("write <message>", "ecoar mensagem (apenas admin)"),
                 ("sum <a> <b>", "somar dois números"),
-                ("tempo <cidade>", "mostra o tempo atual de uma cidade"),
-                ("hora <cidade>", "mostra a hora atual de uma cidade"),
-                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
+            ]
+
+            info = [
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
                 ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
-                ("clear [amount]", "apagar mensagens do canal (apenas admin)"),
+            ]
+
+            weather = [
+                ("tempo <cidade>", "mostra o tempo atual"),
+                ("hora <cidade>", "mostra a hora atual"),
+                ("previsao <cidade>", "previsão para 7 dias"),
+            ]
+
+            utils = [
+                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
+            ]
+
+            admin = [
+                ("write <message>", "ecoar mensagem"),
+                ("clear [amount]", "apagar mensagens do canal"),
+                ("addxp @user <value>", "adicionar XP a um utilizador"),
             ]
 
             music = [
@@ -772,55 +914,68 @@ class Basic(commands.Cog):
             ]
 
             levels = [
-                ("level [@user]", "mostrar nível e XP do utilizador"),
-                ("rank", "mostrar top 10 do ranking de XP"),
-                ("addxp @user <value>", "adicionar XP"),
+                ("level [@user]", "mostrar nível e XP"),
+                ("rank", "mostrar top 10 do ranking"),
             ]
 
             games = [
                 ("termo", "começa um novo jogo de Termo"),
                 ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "mostra as estatísticas do Termo"),
-                ("termo_rank", "mostra o ranking do Termo"),
+                ("termo_stats / stats [@user]", "estatísticas do Termo"),
+                ("termo_rank", "ranking do Termo"),
             ]
 
             quick_games = [
-                ("ppt <pedra|papel|tesoura>", "joga pedra, papel ou tesoura"),
+                ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
                 ("dado [lados]", "rola um dado de N lados"),
                 ("moeda", "atira uma moeda ao ar"),
-                ("escolher <op1> <op2> ...", "deixa o bot escolher por ti"),
-                ("8ball <pergunta>", "faz uma pergunta à bola mágica"),
-                ("adivinhar <número>", "adivinha o número entre 1 e 10"),
-                ("jogos", "mostra todos os jogos disponíveis"),
+                ("escolher <op1> <op2> ...", "deixa o bot escolher"),
+                ("8ball <pergunta>", "pergunta à bola mágica"),
+                ("adivinhar <número>", "adivinha o número (1-10)"),
+                ("jogos", "mostra todos os jogos"),
             ]
 
             code = [
-                ("code / desafio", "começa um novo desafio de programação"),
-                ("stats_code", "mostra estatísticas dos desafios"),
+                ("code / desafio", "desafio de programação"),
+                ("stats_code", "estatísticas dos desafios"),
             ]
             sections = [
-                ("⚙️ Geral (Admin)", general),
+                ("⚙️ Básico", basic),
+                ("ℹ️ Informação", info),
+                ("🌤️ Meteorologia", weather),
+                ("🔧 Utilidades", utils),
                 ("🎵 Música", music),
                 ("📊 Níveis", levels),
                 ("🎮 Jogos - Termo", games),
                 ("🎲 Jogos Rápidos", quick_games),
                 ("💻 Desafios de Código", code),
+                ("👑 Admin", admin),
             ]
 
             embeds = build_embeds("📖 Ajuda (Admin)", discord.Color.red(), sections)
             view = PaginatedView(embeds)
             await ctx.send(embed=embeds[0], view=view)
         else:
-            general = [
+            basic = [
                 ("ping", "responde com pong"),
                 ("sum <a> <b>", "somar dois números"),
-                ("tempo <cidade>", "mostra o tempo atual de uma cidade"),
-                ("hora <cidade>", "mostra a hora atual de uma cidade"),
-                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
+            ]
+
+            info = [
                 ("info [@user]", "mostrar informações do utilizador"),
                 ("server / guild", "mostrar informações do servidor"),
                 ("rules", "mostrar regras do servidor"),
                 ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
+            ]
+
+            weather = [
+                ("tempo <cidade>", "mostra o tempo atual"),
+                ("hora <cidade>", "mostra a hora atual"),
+                ("previsao <cidade>", "previsão para 7 dias"),
+            ]
+
+            utils = [
+                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
             ]
 
             music = [
@@ -836,33 +991,36 @@ class Basic(commands.Cog):
             ]
 
             levels = [
-                ("level [@user]", "mostrar nível e XP do utilizador"),
-                ("rank", "mostrar top 10 do ranking de XP"),
+                ("level [@user]", "mostrar nível e XP"),
+                ("rank", "mostrar top 10 do ranking"),
             ]
 
             games = [
                 ("termo", "começa um novo jogo de Termo"),
                 ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "mostra as estatísticas do Termo"),
-                ("termo_rank", "mostra o ranking do Termo"),
+                ("termo_stats / stats [@user]", "estatísticas do Termo"),
+                ("termo_rank", "ranking do Termo"),
             ]
 
             quick_games = [
-                ("ppt <pedra|papel|tesoura>", "joga pedra, papel ou tesoura"),
+                ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
                 ("dado [lados]", "rola um dado de N lados"),
                 ("moeda", "atira uma moeda ao ar"),
-                ("escolher <op1> <op2> ...", "deixa o bot escolher por ti"),
-                ("8ball <pergunta>", "faz uma pergunta à bola mágica"),
-                ("adivinhar <número>", "adivinha o número entre 1 e 10"),
-                ("jogos", "mostra todos os jogos disponíveis"),
+                ("escolher <op1> <op2> ...", "deixa o bot escolher"),
+                ("8ball <pergunta>", "pergunta à bola mágica"),
+                ("adivinhar <número>", "adivinha o número (1-10)"),
+                ("jogos", "mostra todos os jogos"),
             ]
 
             code = [
-                ("code / desafio", "começa um novo desafio de programação"),
-                ("stats_code", "mostra estatísticas dos desafios"),
+                ("code / desafio", "desafio de programação"),
+                ("stats_code", "estatísticas dos desafios"),
             ]
             sections = [
-                ("⚙️ Geral", general),
+                ("⚙️ Básico", basic),
+                ("ℹ️ Informação", info),
+                ("🌤️ Meteorologia", weather),
+                ("🔧 Utilidades", utils),
                 ("🎵 Música", music),
                 ("📊 Níveis", levels),
                 ("🎮 Jogos - Termo", games),
