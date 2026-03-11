@@ -174,7 +174,7 @@ The bot automatically responds when it detects these keywords in messages (case 
 
 ### 👑 Admin Commands
 - `L!write <message>` - Echoes message
-- `L!clear [amount]` - Deletes messages from channel
+- `L!clear [amount]` - Deletes messages from the channel
 - `L!addxp @user <value>` - Adds XP to a user
 
 ## Running in Background (Linux)
