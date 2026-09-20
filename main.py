@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG)
 class MyBot(commands.Bot):
     async def setup_hook(self):
         # Carrega extensões antes de conectar
-        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo", "cogs.code_challenges", "cogs.games"]:
+        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo", "cogs.code_challenges", "cogs.games", "cogs.reminders", "cogs.polls", "cogs.automod", "cogs.moderation"]:
             try:
                 logging.info(f"Loading extension: {ext}")
                 await self.load_extension(ext)
@@ -56,24 +56,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.voice_states = True
 intents.members = True
-bot = MyBot(command_prefix='L!', intents=intents, help_command=None)
+intents.presences = True
 
-@bot.event
-async def on_command_error(ctx, error):
-    """Error handler global para comandos"""
-    logging.error(f"Error in command {ctx.command}: {error}")
-    logging.exception(error)
-    
-    # Send error to channel
-    try:
-        embed = discord.Embed(
-            title="❌ Erro no Comando",
-            description=f"```{str(error)[:500]}```",
-            color=discord.Color.red()
-        )
-        await ctx.send(embed=embed)
-    except:
-        pass
+bot = MyBot(command_prefix='L!', intents=intents, help_command=None)
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:

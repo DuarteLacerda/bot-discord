@@ -1,0 +1,9 @@
+{
+  "802883554080981022": {
+    "enabled": true,
+    "anti_spam": true,
+    "anti_links": true,
+    "mods": [],
+    "whitelist_domains": []
+  }
+}

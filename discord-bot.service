@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/l4ce/discord_bot
-ExecStart=/home/l4ce/discord_bot/Venv/bin/python /home/l4ce/discord_bot/main.py
+WorkingDirectory=/home/lace/bot-discord
+ExecStart=/home/lace/bot-discord/Venv/bin/python /home/lace/bot-discord/main.py
 Restart=always
 RestartSec=5
 

@@ -1,6 +1,6 @@
 # Discord Bot 🤖
 
-A complete Discord bot with music system, levels/XP, and moderation tools.
+A complete Discord bot with music system, levels/XP, word games, reminders, polls, auto-moderation, and moderation tools.
 
 ## Features ✨
 
@@ -36,10 +36,31 @@ A complete Discord bot with music system, levels/XP, and moderation tools.
 - **Quick Games**: Rock-paper-scissors, dice, coin flip, 8-ball, number guessing
 - **Code Challenges**: Programming challenges to practice coding
 
-### 🛡️ Moderation
-- Message clearing command
-- Echo command (admins only)
-- JSON-based rules system (easy to edit)
+### ⏰ Reminders
+- Set a reminder with a natural duration (`10m`, `2h`, `1d2h30m`)
+- Delivered by DM, falling back to the channel if DMs are closed
+- List and cancel your own pending reminders
+- Persists across restarts (`data/reminders.json`)
+
+### 📊 Polls
+- Quick yes/no polls or up to 10 custom options, voted on via reactions
+- Auto-close after a configurable time (24h by default, `--tempo` flag to customize)
+- Manual close available to the poll's author or an admin
+- Results posted automatically when a poll closes
+
+### 🛡️ Auto-Moderation
+- **Anti-spam**: rapid message bursts are deleted and the sender is timed out
+- **Anti-links**: messages containing non-whitelisted links are deleted automatically
+- Per-server on/off switches for the whole system or each check individually
+- Domain whitelist, fully configurable
+- Own permission system independent of Discord roles: grant/revoke an "automod moderator" status that exempts a user from checks and lets them view current settings
+- All settings persisted per server (`data/automod.json`)
+
+### 🔨 Moderation
+- Warn system with persistent per-user history (`data/warnings.json`)
+- Kick and ban (respecting real Discord permissions), with automatic DM to the affected user
+- Unban by user ID
+- Optional mod-log channel: every warn/kick/ban/unban is automatically logged there
 
 ### 🔧 Others
 - Ping/pong
@@ -118,6 +139,13 @@ Edit `data/auto_responses.json` to customize slang responses:
 ```
 The bot automatically responds when it detects these keywords in messages (case and accent insensitive).
 
+### Auto-Moderation
+Configured per server via commands (see below), not a file to edit by hand. Defaults:
+- Anti-spam: 5 messages in 6 seconds triggers a 5-minute timeout
+- Anti-links: any link outside the whitelist is deleted
+
+Adjust the thresholds by editing the constants at the top of `cogs/automod.py` (`SPAM_MSG_LIMIT`, `SPAM_WINDOW_SECONDS`, `SPAM_TIMEOUT_MINUTES`).
+
 ## Commands 📝
 
 ### ⚙️ Basic
@@ -172,6 +200,38 @@ The bot automatically responds when it detects these keywords in messages (case 
 - `L!code` / `L!desafio` / `L!challenge` / `L!coding` - Starts a programming challenge
 - `L!stats_code` - Shows code challenge statistics
 
+### ⏰ Reminders
+- `L!lembrar <tempo> <mensagem>` - Creates a reminder (e.g. `10m`, `2h`, `1d`, `1d2h30m`)
+- `L!lembretes` - Lists your pending reminders
+- `L!lembrete_cancelar <id>` - Cancels a reminder
+
+### 📊 Polls
+- `L!poll <question>` - Yes/no poll (👍/👎), expires in 24h by default
+- `L!poll <question> | opt1 | opt2 | ...` - Multiple-choice poll (up to 10 options)
+- `L!poll <question> | opt1 | opt2 | --tempo 2h` - Custom expiry (5 min to 7 days)
+- `L!poll_fechar <message_id>` - Closes a poll early and shows results (author or admin)
+
+### 🛡️ Auto-Moderation
+- `L!automod` - Shows current auto-moderation status
+- `L!automod_whitelist` - Lists whitelisted domains
+- `L!automod_perms` - Lists who has automod moderator permission
+- `L!automod_on` / `L!automod_off` - Enables/disables the whole system *(admin)*
+- `L!automod_antispam <on|off>` - Toggles anti-spam only *(admin)*
+- `L!automod_antilinks <on|off>` - Toggles anti-links only *(admin)*
+- `L!automod_whitelist_add <domain>` - Allows a domain (e.g. `youtube.com`) *(admin)*
+- `L!automod_whitelist_remove <domain>` - Removes a domain from the whitelist *(admin)*
+- `L!automod_addperm @user` - Grants automod moderator permission *(admin)*
+- `L!automod_removeperm @user` - Revokes that permission *(admin)*
+
+### 🔨 Moderation
+- `L!warn @user <reason>` - Warns a member *(admin or automod moderator)*
+- `L!warnings [@user]` - Shows warning history (omit = your own)
+- `L!warn_remove @user <id>` - Removes a specific warning *(admin)*
+- `L!kick @user [reason]` - Kicks a member *(requires Kick Members)*
+- `L!ban @user [reason]` - Bans a member *(requires Ban Members)*
+- `L!unban <user_id>` - Removes a ban *(requires Ban Members)*
+- `L!modlog_canal [#channel]` - Sets or shows the mod-log channel *(admin)*
+
 ### 👑 Admin Commands
 - `L!write <message>` - Echoes message
 - `L!clear [amount]` - Deletes messages from the channel
@@ -211,25 +271,33 @@ screen -r discordbot
 
 ```
 discord-bot/
-├── main.py              # Bot initialization
+├── main.py                  # Bot initialization
 ├── cogs/
-│   ├── bot_commands.py  # General commands and help
-│   ├── music.py         # Music cog
-│   ├── levels.py        # Levels cog
-│   ├── events.py        # Event listeners and auto-responses
-│   ├── termo.py         # Termo game
-│   ├── code_challenges.py # Coding challenges
-│   └── games.py         # Games
+│   ├── bot_commands.py      # General commands and help
+│   ├── music.py             # Music cog
+│   ├── levels.py            # Levels cog
+│   ├── events.py            # Event listeners and auto-responses
+│   ├── termo.py             # Termo game
+│   ├── code_challenges.py   # Coding challenges
+│   ├── games.py             # Games
+│   ├── reminders.py         # Reminders
+│   ├── polls.py             # Polls
+│   ├── automod.py           # Anti-spam / anti-links + permission system
+│   └── moderation.py        # Warns, kick, ban, mod-log
 ├── data/
-│   ├── auto_responses.json # Slang auto-responses
-│   ├── rules.json       # Server rules
-│   ├── termo_palavras.json # Termo words
-│   └── code_challenges.json # Challenge data
-├── database/            # Database module
-├── utils/               # Utility components
-├── .env.example         # .env template
-├── requirements.txt     # Python dependencies
-└── README.md            # This file
+│   ├── auto_responses.json  # Slang auto-responses
+│   ├── rules.json           # Server rules
+│   ├── termo_palavras.json  # Termo words
+│   ├── code_challenges.json # Challenge data
+│   ├── reminders.json       # Pending reminders
+│   ├── automod.json         # Per-server auto-mod settings
+│   ├── warnings.json        # Per-server warning history
+│   └── modlog.json          # Per-server mod-log channel
+├── database/                # Database module
+├── utils/                   # Utility components
+├── .env.example              # .env template
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
 ```
 
 ## Dependencies 📦
@@ -244,6 +312,8 @@ discord-bot/
 - `mcstatus` - Minecraft server status
 - `a2s` - Source engine query protocol
 - `audioop-lts` - Audio processing
+
+> Reminders, polls, auto-moderation and moderation use only the standard library plus `discord.py` — no extra dependencies needed.
 
 ## Troubleshooting 🔧
 
@@ -271,6 +341,14 @@ pip install -r requirements.txt
 - Check if bot has message permissions in the channel
 - Ensure the keywords are in the JSON file
 
+### Auto-mod timeout isn't working
+- Confirm the bot has the **Moderate Members** (Timeout Members) permission on the server
+- Deletion of spam messages will still work even if the timeout silently fails
+
+### Kick/ban commands say "permissões insuficientes"
+- Confirm the bot has **Kick Members** / **Ban Members** respectively
+- Confirm the bot's role is positioned above the target member's role in the role list
+
 ## Contributing 🤝
 
 Feel free to suggest improvements or report bugs!
@@ -282,5 +360,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 **Bot Prefix:** `L!`  
-**Version:** 2.0  
+**Version:** 2.1  
 **Developed by:** Duarte Lacerda

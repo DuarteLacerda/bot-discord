@@ -844,6 +844,156 @@ class Basic(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    # ---------- helper: constrói as secções de ajuda ----------
+
+    def _build_help_sections(self, is_admin: bool) -> list:
+        """Devolve a lista de secções (título, comandos) para o help.
+        Centraliza tudo num só sítio — para adicionar um comando novo
+        basta editar aqui, não é preciso duplicar nada."""
+
+        basic = [
+            ("ping", "responde com pong"),
+            ("sum <a> <b>", "somar dois números"),
+        ]
+
+        info = [
+            ("info [@user]", "mostrar informações do utilizador"),
+            ("server / guild", "mostrar informações do servidor"),
+            ("rules", "mostrar regras do servidor"),
+            ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
+        ]
+
+        weather = [
+            ("tempo <cidade>", "mostra o tempo atual"),
+            ("hora <cidade>", "mostra a hora atual"),
+            ("previsao <cidade>", "previsão para 7 dias"),
+        ]
+
+        utils = [
+            ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
+        ]
+
+        music_1 = [
+            ("join / connect / j", "juntar ao canal de voz"),
+            ("play / p <term|link>", "tocar do YouTube ou Spotify"),
+            ("skip / sk", "saltar música atual"),
+            ("stop / s", "parar e sair"),
+            ("pause / pz", "pausar"),
+        ]
+        
+        music_2 = [
+            ("resume / r", "retomar"),
+            ("queue / q", "mostrar fila"),
+            ("testtone / tone", "testar áudio com tom"),
+            ("music", "mostrar comandos de música"),
+        ]
+
+        levels = [
+            ("level [@user]", "mostrar nível e XP"),
+            ("rank", "mostrar top 10 do ranking"),
+        ]
+
+        games = [
+            ("termo", "começa um novo jogo de Termo"),
+            ("termo_quit / quit", "sai do jogo atual"),
+            ("termo_stats / stats [@user]", "estatísticas do Termo"),
+            ("termo_rank", "ranking do Termo"),
+        ]
+
+        quick_games_1 = [
+            ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
+            ("dado [lados]", "rola um dado de N lados"),
+            ("moeda", "atira uma moeda ao ar"),
+            ("escolher <op1> <op2> ...", "deixa o bot escolher"),
+        ]
+        
+        quick_games_2 = [
+            ("8ball <pergunta>", "pergunta à bola mágica"),
+            ("adivinhar <número>", "adivinha o número (1-10)"),
+            ("jogos", "mostra todos os jogos"),
+        ]
+
+        code = [
+            ("code / desafio", "desafio de programação"),
+            ("stats_code", "estatísticas dos desafios"),
+        ]
+
+        reminders = [
+            ("lembrar <tempo> <mensagem>", "cria um lembrete (ex: 10m, 2h, 1d)"),
+            ("lembretes", "lista os teus lembretes pendentes"),
+            ("lembrete_cancelar <id>", "cancela um lembrete"),
+        ]
+        
+        polls = [
+            ("poll <pergunta>", "cria enquete sim/não"),
+            ("poll <pergunta> | op1 | op2 ...", "cria enquete de opções (até 10)"),
+            ("poll_fechar <id_mensagem>", "fecha enquete e mostra resultados"),
+        ]
+        
+        automod_geral = [
+            ("automod", "mostra o estado da auto-moderação"),
+            ("automod_whitelist", "lista domínios permitidos"),
+            ("automod_perms", "lista quem tem permissão de mod automod"),
+        ]
+
+        sections = [
+            ("⚙️ Básico", basic),
+            ("ℹ️ Informação", info),
+            ("🌤️ Meteorologia", weather),
+            ("🔧 Utilidades", utils),
+            ("🎵 Música", music_1),
+            ("🎵 Música (cont.)", music_2),
+            ("📊 Níveis", levels),
+            ("🎮 Jogos - Termo", games),
+            ("🎲 Jogos Rápidos", quick_games_1),
+            ("🎲 Jogos Rápidos (cont.)", quick_games_2),
+            ("💻 Desafios de Código", code),
+            ("⏰ Lembretes", reminders),
+            ("📊 Enquetes", polls),
+            ("🛡️ Auto-Moderação", automod_geral),
+        ]
+
+        if is_admin:
+            automod_1 = [
+                ("automod_on / automod_off", "liga/desliga tudo"),
+                ("automod_antispam <on|off>", "liga/desliga anti-spam"),
+                ("automod_antilinks <on|off>", "liga/desliga anti-links"),
+                ("automod_whitelist_add <dom.>", "permite um domínio"),
+            ]
+            
+            automod_2 = [
+                ("automod_whitelist_remove <dom.>", "remove um domínio"),
+                ("automod_addperm @user", "dá permissão de mod automod"),
+                ("automod_removeperm @user", "remove essa permissão"),
+            ]
+            
+            moderation_1 = [
+                ("warn @user <motivo>", "dá um aviso"),
+                ("warnings [@user]", "lista avisos"),
+                ("warn_remove @user <id>", "remove um aviso"),
+                ("kick @user [motivo]", "expulsa um membro"),
+            ]
+        
+            moderation_2 = [
+                ("ban @user [motivo]", "bane um membro"),
+                ("unban <user_id>", "remove um ban"),
+                ("modlog_canal [#canal]", "define/mostra o canal de log"),
+            ]
+            
+            admin = [
+                ("write <message>", "ecoar mensagem"),
+                ("clear [amount]", "apagar mensagens do canal"),
+                ("addxp @user <value>", "adicionar XP a um utilizador"),
+            ]
+            
+            sections.append(("🛡️ Auto-Moderação", automod_1))
+            sections.append(("🛡️ Auto-Moderação (cont.)", automod_2))
+            sections.append(("🔨 Moderação", moderation_1))
+            sections.append(("🔨 Moderação (cont.)", moderation_2))
+            sections.append(("👑 Admin", admin))
+
+        return sections
+
     @commands.command(name="help")
     async def help_cmd(self, ctx):
         """Mostrar todos os comandos disponíveis"""
@@ -871,166 +1021,16 @@ class Basic(commands.Cog):
             for index, embed in enumerate(embeds, start=1):
                 embed.set_footer(text=f"Página {index}/{total}")
             return embeds
-        
-        if ctx.author.guild_permissions.administrator:
-            basic = [
-                ("ping", "responde com pong"),
-                ("sum <a> <b>", "somar dois números"),
-            ]
 
-            info = [
-                ("info [@user]", "mostrar informações do utilizador"),
-                ("server / guild", "mostrar informações do servidor"),
-                ("rules", "mostrar regras do servidor"),
-                ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
-            ]
+        is_admin = ctx.author.guild_permissions.administrator
+        sections = self._build_help_sections(is_admin)
 
-            weather = [
-                ("tempo <cidade>", "mostra o tempo atual"),
-                ("hora <cidade>", "mostra a hora atual"),
-                ("previsao <cidade>", "previsão para 7 dias"),
-            ]
+        title = "📖 Ajuda (Admin)" if is_admin else "📖 Ajuda"
+        color = discord.Color.red() if is_admin else discord.Color.blurple()
 
-            utils = [
-                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
-            ]
-
-            admin = [
-                ("write <message>", "ecoar mensagem"),
-                ("clear [amount]", "apagar mensagens do canal"),
-                ("addxp @user <value>", "adicionar XP a um utilizador"),
-            ]
-
-            music = [
-                ("join / connect / j", "juntar ao canal de voz"),
-                ("play / p <term|link>", "tocar do YouTube ou Spotify"),
-                ("skip / sk", "saltar música atual"),
-                ("stop / s", "parar e sair"),
-                ("pause / pz", "pausar"),
-                ("resume / r", "retomar"),
-                ("queue / q", "mostrar fila"),
-                ("testtone / tone", "testar áudio com tom"),
-                ("music", "mostrar comandos de música"),
-            ]
-
-            levels = [
-                ("level [@user]", "mostrar nível e XP"),
-                ("rank", "mostrar top 10 do ranking"),
-            ]
-
-            games = [
-                ("termo", "começa um novo jogo de Termo"),
-                ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "estatísticas do Termo"),
-                ("termo_rank", "ranking do Termo"),
-            ]
-
-            quick_games = [
-                ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
-                ("dado [lados]", "rola um dado de N lados"),
-                ("moeda", "atira uma moeda ao ar"),
-                ("escolher <op1> <op2> ...", "deixa o bot escolher"),
-                ("8ball <pergunta>", "pergunta à bola mágica"),
-                ("adivinhar <número>", "adivinha o número (1-10)"),
-                ("jogos", "mostra todos os jogos"),
-            ]
-
-            code = [
-                ("code / desafio", "desafio de programação"),
-                ("stats_code", "estatísticas dos desafios"),
-            ]
-            sections = [
-                ("⚙️ Básico", basic),
-                ("ℹ️ Informação", info),
-                ("🌤️ Meteorologia", weather),
-                ("🔧 Utilidades", utils),
-                ("🎵 Música", music),
-                ("📊 Níveis", levels),
-                ("🎮 Jogos - Termo", games),
-                ("🎲 Jogos Rápidos", quick_games),
-                ("💻 Desafios de Código", code),
-                ("👑 Admin", admin),
-            ]
-
-            embeds = build_embeds("📖 Ajuda (Admin)", discord.Color.red(), sections)
-            view = PaginatedView(embeds)
-            await ctx.send(embed=embeds[0], view=view)
-        else:
-            basic = [
-                ("ping", "responde com pong"),
-                ("sum <a> <b>", "somar dois números"),
-            ]
-
-            info = [
-                ("info [@user]", "mostrar informações do utilizador"),
-                ("server / guild", "mostrar informações do servidor"),
-                ("rules", "mostrar regras do servidor"),
-                ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
-            ]
-
-            weather = [
-                ("tempo <cidade>", "mostra o tempo atual"),
-                ("hora <cidade>", "mostra a hora atual"),
-                ("previsao <cidade>", "previsão para 7 dias"),
-            ]
-
-            utils = [
-                ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
-            ]
-
-            music = [
-                ("join / connect / j", "juntar ao canal de voz"),
-                ("play / p <term|link>", "tocar do YouTube ou Spotify"),
-                ("skip / sk", "saltar música atual"),
-                ("stop / s", "parar e sair"),
-                ("pause / pz", "pausar"),
-                ("resume / r", "retomar"),
-                ("queue / q", "mostrar fila"),
-                ("testtone / tone", "testar áudio com tom"),
-                ("music", "mostrar comandos de música"),
-            ]
-
-            levels = [
-                ("level [@user]", "mostrar nível e XP"),
-                ("rank", "mostrar top 10 do ranking"),
-            ]
-
-            games = [
-                ("termo", "começa um novo jogo de Termo"),
-                ("termo_quit / quit", "sai do jogo atual"),
-                ("termo_stats / stats [@user]", "estatísticas do Termo"),
-                ("termo_rank", "ranking do Termo"),
-            ]
-
-            quick_games = [
-                ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
-                ("dado [lados]", "rola um dado de N lados"),
-                ("moeda", "atira uma moeda ao ar"),
-                ("escolher <op1> <op2> ...", "deixa o bot escolher"),
-                ("8ball <pergunta>", "pergunta à bola mágica"),
-                ("adivinhar <número>", "adivinha o número (1-10)"),
-                ("jogos", "mostra todos os jogos"),
-            ]
-
-            code = [
-                ("code / desafio", "desafio de programação"),
-                ("stats_code", "estatísticas dos desafios"),
-            ]
-            sections = [
-                ("⚙️ Básico", basic),
-                ("ℹ️ Informação", info),
-                ("🌤️ Meteorologia", weather),
-                ("🔧 Utilidades", utils),
-                ("🎵 Música", music),
-                ("📊 Níveis", levels),
-                ("🎮 Jogos - Termo", games),
-                ("🎲 Jogos Rápidos", quick_games),
-                ("💻 Desafios de Código", code),
-            ]
-
-            embeds = build_embeds("📖 Ajuda", discord.Color.blurple(), sections)
-            view = PaginatedView(embeds)
-            await ctx.send(embed=embeds[0], view=view)
+        embeds = build_embeds(title, color, sections)
+        view = PaginatedView(embeds)
+        await ctx.send(embed=embeds[0], view=view)
 
 
 async def setup(bot: commands.Bot):
