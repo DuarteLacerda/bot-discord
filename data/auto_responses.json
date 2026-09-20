@@ -1,58 +1,73 @@
 {
     "ya": [
         "Ya ya, estás bué confiante hoje",
-        "Ya... mas tipo, ya?"
+        "Ya... mas tipo, ya?",
+        "Ya, tás a falar a sério ou quê?"
     ],
     "já": [
         "Já? Tão rápido assim?",
-        "Já está feito? Eficiente!"
+        "Já está feito? Eficiente!",
+        "Já?! Nem tive tempo de reagir"
     ],
     "está": [
         "Está tudo na boa, mano",
-        "Tá tudo controlado aqui"
+        "Tá tudo controlado aqui",
+        "Está, está... acredito"
     ],
     "bué": [
         "Isso é bué fixe mesmo",
-        "Bué mesmo, como sempre."
+        "Bué mesmo, como sempre.",
+        "Bué disso, sem dúvida"
     ],
     "fixe": [
         "Tudo tranquilo, na boa",
-        "Fixe, como deve ser!"
+        "Fixe, como deve ser!",
+        "Fixe fixe, gostei"
     ],
     "na boa": [
-        "Boa vibe, como deve ser"
+        "Boa vibe, como deve ser",
+        "Na boa, sem stress nenhum"
     ],
     "tipo": [
         "Tipo... sabes que disseste 'tipo' 3 vezes, né?",
-        "Tipo tipo tipo... calma aí!"
+        "Tipo tipo tipo... calma aí!",
+        "Tipo assim, tipo aquilo... percebi nada"
     ],
     "mano": [
         "Então mano, como é que é?",
-        "Mano do céu, que cena!"
+        "Mano do céu, que cena!",
+        "Mano, calma com isso"
     ],
     "cena": [
-        "Que cena doida foi essa?"
+        "Que cena doida foi essa?",
+        "Cena muito estranha, meu"
     ],
     "bro": [
         "Tás a mandar uma de bro agora",
-        "Bro, sem stress"
+        "Bro, sem stress",
+        "Bro, relaxa aí"
     ],
     "baza": [
-        "A bazar já? Não fiques muito tempo fora"
+        "A bazar já? Não fiques muito tempo fora",
+        "Baza baza, foge enquanto podes"
     ],
     "curtir": [
-        "Curtiste? Eu também curti"
+        "Curtiste? Eu também curti",
+        "Curti bué, sincero"
     ],
     "ganda": [
         "Ganda cena, pá!",
-        "Ganda vibe!"
+        "Ganda vibe!",
+        "Ganda coisa essa"
     ],
     "wtf": [
         "Nem sei o que dizer… wtf mesmo.",
-        "WTF... plot twist à portuguesa!"
+        "WTF... plot twist à portuguesa!",
+        "WTF, explica lá isso melhor"
     ],
     "omg": [
-        "Oh meu Deus… calma lá"
+        "Oh meu Deus… calma lá",
+        "OMG, não acredito"
     ],
     "pog": [
         "Isso foi mesmo poggers",
@@ -61,47 +76,277 @@
     ],
     "ez": [
         "Foi tão fácil que até me senti mal",
-        "EZ clap!"
+        "EZ clap!",
+        "Ez demais, nem contou"
     ],
     "gg": [
         "GG! Boa partida, bro",
-        "GG well played!"
+        "GG well played!",
+        "GG, respeito"
     ],
     "clutch": [
         "Clutch do ano, mano!",
-        "Clutch e com estilo!"
+        "Clutch e com estilo!",
+        "Clutch daqueles de tremer a mão"
     ],
     "nerf": [
-        "Isso precisa mesmo de um nerf urgente"
+        "Isso precisa mesmo de um nerf urgente",
+        "Nerf já, isto tá quebrado"
     ],
     "buff": [
-        "Buffaram e agora tá imbatível"
+        "Buffaram e agora tá imbatível",
+        "Buff a mais, agora é injusto"
     ],
     "smurf": [
-        "Smurf spotted... estás a brincar com os noobs?"
+        "Smurf spotted... estás a brincar com os noobs?",
+        "Smurf óbvio, nem escondeste bem"
     ],
     "rage": [
-        "Calma, não dês rage quit!"
+        "Calma, não dês rage quit!",
+        "Rage mode ativado"
     ],
     "camp": [
-        "Está ali a camperar desde 1999"
+        "Está ali a camperar desde 1999",
+        "Camp lendário, nem se mexe"
     ],
     "carry": [
-        "Carregou a equipa às costas, tipo mula"
+        "Carregou a equipa às costas, tipo mula",
+        "Carry absoluto, salvou o jogo"
     ],
     "feed": [
-        "Tá a dar feed ou é impressão minha?"
+        "Tá a dar feed ou é impressão minha?",
+        "Feed non-stop, credo"
     ],
     "noob": [
-        "Noob detected... cuidado!"
+        "Noob detected... cuidado!",
+        "Noob dos grandes, sem ofensa"
     ],
     "toxic": [
-        "Tóxico nível chat global"
+        "Tóxico nível chat global",
+        "Toxicidade a mais hoje, calma"
     ],
     "meta": [
-        "Sempre a jogar com o meta... previsível"
+        "Sempre a jogar com o meta... previsível",
+        "Meta abuser, típico"
     ],
     "bot": [
-        "Joga pior que bot do tutorial"
+        "Joga pior que bot do tutorial",
+        "Bot confirmado, sem dúvida"
+    ],
+    "sla": [
+        "Sla mesmo, nem eu sei",
+        "Sla, tu é que sabes"
+    ],
+    "cringe": [
+        "Isso foi bué cringe, admite",
+        "Cringe nível máximo"
+    ],
+    "épico": [
+        "Épico! Sem palavras",
+        "Isso sim foi épico"
+    ],
+    "chill": [
+        "Chill, tá tudo bem",
+        "Modo chill ativado"
+    ],
+    "stressado": [
+        "Calma, respira fundo",
+        "Stressado porquê? Relaxa"
+    ],
+    "brutal": [
+        "Brutal mesmo, gostei",
+        "Isso foi brutal, sem dúvida"
+    ],
+    "puto": [
+        "Fica-te na boa, não vale a pena",
+        "Puto? Calma aí"
+    ],
+    "vontade": [
+        "Sem vontade nenhuma hoje, percebo",
+        "Falta de vontade total, bué relatable"
+    ],
+    "cota": [
+        "Cota fixe esse, respeito",
+        "Falou como um verdadeiro cota"
+    ],
+    "bacano": [
+        "Bacano da gema, esse",
+        "Tá bacano, gostei"
+    ],
+    "grosso": [
+        "Grosso demais, admito",
+        "Isso foi grosso, meu"
+    ],
+    "altas": [
+        "Altas cenas essas, pá",
+        "Altas horas para altas ideias"
+    ],
+    "tá-se bem": [
+        "Tá-se bem, sem dramas",
+        "Tá-se bem, na paz"
+    ],
+    "boas": [
+        "Boas! Como é que anda isso?",
+        "Boas boas, tudo tranquilo"
+    ],
+    "eish": [
+        "Eish, isso doeu",
+        "Eish, não esperava essa"
+    ],
+    "bazuca": [
+        "Bazuca dessas nem em jogo se vê",
+        "Levou com uma bazuca, coitado"
+    ],
+    "trabalheira": [
+        "Ganda trabalheira, força aí",
+        "Trabalheira dessas cansa só de ouvir"
+    ],
+    "canseira": [
+        "Canseira máxima, descansa lá",
+        "Sinto a tua canseira daqui"
+    ],
+    "picha": [
+        "Picha de esperteza esse comentário",
+        "Picha, isso foi bem pensado"
+    ],
+    "totó": [
+        "Totó demais, credo",
+        "Isso foi bem totó, sem ofensa"
+    ],
+    "ferro": [
+        "Ferro nisso, vais conseguir",
+        "Manda ferro, sem medo"
+    ],
+    "abrandar": [
+        "Abranda aí, calma",
+        "Vai abrandando, respira"
+    ],
+    "avariado": [
+        "Isso tá avariado de vez",
+        "Avariado total, credo"
+    ],
+    "chapado": [
+        "Chapado de sono, percebo",
+        "Tá chapado, deixa descansar"
+    ],
+    "és troll": [
+        "Troll mode ativado, apanhaste-me",
+        "És troll, admite lá"
+    ],
+    "sem noção": [
+        "Sem noção mesmo, uau",
+        "Isso foi sem noção nenhuma"
+    ],
+    "épico fail": [
+        "Épico fail, dos que ficam na história",
+        "Fail épico, sem escapatória"
+    ],
+    "matar saudades": [
+        "Bora matar saudades então",
+        "Saudades matadas, boa"
+    ],
+    "à séria": [
+        "À séria? Não acredito",
+        "Tás a falar à séria ou quê"
+    ],
+    "vais-te embora": [
+        "Já te vais embora? Fica mais um bocado",
+        "Vais-te embora tão cedo?"
+    ],
+    "tá a dar": [
+        "Tá a dar bué, não te preocupes",
+        "Tá a dar, força aí"
+    ],
+    "tá a bombar": [
+        "Tá a bombar mesmo, parabéns",
+        "Tá a bombar, continua assim"
+    ],
+    "xD": [
+        "xD, isso foi engraçado",
+        "xD, ri-me bué com isso"
+    ],
+    "lol": [
+        "LOL, não esperava essa",
+        "LOL, bué de rir"
+    ],
+    "tás a gozar": [
+        "Tás a gozar comigo, certo?",
+        "Gozar é? Nem sei o que dizer"
+    ],
+    "sacana": [
+        "Sacana, apanhaste-me desprevenido",
+        "Ganda sacana esse teu"
+    ],
+    "estás feito": [
+        "Estás feito, sem escapatória",
+        "Feito ao bife, coitado"
+    ],
+    "levar na boa": [
+        "Leva isso na boa, sem stress",
+        "Toma na boa, é só brincadeira"
+    ],
+    "és lixado": [
+        "És lixado mesmo, tás bem?",
+        "Lixado, mas de forma engraçada"
+    ],
+    "dar em doido": [
+        "Vais dar em doido com isso",
+        "Já deste em doido de vez"
+    ],
+    "cara de caso": [
+        "Cara de caso, o que se passou?",
+        "Isso é cara de quem viu um fantasma"
+    ],
+    "bater a bota": [
+        "Bateu a bota o teu plano",
+        "Vai bater a bota se continuares assim"
+    ],
+    "fazer figura": [
+        "Fizeste figura, admite",
+        "Ganda figura essa, credo"
+    ],
+    "tar a monte": [
+        "Tá tudo a monte hoje",
+        "A monte total, sem organização"
+    ],
+    "borra-te": [
+        "Borra-te todo com isso, é normal",
+        "Deu para te borrares, percebo"
+    ],
+    "ir à vida": [
+        "Vai à vida, não percas tempo",
+        "Já foi à vida, nem olhou para trás"
+    ],
+    "chico esperto": [
+        "Chico esperto detectado",
+        "Fazes-te de chico esperto, mas eu vi"
+    ],
+    "à bruta": [
+        "Fizeste isso à bruta, respeito",
+        "À bruta e sem medo, gostei"
+    ],
+    "estar de trombas": [
+        "Tás de trombas outra vez?",
+        "De trombas porquê? Conta lá"
+    ],
+    "cair a ficha": [
+        "Caiu a ficha finalmente",
+        "Demorou mas a ficha caiu"
+    ],
+    "dar troco": [
+        "Deu troco à letra, boa resposta",
+        "Troco merecido, sem dúvida"
+    ],
+    "estar pedrado": [
+        "Tás pedrado ou quê, essa ideia é de outro mundo",
+        "Pedrado nível máximo, sem julgamento"
+    ],
+    "bater badalhoco": [
+        "Foi bater badalhoco outra vez",
+        "Badalhoco à solta, cuidado"
+    ],
+    "vá lá": [
+        "Vá lá, não sejas assim",
+        "Vá lá, confia em mim"
     ]
 }
