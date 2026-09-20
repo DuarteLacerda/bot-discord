@@ -354,9 +354,9 @@ pip install -r requirements.txt
 Feel free to suggest improvements or report bugs!
 
 ## License 📄
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
+ 
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). See the [LICENSE](LICENSE) file for details.
+ 
 ---
 
 **Bot Prefix:** `L!`  
