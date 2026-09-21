@@ -8,7 +8,7 @@ A complete Discord bot with music system, levels/XP, word games, reminders, poll
 - YouTube playback
 - Queue system
 - Controls: play, skip, pause, resume, stop
-- Playlist support (maximum 20 tracks)
+- Playlist support (maximum 100 tracks)
 - Case opening with rewards when playing music
 
 ### 📊 Level System
@@ -61,6 +61,11 @@ A complete Discord bot with music system, levels/XP, word games, reminders, poll
 - Kick and ban (respecting real Discord permissions), with automatic DM to the affected user
 - Unban by user ID
 - Optional mod-log channel: every warn/kick/ban/unban is automatically logged there
+
+### 🎫 Tickets
+- Create private tickets with the staff
+- Manage and resolve tickets efficiently
+- Log all ticket interactions
 
 ### 🔧 Others
 - Ping/pong
@@ -231,6 +236,10 @@ Adjust the thresholds by editing the constants at the top of `cogs/automod.py` (
 - `L!ban @user [reason]` - Bans a member *(requires Ban Members)*
 - `L!unban <user_id>` - Removes a ban *(requires Ban Members)*
 - `L!modlog_canal [#channel]` - Sets or shows the mod-log channel *(admin)*
+
+### 🎫 Tickets
+- `L!ticket <reason>` - Opens a private ticket with the staff
+- `L!ticketpanel` - Posts the ticket opening panel
 
 ### 👑 Admin Commands
 - `L!write <message>` - Echoes message

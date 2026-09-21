@@ -935,6 +935,10 @@ class Basic(commands.Cog):
             ("automod_whitelist", "lista domínios permitidos"),
             ("automod_perms", "lista quem tem permissão de mod automod"),
         ]
+        
+        tickets = [
+            ("ticket <motivo>", "abre um ticket privado com a staff"),
+        ]
 
         sections = [
             ("⚙️ Básico", basic),
@@ -951,6 +955,7 @@ class Basic(commands.Cog):
             ("⏰ Lembretes", reminders),
             ("📊 Enquetes", polls),
             ("🛡️ Auto-Moderação", automod_geral),
+            ("🎫 Tickets", tickets)
         ]
 
         if is_admin:
@@ -982,8 +987,10 @@ class Basic(commands.Cog):
             
             admin = [
                 ("write <message>", "ecoar mensagem"),
-                ("clear [amount]", "apagar mensagens do canal"),
+                ("clear [amount]", "apagar x mensagens do canal"),
+                ("clear", "apagar todas as mensagens do canal"),
                 ("addxp @user <value>", "adicionar XP a um utilizador"),
+                ("ticketpanel", "posta o painel de abertura de tickets"),
             ]
             
             sections.append(("🛡️ Auto-Moderação", automod_1))
