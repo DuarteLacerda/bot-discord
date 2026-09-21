@@ -55,11 +55,7 @@ class Music(commands.Cog):
     # ===== UTILITIES =====
 
     async def _extract_info(self, search: str) -> Dict[str, Any]:
-        loop = asyncio.get_event_loop()
-        
-        if "youtube.com/watch" in search or "youtu.be" in search:
-            search = search.split("&list=")[0]
-        
+        loop = asyncio.get_event_loop()        
         return await loop.run_in_executor(None, lambda: self.ytdl.extract_info(search, download=False))
 
     async def _resolve_track(self, query: str) -> List[Dict[str, Any]]:

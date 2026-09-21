@@ -111,6 +111,13 @@ class AutoMod(commands.Cog):
         if message.author.bot or not message.guild:
             return
 
+        # Ignora comandos do bot — um link dentro de "L!play <link>" não é spam de link
+        prefixes = await self.bot.get_prefix(message)
+        if isinstance(prefixes, str):
+            prefixes = [prefixes]
+        if any(message.content.startswith(p) for p in prefixes):
+            return
+
         config = self._get_config(message.guild.id)
         if not config["enabled"]:
             return
