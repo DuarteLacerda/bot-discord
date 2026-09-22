@@ -110,9 +110,14 @@ python main.py
 
 ### Environment Variables (.env)
 ```env
-DISCORD_BOT_TOKEN=your_token_here
+# Discord Bot Token
+DISCORD_BOT_TOKEN=your_discord_bot_token_here
 
-AUTO_ROLE_NAME=Your Role Name
+# Ticket Configuration
+TICKET_CATEGORY_NAME=your_ticket_category_name_here
+TICKET_STAFF_ROLE_NAME=your_staff_role_name_here
+TICKET_LOG_CHANNEL_NAME=your_log_channel_name_here
+
 ```
 
 When inviting the application, include the `bot` and `applications.commands` scopes. Slash commands are synchronized globally at startup and can take a while to appear in Discord.
@@ -127,6 +132,22 @@ XP_MULTIPLICADOR = 1.15      # Exponential growth
 
 ### Edit Rules
 Edit `data/rules.json` to add/remove server rules. No need to restart the bot!
+
+The file uses this structure:
+```json
+{
+    "title": "📜 Regras do Servidor",
+    "color": "0xFF5733",
+    "rules": [
+        {
+            "number": 1,
+            "title": "Respeito",
+            "description": "Respeita todos os membros."
+        }
+    ],
+    "footer": "Última atualização: 22/01/2026"
+}
+```
 
 ### Auto-Responses
 Edit `data/auto_responses.json` to customize slang responses:
@@ -144,12 +165,62 @@ Edit `data/auto_responses.json` to customize slang responses:
 ```
 The bot automatically responds when it detects these keywords in messages (case and accent insensitive).
 
+Restart the bot after changing this file so the new responses are loaded.
+
+### Termo Words
+Edit `data/termo_palavras.json` to add or remove valid five-letter words from Termo. The file must contain a JSON array of words:
+```json
+[
+    "carro",
+    "porta",
+    "ponte"
+]
+```
+
+Use lowercase words without accents and restart the bot after changing the file.
+
+### Code Challenges
+Edit `data/code_challenges.json` to add challenges. Organize them by language and difficulty (`facil`, `medio` or `dificil`):
+```json
+{
+    "python": {
+        "facil": [
+            {
+                "titulo": "Soma de Dois Números",
+                "descricao": "Cria uma função que soma dois números.",
+                "exemplo": "soma(5, 3) → 8",
+                "dica": "Usa o operador +"
+            }
+        ]
+    }
+}
+```
+
+Each challenge needs `titulo`, `descricao`, `exemplo` and `dica`. Restart the bot after changing this file.
+
 ### Auto-Moderation
 Configured per server via commands (see below), not a file to edit by hand. Defaults:
 - Anti-spam: 5 messages in 6 seconds triggers a 5-minute timeout
 - Anti-links: any link outside the whitelist is deleted
 
 Adjust the thresholds by editing the constants at the top of `cogs/automod.py` (`SPAM_MSG_LIMIT`, `SPAM_WINDOW_SECONDS`, `SPAM_TIMEOUT_MINUTES`).
+
+### Data Files
+
+| File | Purpose | Manual editing |
+| --- | --- | --- |
+| `data/rules.json` | Server rules shown by `/rules`. | Yes |
+| `data/auto_responses.json` | Keywords and automatic responses. | Yes, then restart the bot |
+| `data/termo_palavras.json` | Valid five-letter words for Termo. | Yes, then restart the bot |
+| `data/code_challenges.json` | Programming challenges grouped by language and difficulty. | Yes, then restart the bot |
+| `data/automod.json` | Per-server auto-moderation settings. | Yes, but prefer the `/automod_*` commands; restart afterwards |
+| `data/antiraid.json` | Per-server anti-raid settings and lockdown state. | Yes, but prefer the `/antiraid_*` commands; restart afterwards |
+| `data/tickets.json` | Ticket records and configuration. | Yes, with care; prefer managing tickets through Discord |
+| `data/modlog.json` | Configured moderation log channels. | Yes, but `/modlog_canal` is safer; restart afterwards |
+| `data/reminders.json` | Pending reminders. Created when the first reminder is saved. | Yes, with care; prefer `/lembrar` and `/lembrete_cancelar` |
+| `data/warnings.json` | Warning history. Created when the first warning is saved. | Yes, with care; prefer the moderation commands |
+
+All JSON files can be edited manually, but configuration and runtime files must keep their existing structure. Stop the bot before editing them, make a backup first and restart it afterwards. Changes made through commands are safer because they are validated and saved automatically.
 
 ## Commands 📝
 
@@ -292,14 +363,16 @@ discord-bot/
 │   ├── automod.py           # Anti-spam / anti-links + permission system
 │   └── moderation.py        # Warns, kick, ban, mod-log
 ├── data/
+│   ├── antiraid.json         # Per-server anti-raid settings
 │   ├── auto_responses.json  # Slang auto-responses
+│   ├── automod.json          # Per-server auto-mod settings
+│   ├── code_challenges.json  # Challenge data
+│   ├── modlog.json           # Moderation log channels
+│   ├── reminders.json        # Created at runtime for pending reminders
 │   ├── rules.json           # Server rules
 │   ├── termo_palavras.json  # Termo words
-│   ├── code_challenges.json # Challenge data
-│   ├── reminders.json       # Pending reminders
-│   ├── automod.json         # Per-server auto-mod settings
-│   ├── warnings.json        # Per-server warning history
-│   └── modlog.json          # Per-server mod-log channel
+│   ├── tickets.json          # Ticket records
+│   └── warnings.json         # Created at runtime for warning history
 ├── database/                # Database module
 ├── utils/                   # Utility components
 ├── .env.example              # .env template
