@@ -194,11 +194,11 @@ class CodeChallenges(commands.Cog):
             self.challenges_data = {}
             print("⚠️ Ficheiro code_challenges.json não encontrado!")
     
-    @commands.command(aliases=['desafio', 'challenge', 'coding'])
+    @commands.hybrid_command(aliases=['desafio', 'challenge', 'coding'])
     async def code(self, ctx):
         """Gera um desafio de programação por linguagem e dificuldade
         
-        Uso: L!code
+        Uso: /code
         
         Linguagens disponíveis:
         • 🐍 Python
@@ -240,7 +240,7 @@ class CodeChallenges(commands.Cog):
         
         await ctx.send(embed=embed, view=view)
     
-    @commands.command()
+    @commands.hybrid_command()
     async def stats_code(self, ctx):
         """Mostra estatísticas sobre os desafios disponíveis"""
         

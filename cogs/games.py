@@ -7,9 +7,9 @@ class Games(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         
-    @commands.command(name='ppt', aliases=['pedrapapeltesoura', 'rps'])
+    @commands.hybrid_command(name='ppt', aliases=['pedrapapeltesoura', 'rps'])
     async def pedra_papel_tesoura(self, ctx, escolha: str = None):
-        """Jogue pedra, papel ou tesoura! Uso: L!ppt <pedra|papel|tesoura>"""
+        """Jogue pedra, papel ou tesoura! Uso: /ppt <pedra|papel|tesoura>"""
         opcoes = {
             'pedra': '🪨',
             'papel': '📄',
@@ -29,7 +29,7 @@ class Games(commands.Cog):
                 description="Escolhe uma opção:\n🪨 **Pedra**\n📄 **Papel**\n✂️ **Tesoura**",
                 color=discord.Color.blue()
             )
-            embed.set_footer(text="Uso: L!ppt <pedra|papel|tesoura>")
+            embed.set_footer(text="Uso: /ppt <pedra|papel|tesoura>")
             await ctx.send(embed=embed)
             return
         
@@ -89,9 +89,9 @@ class Games(commands.Cog):
             return 'vitoria'
         return 'derrota'
     
-    @commands.command(name='dado', aliases=['dice', 'roll'])
+    @commands.hybrid_command(name='dado', aliases=['dice', 'roll'])
     async def rolar_dado(self, ctx, lados: int = 6):
-        """Rola um dado! Uso: L!dado [número de lados]"""
+        """Rola um dado! Uso: /dado [número de lados]"""
         if lados < 2:
             await ctx.send("❌ O dado precisa ter pelo menos 2 lados!")
             return
@@ -115,7 +115,7 @@ class Games(commands.Cog):
         )
         await ctx.send(embed=embed)
     
-    @commands.command(name='moeda', aliases=['coin', 'flip'])
+    @commands.hybrid_command(name='moeda', aliases=['coin', 'flip'])
     async def atirar_moeda(self, ctx):
         """Atira uma moeda ao ar! Cara ou coroa?"""
         resultado = random.choice(['cara', 'coroa'])
@@ -128,16 +128,17 @@ class Games(commands.Cog):
         )
         await ctx.send(embed=embed)
     
-    @commands.command(name='escolher', aliases=['choose', 'pick'])
-    async def escolher(self, ctx, *opcoes):
-        """Deixa o bot escolher por ti! Uso: L!escolher <opção1> <opção2> ..."""
+    @commands.hybrid_command(name='escolher', aliases=['choose', 'pick'])
+    async def escolher(self, ctx, opcoes: str):
+        """Escolhe uma opção entre valores separados por |."""
+        opcoes = [opcao.strip() for opcao in opcoes.split("|") if opcao.strip()]
         if len(opcoes) < 2:
             embed = discord.Embed(
                 title="🎯 Escolher Opção",
                 description="Preciso de pelo menos 2 opções para escolher!",
                 color=discord.Color.red()
             )
-            embed.set_footer(text='Uso: L!escolher <opção1> <opção2> <opção3> ...')
+            embed.set_footer(text='Uso: /escolher opção1 | opção2 | opção3')
             await ctx.send(embed=embed)
             return
         
@@ -150,16 +151,16 @@ class Games(commands.Cog):
         )
         await ctx.send(embed=embed)
     
-    @commands.command(name='8ball', aliases=['bola8', 'pergunta'])
+    @commands.hybrid_command(name='8ball', aliases=['bola8', 'pergunta'])
     async def bola_magica(self, ctx, *, pergunta: str = None):
-        """Faz uma pergunta à bola mágica! Uso: L!8ball <pergunta>"""
+        """Faz uma pergunta à bola mágica! Uso: /8ball <pergunta>"""
         if not pergunta:
             embed = discord.Embed(
                 title="🔮 Bola Mágica",
                 description="Faz-me uma pergunta e eu responderei!",
                 color=discord.Color.purple()
             )
-            embed.set_footer(text="Uso: L!8ball <tua pergunta>")
+            embed.set_footer(text="Uso: /8ball <tua pergunta>")
             await ctx.send(embed=embed)
             return
         
@@ -206,9 +207,9 @@ class Games(commands.Cog):
         
         await ctx.send(embed=embed)
     
-    @commands.command(name='adivinhar', aliases=['guess', 'numero'])
+    @commands.hybrid_command(name='adivinhar', aliases=['guess', 'numero'])
     async def adivinhar_numero(self, ctx, palpite: int = None):
-        """Tenta adivinhar o número entre 1 e 10! Uso: L!adivinhar <número>"""
+        """Tenta adivinhar o número entre 1 e 10! Uso: /adivinhar <número>"""
         numero_secreto = random.randint(1, 10)
         
         if palpite is None:
@@ -217,7 +218,7 @@ class Games(commands.Cog):
                 description="Estou a pensar num número entre **1 e 10**!\nTenta adivinhar!",
                 color=discord.Color.blue()
             )
-            embed.set_footer(text="Uso: L!adivinhar <número>")
+            embed.set_footer(text="Uso: /adivinhar <número>")
             await ctx.send(embed=embed)
             return
         
@@ -240,7 +241,7 @@ class Games(commands.Cog):
         
         await ctx.send(embed=embed)
     
-    @commands.command(name='jogos', aliases=['games', 'listarjogos'])
+    @commands.hybrid_command(name='jogos', aliases=['games', 'listarjogos'])
     async def listar_jogos(self, ctx):
         """Mostra todos os jogos disponíveis"""
         embed = discord.Embed(
@@ -250,12 +251,12 @@ class Games(commands.Cog):
         )
         
         jogos = [
-            ("🪨📄✂️ Pedra, Papel, Tesoura", "`L!ppt <pedra|papel|tesoura>`", "Joga o clássico jogo!"),
-            ("🎲 Rolar Dado", "`L!dado [lados]`", "Rola um dado de N lados"),
-            ("🪙 Atirar Moeda", "`L!moeda`", "Cara ou coroa?"),
-            ("🎯 Escolher", "`L!escolher <opção1> <opção2> ...`", "Deixa-me escolher por ti"),
-            ("🔮 Bola Mágica", "`L!8ball <pergunta>`", "Faz uma pergunta ao destino"),
-            ("🎲 Adivinhar Número", "`L!adivinhar <número>`", "Adivinha o número entre 1 e 10")
+            ("🪨📄✂️ Pedra, Papel, Tesoura", "`/ppt <pedra|papel|tesoura>`", "Joga o clássico jogo!"),
+            ("🎲 Rolar Dado", "`/dado [lados]`", "Rola um dado de N lados"),
+            ("🪙 Atirar Moeda", "`/moeda`", "Cara ou coroa?"),
+            ("🎯 Escolher", "`/escolher opção1 | opção2`", "Deixa-me escolher por ti"),
+            ("🔮 Bola Mágica", "`/8ball <pergunta>`", "Faz uma pergunta ao destino"),
+            ("🎲 Adivinhar Número", "`/adivinhar <número>`", "Adivinha o número entre 1 e 10")
         ]
         
         for nome, comando, descricao in jogos:

@@ -8,11 +8,11 @@ rajada com uma conta demasiado nova. Reverte sozinho ao fim de um
 tempo configurável.
 
 Comandos (todos admin, exceto o status):
-    L!antiraid                          - mostra o estado atual
-    L!antiraid_on / L!antiraid_off      - liga/desliga o sistema
-    L!antiraid_config <n> <segs> <dias> - configura sensibilidade
-    L!antiraid_lockdown_on              - ativa lockdown manualmente
-    L!antiraid_lockdown_off             - desativa lockdown manualmente
+    /antiraid                          - mostra o estado atual
+    /antiraid_on / /antiraid_off       - liga/desliga o sistema
+    /antiraid_config <n> <segs> <dias> - configura sensibilidade
+    /antiraid_lockdown_on              - ativa lockdown manualmente
+    /antiraid_lockdown_off             - desativa lockdown manualmente
 
 Configuração por defeito: 5 entradas em 10 segundos dispara o
 lockdown; contas com menos de 7 dias são expulsas durante o lockdown;
@@ -195,7 +195,7 @@ class AntiRaid(commands.Cog):
 
     # ---------- comandos ----------
 
-    @commands.command(name="antiraid")
+    @commands.hybrid_command(name="antiraid")
     async def antiraid_status(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
         embed = discord.Embed(title="🚨 Anti-Raid", color=discord.Color.blurple())
@@ -212,7 +212,7 @@ class AntiRaid(commands.Cog):
         embed.add_field(name="Duração do lockdown", value=f"{config['lockdown_minutes']} min", inline=True)
         await ctx.send(embed=embed)
 
-    @commands.command(name="antiraid_on")
+    @commands.hybrid_command(name="antiraid_on")
     @commands.has_permissions(administrator=True)
     async def antiraid_on(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -220,7 +220,7 @@ class AntiRaid(commands.Cog):
         self._save()
         await ctx.send("✅ Anti-raid ligado.")
 
-    @commands.command(name="antiraid_off")
+    @commands.hybrid_command(name="antiraid_off")
     @commands.has_permissions(administrator=True)
     async def antiraid_off(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -228,7 +228,7 @@ class AntiRaid(commands.Cog):
         self._save()
         await ctx.send("❌ Anti-raid desligado.")
 
-    @commands.command(name="antiraid_config")
+    @commands.hybrid_command(name="antiraid_config")
     @commands.has_permissions(administrator=True)
     async def antiraid_config(self, ctx: commands.Context, entradas: int, segundos: int, dias_conta: int):
         if entradas < 2 or segundos < 1 or dias_conta < 0:
@@ -246,7 +246,7 @@ class AntiRaid(commands.Cog):
             f"contas com menos de **{dias_conta} dias** são expulsas durante o lockdown."
         )
 
-    @commands.command(name="antiraid_lockdown_on")
+    @commands.hybrid_command(name="antiraid_lockdown_on")
     @commands.has_permissions(administrator=True)
     async def antiraid_lockdown_on(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -256,7 +256,7 @@ class AntiRaid(commands.Cog):
         await self._activate_lockdown(ctx.guild, config, reason=f"ativado manualmente por {ctx.author}")
         await ctx.send("🔒 Lockdown ativado manualmente.")
 
-    @commands.command(name="antiraid_lockdown_off")
+    @commands.hybrid_command(name="antiraid_lockdown_off")
     @commands.has_permissions(administrator=True)
     async def antiraid_lockdown_off(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -277,7 +277,7 @@ class AntiRaid(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("❌ Precisas de ser administrador para usar este comando.")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("⚠️ Uso: `L!antiraid_config <entradas> <segundos> <dias_conta>`")
+            await ctx.send("⚠️ Uso: `/antiraid_config <entradas> <segundos> <dias_conta>`")
         elif isinstance(error, commands.BadArgument):
             await ctx.send("⚠️ Os três valores têm de ser números inteiros.")
 

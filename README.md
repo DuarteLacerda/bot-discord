@@ -72,8 +72,6 @@ A complete Discord bot with music system, levels/XP, word games, reminders, poll
 - User information
 - Server information
 - Context-aware help (shows different commands to admins)
-- Text translation between languages
-- Server status (Minecraft/CS:GO)
 
 ## Installation 🚀
 
@@ -117,6 +115,8 @@ DISCORD_BOT_TOKEN=your_token_here
 AUTO_ROLE_NAME=Your Role Name
 ```
 
+When inviting the application, include the `bot` and `applications.commands` scopes. Slash commands are synchronized globally at startup and can take a while to appear in Discord.
+
 ### XP Balancing
 Edit the top of `cogs/levels.py`:
 ```python
@@ -153,98 +153,96 @@ Adjust the thresholds by editing the constants at the top of `cogs/automod.py` (
 
 ## Commands 📝
 
+Commands are available through Discord's slash-command menu. Type `/` in a channel to browse them and select the command you need.
+
 ### ⚙️ Basic
-- `L!ping` - Shows bot latency
-- `L!sum <a> <b>` - Adds two numbers
+- `/ping` - Shows bot latency
+- `/sum <a> <b>` - Adds two numbers
 
 ### ℹ️ Information
-- `L!info [@user]` - User information
-- `L!server` / `L!guild` - Server information
-- `L!rules` - Shows server rules
-- `L!serverstatus <ip>` - Minecraft/CS:GO server status
+- `/info [@user]` - User information
+- `/server` - Server information
+- `/rules` - Shows server rules
 
 ### 🌤️ Weather
-- `L!tempo` / `L!weather` / `L!clima <city>` - Shows current weather for a city
-- `L!hora` / `L!time` / `L!horario` / `L!timezone <city>` - Shows current time for a city
-- `L!previsao` / `L!previsão` / `L!forecast <city>` - 7-day weather forecast
-
-### 🔧 Utilities
-- `L!traduzir` / `L!translate` / `L!tr <dest> <text>` - Translates text between languages
+- `/tempo <city>` - Shows current weather for a city
+- `/hora <city>` - Shows the current time for a city
+- `/previsao <city>` - 7-day weather forecast
 
 ### 🎵 Music
-- `L!join` / `L!connect` / `L!j` - Joins your voice channel
-- `L!play` / `L!p <term|link>` - Plays from YouTube or Spotify
-- `L!skip` / `L!sk` - Skips current track
-- `L!stop` / `L!s` - Stops and leaves
-- `L!pause` / `L!pz` - Pauses
-- `L!resume` / `L!r` - Resumes
-- `L!queue` / `L!q` - Shows the queue
-- `L!testtone` / `L!tone` - Tests audio with a tone
-- `L!music` - Shows music commands
+- `/join` - Joins your voice channel
+- `/play <term|link>` - Plays from YouTube or Spotify
+- `/skip` - Skips the current track
+- `/stop` - Stops playback and leaves
+- `/pause` - Pauses playback
+- `/resume` - Resumes playback
+- `/queue` - Shows the queue
+- `/testtone` - Tests audio with a tone
+- `/music` - Shows music commands
 
 ### 📊 Levels
-- `L!level [@user]` - Shows level and XP
-- `L!rank` - Server top 10 leaderboard
+- `/level [@user]` - Shows level and XP
+- `/rank` - Server top 10 leaderboard
 
 ### 🎮 Termo Game
-- `L!termo` - Starts a new Termo game (Portuguese Wordle)
-- `L!termo_quit` / `L!quit` - Exits current game
-- `L!termo_stats` / `L!stats [@user]` - Shows Termo statistics
-- `L!termo_rank` - Shows Termo ranking
+- `/termo` - Starts a new Termo game (Portuguese Wordle)
+- `/termo_quit` - Exits the current game
+- `/termo_stats [@user]` - Shows Termo statistics
+- `/termo_rank` - Shows the Termo ranking
 
 ### 🎲 Quick Games
-- `L!ppt` / `L!pedrapapeltesoura` / `L!rps <rock|paper|scissors>` - Rock, paper, scissors
-- `L!dado` / `L!dice` / `L!roll [sides]` - Rolls a dice with N sides
-- `L!moeda` / `L!coin` / `L!flip` - Flips a coin
-- `L!escolher` / `L!choose` / `L!pick <op1> <op2> ...` - Lets the bot choose for you
-- `L!8ball` / `L!bola8` / `L!pergunta <question>` - Ask the magic 8-ball
-- `L!adivinhar` / `L!guess` / `L!numero <number>` - Guess the number between 1 and 10
-- `L!jogos` / `L!games` / `L!listarjogos` - Shows all available games
+- `/ppt <rock|paper|scissors>` - Rock, paper, scissors
+- `/dado [sides]` - Rolls a dice with N sides
+- `/moeda` - Flips a coin
+- `/escolher <option1 | option2>` - Lets the bot choose for you
+- `/adivinhar <number>` - Guess the number between 1 and 10
+- `/8ball <question>` - Ask the magic 8-ball
+- `/jogos` - Shows all available games
 
 ### 💻 Code Challenges
-- `L!code` / `L!desafio` / `L!challenge` / `L!coding` - Starts a programming challenge
-- `L!stats_code` - Shows code challenge statistics
+- `/code` - Starts a programming challenge
+- `/stats_code` - Shows code challenge statistics
 
 ### ⏰ Reminders
-- `L!lembrar <tempo> <mensagem>` - Creates a reminder (e.g. `10m`, `2h`, `1d`, `1d2h30m`)
-- `L!lembretes` - Lists your pending reminders
-- `L!lembrete_cancelar <id>` - Cancels a reminder
+- `/lembrar <tempo> <mensagem>` - Creates a reminder (e.g. `10m`, `2h`, `1d`, `1d2h30m`)
+- `/lembretes` - Lists your pending reminders
+- `/lembrete_cancelar <id>` - Cancels a reminder
 
 ### 📊 Polls
-- `L!poll <question>` - Yes/no poll (👍/👎), expires in 24h by default
-- `L!poll <question> | opt1 | opt2 | ...` - Multiple-choice poll (up to 10 options)
-- `L!poll <question> | opt1 | opt2 | --tempo 2h` - Custom expiry (5 min to 7 days)
-- `L!poll_fechar <message_id>` - Closes a poll early and shows results (author or admin)
+- `/poll <question>` - Yes/no poll (👍/👎), expires in 24h by default
+- `/poll <question> | opt1 | opt2 | ...` - Multiple-choice poll (up to 10 options)
+- `/poll <question> | opt1 | opt2 | --tempo 2h` - Custom expiry (5 min to 7 days)
+- `/poll_fechar <message_id>` - Closes a poll early and shows results (author or admin)
 
 ### 🛡️ Auto-Moderation
-- `L!automod` - Shows current auto-moderation status
-- `L!automod_whitelist` - Lists whitelisted domains
-- `L!automod_perms` - Lists who has automod moderator permission
-- `L!automod_on` / `L!automod_off` - Enables/disables the whole system *(admin)*
-- `L!automod_antispam <on|off>` - Toggles anti-spam only *(admin)*
-- `L!automod_antilinks <on|off>` - Toggles anti-links only *(admin)*
-- `L!automod_whitelist_add <domain>` - Allows a domain (e.g. `youtube.com`) *(admin)*
-- `L!automod_whitelist_remove <domain>` - Removes a domain from the whitelist *(admin)*
-- `L!automod_addperm @user` - Grants automod moderator permission *(admin)*
-- `L!automod_removeperm @user` - Revokes that permission *(admin)*
+- `/automod` - Shows current auto-moderation status
+- `/automod_whitelist` - Lists whitelisted domains
+- `/automod_perms` - Lists users with automod moderator permission
+- `/automod_on` / `/automod_off` - Enables/disables the whole system *(admin)*
+- `/automod_antispam <on|off>` - Toggles anti-spam only *(admin)*
+- `/automod_antilinks <on|off>` - Toggles anti-links only *(admin)*
+- `/automod_whitelist_add <domain>` - Allows a domain (e.g. `youtube.com`) *(admin)*
+- `/automod_whitelist_remove <domain>` - Removes a domain from the whitelist *(admin)*
+- `/automod_addperm @user` - Grants automod moderator permission *(admin)*
+- `/automod_removeperm @user` - Revokes that permission *(admin)*
 
 ### 🔨 Moderation
-- `L!warn @user <reason>` - Warns a member *(admin or automod moderator)*
-- `L!warnings [@user]` - Shows warning history (omit = your own)
-- `L!warn_remove @user <id>` - Removes a specific warning *(admin)*
-- `L!kick @user [reason]` - Kicks a member *(requires Kick Members)*
-- `L!ban @user [reason]` - Bans a member *(requires Ban Members)*
-- `L!unban <user_id>` - Removes a ban *(requires Ban Members)*
-- `L!modlog_canal [#channel]` - Sets or shows the mod-log channel *(admin)*
+- `/warn @user <reason>` - Warns a member *(admin or automod moderator)*
+- `/warnings [@user]` - Shows warning history (omit = your own)
+- `/warn_remove @user <id>` - Removes a specific warning *(admin)*
+- `/kick @user [reason]` - Kicks a member *(requires Kick Members)*
+- `/ban @user [reason]` - Bans a member *(requires Ban Members)*
+- `/unban <user_id>` - Removes a ban *(requires Ban Members)*
+- `/modlog_canal [#channel]` - Sets or shows the mod-log channel *(admin)*
 
 ### 🎫 Tickets
-- `L!ticket <reason>` - Opens a private ticket with the staff
-- `L!ticketpanel` - Posts the ticket opening panel
+- `/ticket <reason>` - Opens a private ticket with the staff
+- `/ticketpanel` - Posts the ticket opening panel
 
 ### 👑 Admin Commands
-- `L!write <message>` - Echoes message
-- `L!clear [amount]` - Deletes messages from the channel
-- `L!addxp @user <value>` - Adds XP to a user
+- `/write <message>` - Echoes message
+- `/clear [amount]` - Deletes messages from the channel
+- `/addxp @user <value>` - Adds XP to a user
 
 ## Running in Background (Linux)
 
@@ -315,11 +313,8 @@ discord-bot/
 - `python-dotenv` - Environment variables management
 - `yt-dlp` - YouTube video downloader
 - `PyNaCl` - Voice support for Discord
+- `davey` - Discord voice encryption support
 - `aiohttp` - Async HTTP client
-- `deep-translator` - Text translation
-- `langdetect` - Language detection
-- `mcstatus` - Minecraft server status
-- `a2s` - Source engine query protocol
 - `audioop-lts` - Audio processing
 
 > Reminders, polls, auto-moderation and moderation use only the standard library plus `discord.py` — no extra dependencies needed.
@@ -336,10 +331,6 @@ pip install -r requirements.txt
 - Check if FFmpeg is installed: `ffmpeg -version`
 - Make sure you're in a voice channel
 - Check bot permissions in voice channels
-
-### Translation doesn't work
-- Check if internet connection is available
-- Verify language codes are correct (e.g., 'en', 'pt', 'es')
 
 ### Database errors
 - Ensure the `database/` directory has write permissions
@@ -368,6 +359,5 @@ This project is licensed under the [PolyForm Noncommercial License 1.0.0](https:
  
 ---
 
-**Bot Prefix:** `L!`  
 **Version:** 2.1  
 **Developed by:** Duarte Lacerda

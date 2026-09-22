@@ -8,18 +8,18 @@ o sistema, sem precisarem de ser administradores.
 
 Comandos:
     Estado / configuração (admin do Discord apenas):
-        L!automod                          - mostra o estado atual
-        L!automod_on / L!automod_off       - liga/desliga tudo
-        L!automod_antispam <on|off>        - liga/desliga só o anti-spam
-        L!automod_antilinks <on|off>       - liga/desliga só o anti-links
-        L!automod_whitelist_add <domínio>  - permite um domínio (ex: youtube.com)
-        L!automod_whitelist_remove <dom.>  - remove um domínio da whitelist
-        L!automod_whitelist               - lista domínios permitidos
+        /automod                          - mostra o estado atual
+        /automod_on / /automod_off       - liga/desliga tudo
+        /automod_antispam <on|off>       - liga/desliga só o anti-spam
+        /automod_antilinks <on|off>      - liga/desliga só o anti-links
+        /automod_whitelist_add <domínio> - permite um domínio (ex: youtube.com)
+        /automod_whitelist_remove <dom.> - remove um domínio da whitelist
+        /automod_whitelist               - lista domínios permitidos
 
     Permissões (dar/remover: admin do Discord apenas; ver: todos):
-        L!automod_addperm @user     - dá a alguém permissão de moderador automod
-        L!automod_removeperm @user  - remove essa permissão
-        L!automod_perms             - lista quem tem essa permissão
+        /automod_addperm @user     - dá a alguém permissão de moderador automod
+        /automod_removeperm @user  - remove essa permissão
+        /automod_perms             - lista quem tem essa permissão
 
 Quem tem "permissão automod" (ou é administrador) fica isento do
 anti-spam e anti-links, e pode usar os comandos de configuração acima.
@@ -111,7 +111,7 @@ class AutoMod(commands.Cog):
         if message.author.bot or not message.guild:
             return
 
-        # Ignora comandos do bot — um link dentro de "L!play <link>" não é spam de link
+        # Ignora comandos do bot — um link dentro de "/play <link>" não é spam de link
         prefixes = await self.bot.get_prefix(message)
         if isinstance(prefixes, str):
             prefixes = [prefixes]
@@ -214,7 +214,7 @@ class AutoMod(commands.Cog):
 
     # ---------- comandos: estado geral ----------
 
-    @commands.command(name="automod")
+    @commands.hybrid_command(name="automod")
     async def automod_status(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
         embed = discord.Embed(title="🛡️ Auto-Moderação", color=discord.Color.blurple())
@@ -229,7 +229,7 @@ class AutoMod(commands.Cog):
         embed.add_field(name="Moderadores automod", value=str(len(config["mods"])), inline=True)
         await ctx.send(embed=embed)
 
-    @commands.command(name="automod_on")
+    @commands.hybrid_command(name="automod_on")
     @commands.has_permissions(administrator=True)
     async def automod_on(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -237,7 +237,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send("✅ Auto-moderação ligada.")
 
-    @commands.command(name="automod_off")
+    @commands.hybrid_command(name="automod_off")
     @commands.has_permissions(administrator=True)
     async def automod_off(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
@@ -245,7 +245,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send("❌ Auto-moderação desligada.")
 
-    @commands.command(name="automod_antispam")
+    @commands.hybrid_command(name="automod_antispam")
     @commands.has_permissions(administrator=True)
     async def automod_antispam(self, ctx: commands.Context, estado: str):
         config = self._get_config(ctx.guild.id)
@@ -256,7 +256,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send(f"Anti-spam {'ligado' if config['anti_spam'] else 'desligado'}.")
 
-    @commands.command(name="automod_antilinks")
+    @commands.hybrid_command(name="automod_antilinks")
     @commands.has_permissions(administrator=True)
     async def automod_antilinks(self, ctx: commands.Context, estado: str):
         config = self._get_config(ctx.guild.id)
@@ -269,7 +269,7 @@ class AutoMod(commands.Cog):
 
     # ---------- comandos: whitelist de domínios ----------
 
-    @commands.command(name="automod_whitelist_add")
+    @commands.hybrid_command(name="automod_whitelist_add")
     @commands.has_permissions(administrator=True)
     async def automod_whitelist_add(self, ctx: commands.Context, dominio: str):
         config = self._get_config(ctx.guild.id)
@@ -281,7 +281,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send(f"✅ `{dominio}` adicionado à whitelist.")
 
-    @commands.command(name="automod_whitelist_remove")
+    @commands.hybrid_command(name="automod_whitelist_remove")
     @commands.has_permissions(administrator=True)
     async def automod_whitelist_remove(self, ctx: commands.Context, dominio: str):
         config = self._get_config(ctx.guild.id)
@@ -293,7 +293,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send(f"🗑️ `{dominio}` removido da whitelist.")
 
-    @commands.command(name="automod_whitelist")
+    @commands.hybrid_command(name="automod_whitelist")
     async def automod_whitelist(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
         domains = config["whitelist_domains"]
@@ -309,7 +309,7 @@ class AutoMod(commands.Cog):
 
     # ---------- comandos: permissões automod ----------
 
-    @commands.command(name="automod_addperm")
+    @commands.hybrid_command(name="automod_addperm")
     @commands.has_permissions(administrator=True)
     async def automod_addperm(self, ctx: commands.Context, member: discord.Member):
         config = self._get_config(ctx.guild.id)
@@ -320,7 +320,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send(f"✅ {member.mention} agora tem permissão de moderador automod (isento + pode configurar).")
 
-    @commands.command(name="automod_removeperm")
+    @commands.hybrid_command(name="automod_removeperm")
     @commands.has_permissions(administrator=True)
     async def automod_removeperm(self, ctx: commands.Context, member: discord.Member):
         config = self._get_config(ctx.guild.id)
@@ -331,7 +331,7 @@ class AutoMod(commands.Cog):
         self._save()
         await ctx.send(f"🗑️ Permissão de moderador automod removida de {member.mention}.")
 
-    @commands.command(name="automod_perms")
+    @commands.hybrid_command(name="automod_perms")
     async def automod_perms(self, ctx: commands.Context):
         config = self._get_config(ctx.guild.id)
         admins = [m for m in ctx.guild.members if m.guild_permissions.administrator]
@@ -366,7 +366,7 @@ class AutoMod(commands.Cog):
         elif isinstance(error, commands.MemberNotFound):
             await ctx.send("⚠️ Não encontrei esse membro.")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("⚠️ Faltam argumentos. Confirma a sintaxe no `L!help`.")
+            await ctx.send("⚠️ Faltam argumentos. Confirma a sintaxe no `/help`.")
 
 
 async def setup(bot: commands.Bot):

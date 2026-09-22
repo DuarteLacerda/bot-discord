@@ -5,13 +5,13 @@ Sistema de avisos (warns) com histórico persistente, kick, ban, unban,
 e um canal de log opcional onde todas as ações ficam registadas.
 
 Comandos:
-    L!warn @user <motivo>            - dá um aviso a alguém (admin ou mod automod)
-    L!warnings [@user]               - lista os avisos de alguém (omite = os teus)
-    L!warn_remove @user <id>         - remove um aviso específico (admin)
-    L!kick @user [motivo]            - expulsa (precisa de Kick Members)
-    L!ban @user [motivo]             - bane (precisa de Ban Members)
-    L!unban <user_id>                - remove o ban (precisa de Ban Members)
-    L!modlog_canal [#canal]          - define/mostra o canal de log (admin)
+    /warn @user <motivo>            - dá um aviso a alguém (admin ou mod automod)
+    /warnings [@user]               - lista os avisos de alguém (omite = os teus)
+    /warn_remove @user <id>         - remove um aviso específico (admin)
+    /kick @user [motivo]            - expulsa (precisa de Kick Members)
+    /ban @user [motivo]             - bane (precisa de Ban Members)
+    /unban <user_id>                - remove o ban (precisa de Ban Members)
+    /modlog_canal [#canal]          - define/mostra o canal de log (admin)
 
 Se houver canal de log definido, todas as ações acima são registadas lá
 automaticamente com autor, alvo, motivo e hora.
@@ -76,7 +76,7 @@ class Moderation(commands.Cog):
 
     # ---------- warns ----------
 
-    @commands.command(name="warn")
+    @commands.hybrid_command(name="warn")
     async def warn(self, ctx: commands.Context, member: discord.Member, *, motivo: str = "Sem motivo especificado"):
         if not await self._can_warn(ctx):
             await ctx.send("❌ Precisas de ser admin ou moderador automod para avisar alguém.")
@@ -120,7 +120,7 @@ class Moderation(commands.Cog):
         log_embed.set_footer(text=warn["timestamp"])
         await self._log(ctx.guild, log_embed)
 
-    @commands.command(name="warnings")
+    @commands.hybrid_command(name="warnings")
     async def warnings_cmd(self, ctx: commands.Context, member: discord.Member = None):
         target = member or ctx.author
 
@@ -144,7 +144,7 @@ class Moderation(commands.Cog):
             )
         await ctx.send(embed=embed)
 
-    @commands.command(name="warn_remove")
+    @commands.hybrid_command(name="warn_remove")
     @commands.has_permissions(administrator=True)
     async def warn_remove(self, ctx: commands.Context, member: discord.Member, warn_id: int):
         guild_key = str(ctx.guild.id)
@@ -162,7 +162,7 @@ class Moderation(commands.Cog):
 
     # ---------- kick / ban ----------
 
-    @commands.command(name="kick")
+    @commands.hybrid_command(name="kick")
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx: commands.Context, member: discord.Member, *, motivo: str = "Sem motivo especificado"):
         try:
@@ -187,7 +187,7 @@ class Moderation(commands.Cog):
         log_embed.add_field(name="Motivo", value=motivo, inline=False)
         await self._log(ctx.guild, log_embed)
 
-    @commands.command(name="ban")
+    @commands.hybrid_command(name="ban")
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx: commands.Context, member: discord.Member, *, motivo: str = "Sem motivo especificado"):
         try:
@@ -212,7 +212,7 @@ class Moderation(commands.Cog):
         log_embed.add_field(name="Motivo", value=motivo, inline=False)
         await self._log(ctx.guild, log_embed)
 
-    @commands.command(name="unban")
+    @commands.hybrid_command(name="unban")
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx: commands.Context, user_id: int):
         try:
@@ -236,7 +236,7 @@ class Moderation(commands.Cog):
 
     # ---------- canal de log ----------
 
-    @commands.command(name="modlog_canal")
+    @commands.hybrid_command(name="modlog_canal")
     @commands.has_permissions(administrator=True)
     async def modlog_canal(self, ctx: commands.Context, canal: discord.TextChannel = None):
         guild_key = str(ctx.guild.id)
@@ -244,7 +244,7 @@ class Moderation(commands.Cog):
         if canal is None:
             current_id = self.modlog.get(guild_key)
             if not current_id:
-                await ctx.send("Não há canal de log definido. Usa `L!modlog_canal #canal` para definir.")
+                await ctx.send("Não há canal de log definido. Usa `/modlog_canal #canal` para definir.")
                 return
             current = ctx.guild.get_channel(current_id)
             await ctx.send(f"Canal de log atual: {current.mention if current else '(canal apagado)'}")
@@ -267,7 +267,7 @@ class Moderation(commands.Cog):
         elif isinstance(error, commands.MemberNotFound):
             await ctx.send("⚠️ Não encontrei esse membro.")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("⚠️ Faltam argumentos. Confirma a sintaxe no `L!help`.")
+            await ctx.send("⚠️ Faltam argumentos. Confirma a sintaxe no `/help`.")
         elif isinstance(error, commands.ChannelNotFound):
             await ctx.send("⚠️ Não encontrei esse canal.")
 
@@ -276,7 +276,7 @@ class Moderation(commands.Cog):
         if isinstance(error, commands.MemberNotFound):
             await ctx.send("⚠️ Não encontrei esse membro.")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("⚠️ Uso: `L!warn @user <motivo>`")
+            await ctx.send("⚠️ Uso: `/warn @user <motivo>`")
 
 
 async def setup(bot: commands.Bot):

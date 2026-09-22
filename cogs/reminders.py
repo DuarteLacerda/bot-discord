@@ -5,9 +5,9 @@ Permite aos utilizadores criar lembretes que o bot envia mais tarde,
 por DM ou no canal onde foi pedido.
 
 Comandos:
-    L!lembrar <tempo> <mensagem>   -> cria um lembrete (ex: L!lembrar 10m estudar POO)
-    L!lembretes                    -> lista os teus lembretes pendentes
-    L!lembrete_cancelar <id>       -> cancela um lembrete pelo id
+    /lembrar <tempo> <mensagem>   -> cria um lembrete (ex: /lembrar 10m estudar POO)
+    /lembretes                    -> lista os teus lembretes pendentes
+    /lembrete_cancelar <id>       -> cancela um lembrete pelo id
 
 Formatos de tempo aceites: combinações de números + unidade, ex: "1d2h30m", "45s", "3h".
 Unidades: s (segundos), m (minutos), h (horas), d (dias).
@@ -117,7 +117,7 @@ class Reminders(commands.Cog):
 
     # ---------- comandos ----------
 
-    @commands.command(name="lembrar", aliases=["remind", "remindme"])
+    @commands.hybrid_command(name="lembrar", aliases=["remind", "remindme"])
     async def lembrar(self, ctx: commands.Context, tempo: str, *, mensagem: str):
         segundos = parse_duration(tempo)
         if segundos is None:
@@ -149,7 +149,7 @@ class Reminders(commands.Cog):
             f"✅ Lembrete #{reminder['id']} criado! Aviso-te a **{quando}**."
         )
 
-    @commands.command(name="lembretes", aliases=["reminders"])
+    @commands.hybrid_command(name="lembretes", aliases=["reminders"])
     async def lembretes(self, ctx: commands.Context):
         meus = [r for r in self.reminders if r["user_id"] == ctx.author.id]
         if not meus:
@@ -166,7 +166,7 @@ class Reminders(commands.Cog):
             )
         await ctx.send(embed=embed)
 
-    @commands.command(name="lembrete_cancelar", aliases=["remind_cancel", "unremind"])
+    @commands.hybrid_command(name="lembrete_cancelar", aliases=["remind_cancel", "unremind"])
     async def lembrete_cancelar(self, ctx: commands.Context, reminder_id: int):
         alvo = next(
             (r for r in self.reminders if r["id"] == reminder_id and r["user_id"] == ctx.author.id),
