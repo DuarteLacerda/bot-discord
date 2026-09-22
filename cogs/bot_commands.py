@@ -10,6 +10,75 @@ from discord.ext import commands
 
 from utils.components import ConfirmView, PaginatedView
 
+def _chunk_lines(lines: list, limit: int = 1024) -> list:
+    """Divide as linhas em blocos que cabem num campo de embed (máx 1024 chars),
+    sem cortar nenhuma linha a meio."""
+    chunks = []
+    current = []
+    current_len = 0
+    for line in lines:
+        line_len = len(line) + 1  # +1 pelo \n
+        if current and current_len + line_len > limit:
+            chunks.append("\n".join(current))
+            current = []
+            current_len = 0
+        current.append(line)
+        current_len += line_len
+    if current:
+        chunks.append("\n".join(current))
+    return chunks
+
+class HelpView(discord.ui.View):
+    """Menu de ajuda com dropdown para saltar direto a uma categoria,
+    mais botões Anterior/Seguinte para quem prefere navegar em sequência."""
+ 
+    def __init__(self, embeds: list, section_titles: list, author_id: int, timeout: float = 180):
+        super().__init__(timeout=timeout)
+        self.embeds = embeds
+        self.author_id = author_id
+        self.index = 0
+ 
+        options = [
+            discord.SelectOption(label=title[:100], value=str(i))
+            for i, title in enumerate(section_titles)
+        ]
+        # Discord só permite 25 opções por select — corta se algum dia crescer mais que isso
+        self.select = discord.ui.Select(placeholder="📂 Escolhe uma categoria...", options=options[:25])
+        self.select.callback = self._on_select
+        self.add_item(self.select)
+ 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "Usa `L!help` para abrires o teu próprio menu.", ephemeral=True
+            )
+            return False
+        return True
+ 
+    async def _on_select(self, interaction: discord.Interaction):
+        self.index = int(self.select.values[0])
+        await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
+ 
+    @discord.ui.button(label="◀ Anterior", style=discord.ButtonStyle.secondary, row=1)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.index = (self.index - 1) % len(self.embeds)
+        await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
+ 
+    @discord.ui.button(label="Seguinte ▶", style=discord.ButtonStyle.secondary, row=1)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.index = (self.index + 1) % len(self.embeds)
+        await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
+ 
+    @discord.ui.button(label="Fechar", style=discord.ButtonStyle.danger, row=1)
+    async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.message.delete()
+        except discord.HTTPException:
+            pass
+ 
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
 
 class Basic(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -847,199 +916,178 @@ class Basic(commands.Cog):
     # ---------- helper: constrói as secções de ajuda ----------
 
     def _build_help_sections(self, is_admin: bool) -> list:
-        """Devolve a lista de secções (título, comandos) para o help.
-        Centraliza tudo num só sítio — para adicionar um comando novo
-        basta editar aqui, não é preciso duplicar nada."""
-
         basic = [
             ("ping", "responde com pong"),
             ("sum <a> <b>", "somar dois números"),
         ]
-
+ 
         info = [
             ("info [@user]", "mostrar informações do utilizador"),
             ("server / guild", "mostrar informações do servidor"),
             ("rules", "mostrar regras do servidor"),
             ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
         ]
-
+ 
         weather = [
             ("tempo <cidade>", "mostra o tempo atual"),
             ("hora <cidade>", "mostra a hora atual"),
             ("previsao <cidade>", "previsão para 7 dias"),
         ]
-
+ 
         utils = [
             ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
         ]
-
-        music_1 = [
+ 
+        music = [
             ("join / connect / j", "juntar ao canal de voz"),
             ("play / p <term|link>", "tocar do YouTube ou Spotify"),
             ("skip / sk", "saltar música atual"),
             ("stop / s", "parar e sair"),
             ("pause / pz", "pausar"),
-        ]
-        
-        music_2 = [
             ("resume / r", "retomar"),
             ("queue / q", "mostrar fila"),
             ("testtone / tone", "testar áudio com tom"),
             ("music", "mostrar comandos de música"),
         ]
-
+ 
         levels = [
             ("level [@user]", "mostrar nível e XP"),
             ("rank", "mostrar top 10 do ranking"),
         ]
-
+ 
         games = [
             ("termo", "começa um novo jogo de Termo"),
             ("termo_quit / quit", "sai do jogo atual"),
             ("termo_stats / stats [@user]", "estatísticas do Termo"),
             ("termo_rank", "ranking do Termo"),
         ]
-
-        quick_games_1 = [
+ 
+        quick_games = [
             ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
             ("dado [lados]", "rola um dado de N lados"),
             ("moeda", "atira uma moeda ao ar"),
             ("escolher <op1> <op2> ...", "deixa o bot escolher"),
-        ]
-        
-        quick_games_2 = [
             ("8ball <pergunta>", "pergunta à bola mágica"),
             ("adivinhar <número>", "adivinha o número (1-10)"),
             ("jogos", "mostra todos os jogos"),
         ]
-
+ 
         code = [
             ("code / desafio", "desafio de programação"),
             ("stats_code", "estatísticas dos desafios"),
         ]
-
+ 
         reminders = [
             ("lembrar <tempo> <mensagem>", "cria um lembrete (ex: 10m, 2h, 1d)"),
             ("lembretes", "lista os teus lembretes pendentes"),
             ("lembrete_cancelar <id>", "cancela um lembrete"),
         ]
-        
+ 
         polls = [
             ("poll <pergunta>", "cria enquete sim/não"),
             ("poll <pergunta> | op1 | op2 ...", "cria enquete de opções (até 10)"),
             ("poll_fechar <id_mensagem>", "fecha enquete e mostra resultados"),
         ]
-        
+ 
         automod_geral = [
             ("automod", "mostra o estado da auto-moderação"),
             ("automod_whitelist", "lista domínios permitidos"),
             ("automod_perms", "lista quem tem permissão de mod automod"),
         ]
-        
+ 
         tickets = [
             ("ticket <motivo>", "abre um ticket privado com a staff"),
         ]
-
+ 
         sections = [
             ("⚙️ Básico", basic),
             ("ℹ️ Informação", info),
             ("🌤️ Meteorologia", weather),
             ("🔧 Utilidades", utils),
-            ("🎵 Música", music_1),
-            ("🎵 Música (cont.)", music_2),
+            ("🎵 Música", music),
             ("📊 Níveis", levels),
             ("🎮 Jogos - Termo", games),
-            ("🎲 Jogos Rápidos", quick_games_1),
-            ("🎲 Jogos Rápidos (cont.)", quick_games_2),
+            ("🎲 Jogos Rápidos", quick_games),
             ("💻 Desafios de Código", code),
             ("⏰ Lembretes", reminders),
             ("📊 Enquetes", polls),
             ("🛡️ Auto-Moderação", automod_geral),
-            ("🎫 Tickets", tickets)
+            ("🎫 Tickets", tickets),
         ]
-
+ 
         if is_admin:
-            automod_1 = [
+            automod_admin = [
                 ("automod_on / automod_off", "liga/desliga tudo"),
                 ("automod_antispam <on|off>", "liga/desliga anti-spam"),
                 ("automod_antilinks <on|off>", "liga/desliga anti-links"),
                 ("automod_whitelist_add <dom.>", "permite um domínio"),
-            ]
-            
-            automod_2 = [
                 ("automod_whitelist_remove <dom.>", "remove um domínio"),
                 ("automod_addperm @user", "dá permissão de mod automod"),
                 ("automod_removeperm @user", "remove essa permissão"),
             ]
-            
-            moderation_1 = [
+ 
+            moderation = [
                 ("warn @user <motivo>", "dá um aviso"),
                 ("warnings [@user]", "lista avisos"),
                 ("warn_remove @user <id>", "remove um aviso"),
                 ("kick @user [motivo]", "expulsa um membro"),
-            ]
-        
-            moderation_2 = [
                 ("ban @user [motivo]", "bane um membro"),
                 ("unban <user_id>", "remove um ban"),
                 ("modlog_canal [#canal]", "define/mostra o canal de log"),
             ]
-            
+ 
+            antiraid = [
+                ("antiraid", "mostra o estado do anti-raid"),
+                ("antiraid_on / antiraid_off", "liga/desliga"),
+                ("antiraid_config <n> <s> <dias>", "ajusta sensibilidade"),
+                ("antiraid_lockdown_on/off", "ativa/desativa lockdown manual"),
+            ]
+ 
             admin = [
                 ("write <message>", "ecoar mensagem"),
-                ("clear [amount]", "apagar x mensagens do canal"),
-                ("clear", "apagar todas as mensagens do canal"),
+                ("clear [amount]", "apagar mensagens do canal"),
                 ("addxp @user <value>", "adicionar XP a um utilizador"),
                 ("ticketpanel", "posta o painel de abertura de tickets"),
             ]
-            
-            sections.append(("🛡️ Auto-Moderação", automod_1))
-            sections.append(("🛡️ Auto-Moderação (cont.)", automod_2))
-            sections.append(("🔨 Moderação", moderation_1))
-            sections.append(("🔨 Moderação (cont.)", moderation_2))
+ 
+            sections.append(("🛡️ Auto-Moderação (Admin)", automod_admin))
+            sections.append(("🔨 Moderação", moderation))
+            sections.append(("🚨 Anti-Raid", antiraid))
             sections.append(("👑 Admin", admin))
-
+ 
         return sections
 
     @commands.command(name="help")
     async def help_cmd(self, ctx):
         """Mostrar todos os comandos disponíveis"""
         prefix = ctx.prefix or "L!"
-
-        def build_embeds(title: str, color: discord.Color, sections: list):
-            embeds = []
-            for section_title, commands_list in sections:
-                embed = discord.Embed(
-                    title=title,
-                    description="Para mais informações sobre um comando, usa `L!help`",
-                    color=color,
-                )
-                section_text = "\n".join(
-                    f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in commands_list
-                )
-                embed.add_field(
-                    name=section_title,
-                    value=section_text or "(sem comandos)",
-                    inline=False,
-                )
-                embeds.append(embed)
-
-            total = len(embeds)
-            for index, embed in enumerate(embeds, start=1):
-                embed.set_footer(text=f"Página {index}/{total}")
-            return embeds
-
         is_admin = ctx.author.guild_permissions.administrator
         sections = self._build_help_sections(is_admin)
-
+ 
         title = "📖 Ajuda (Admin)" if is_admin else "📖 Ajuda"
         color = discord.Color.red() if is_admin else discord.Color.blurple()
-
-        embeds = build_embeds(title, color, sections)
-        view = PaginatedView(embeds)
+ 
+        embeds = []
+        for section_title, commands_list in sections:
+            lines = [f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in commands_list]
+            chunks = _chunk_lines(lines) or ["(sem comandos)"]
+ 
+            embed = discord.Embed(
+                title=title,
+                description="Escolhe uma categoria no menu abaixo 👇",
+                color=color,
+            )
+            for i, chunk in enumerate(chunks):
+                field_name = section_title if i == 0 else f"{section_title} (cont.)"
+                embed.add_field(name=field_name, value=chunk, inline=False)
+ 
+            embed.set_footer(text=f"{section_title} • L!help")
+            embeds.append(embed)
+ 
+        section_titles = [s[0] for s in sections]
+        view = HelpView(embeds, section_titles, author_id=ctx.author.id)
         await ctx.send(embed=embeds[0], view=view)
 
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Basic(bot))
-

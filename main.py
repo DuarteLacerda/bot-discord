@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG)
 class MyBot(commands.Bot):
     async def setup_hook(self):
         # Carrega extensões antes de conectar
-        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo", "cogs.code_challenges", "cogs.games", "cogs.reminders", "cogs.polls", "cogs.automod", "cogs.moderation", "cogs.tickets"]:
+        for ext in ["cogs.bot_commands", "cogs.events", "cogs.music", "cogs.levels", "cogs.termo", "cogs.code_challenges", "cogs.games", "cogs.reminders", "cogs.polls", "cogs.automod", "cogs.moderation", "cogs.tickets", "cogs.antiraid"]:
             try:
                 logging.info(f"Loading extension: {ext}")
                 await self.load_extension(ext)
