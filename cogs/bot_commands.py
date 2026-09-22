@@ -31,13 +31,14 @@ def _chunk_lines(lines: list, limit: int = 1024) -> list:
 class HelpView(discord.ui.View):
     """Menu de ajuda com dropdown para saltar direto a uma categoria,
     mais botões Anterior/Seguinte para quem prefere navegar em sequência."""
- 
-    def __init__(self, embeds: list, section_titles: list, author_id: int, timeout: float = 180):
+
+    def __init__(self, embeds: list, section_titles: list, author_id: int, timeout: float = 60):
         super().__init__(timeout=timeout)
         self.embeds = embeds
         self.author_id = author_id
         self.index = 0
- 
+        self.message = None  # definido depois do ctx.send
+
         options = [
             discord.SelectOption(label=title[:100], value=str(i))
             for i, title in enumerate(section_titles)
@@ -46,7 +47,7 @@ class HelpView(discord.ui.View):
         self.select = discord.ui.Select(placeholder="📂 Escolhe uma categoria...", options=options[:25])
         self.select.callback = self._on_select
         self.add_item(self.select)
- 
+
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author_id:
             await interaction.response.send_message(
@@ -54,31 +55,36 @@ class HelpView(discord.ui.View):
             )
             return False
         return True
- 
+
     async def _on_select(self, interaction: discord.Interaction):
         self.index = int(self.select.values[0])
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
- 
+
     @discord.ui.button(label="◀ Anterior", style=discord.ButtonStyle.secondary, row=1)
     async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.index = (self.index - 1) % len(self.embeds)
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
- 
+
     @discord.ui.button(label="Seguinte ▶", style=discord.ButtonStyle.secondary, row=1)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.index = (self.index + 1) % len(self.embeds)
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
- 
+
     @discord.ui.button(label="Fechar", style=discord.ButtonStyle.danger, row=1)
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await interaction.message.delete()
         except discord.HTTPException:
             pass
- 
+
     async def on_timeout(self):
         for item in self.children:
             item.disabled = True
+        if self.message:
+            try:
+                await self.message.delete()
+            except discord.HTTPException:
+                pass
 
 class Basic(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -275,74 +281,6 @@ class Basic(commands.Cog):
                     "wind": daily_units.get("wind_speed_10m_max", "km/h"),
                 }
             }
-
-    @staticmethod
-    def _split_host_port(address: str):
-        address = address.strip()
-        if address.startswith("[") and "]" in address:
-            host, rest = address[1:].split("]", 1)
-            if rest.startswith(":") and rest[1:].isdigit():
-                return host, int(rest[1:])
-            return host, None
-
-        if ":" in address:
-            host, port = address.rsplit(":", 1)
-            if port.isdigit():
-                return host, int(port)
-
-        return address, None
-
-    async def _query_minecraft(self, host: str, port: int | None):
-        def _lookup():
-            from mcstatus import JavaServer
-
-            targets = []
-            if port is None:
-                targets.append(host)
-                targets.append(f"{host}:25565")
-            else:
-                targets.append(f"{host}:{port}")
-
-            last_error = None
-            for target in targets:
-                try:
-                    server = JavaServer.lookup(target)
-                    status = server.status()
-                    try:
-                        latency = server.ping()
-                    except Exception:
-                        latency = getattr(status, "latency", None)
-
-                    description = getattr(status, "description", None)
-                    return {
-                        "type": "Minecraft",
-                        "players": getattr(status.players, "online", None),
-                        "max_players": getattr(status.players, "max", None),
-                        "version": getattr(status.version, "name", None),
-                    }
-                except Exception as exc:
-                    last_error = exc
-                    continue
-
-            raise last_error
-
-        return await asyncio.to_thread(_lookup)
-
-    async def _query_source(self, host: str, port: int):
-        def _lookup():
-            import a2s
-
-            info = a2s.info((host, port), timeout=3.0)
-            return {
-                "type": "Source",
-                "players": getattr(info, "player_count", None),
-                "max_players": getattr(info, "max_players", None),
-                "game": getattr(info, "game", None),
-                "map": getattr(info, "map_name", None),
-                "name": getattr(info, "server_name", None),
-            }
-
-        return await asyncio.to_thread(_lookup)
 
     @commands.command()
     async def ping(self, ctx):
@@ -560,144 +498,6 @@ class Basic(commands.Cog):
         embed.set_footer(text="Fonte: Open-Meteo")
         await ctx.send(embed=embed)
 
-    @commands.command(name="traduzir", aliases=["translate", "tr"])
-    async def traduzir(self, ctx, *args):
-        """Traduz texto entre idiomas"""
-        try:
-            from deep_translator import GoogleTranslator, MyMemoryTranslator
-        except Exception:
-            embed = discord.Embed(
-                title="❌ Tradução Indisponível",
-                description="A dependência `deep-translator` não está instalada.",
-                color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        try:
-            from langdetect import detect
-        except Exception:
-            detect = None
-
-        if len(args) < 2:
-            embed = discord.Embed(
-                title="❌ Sintaxe Inválida",
-                description=(
-                    "Uso: `L!traduzir <idioma_destino> <texto>`\n"
-                    "Ou:  `L!traduzir <idioma_origem> <idioma_destino> <texto>`"
-                ),
-                color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        mm_supported = MyMemoryTranslator(source="en-GB", target="pt-PT").get_supported_languages(as_dict=True)
-        mm_supported_names = set(mm_supported.keys())
-        mm_supported_codes = set(mm_supported.values())
-
-        def normalize_mymemory_lang(token: str):
-            token_lower = token.lower()
-
-            if token_lower in mm_supported_names:
-                return mm_supported[token_lower]
-            if token in mm_supported_codes:
-                return token
-
-            preferred = {
-                "en": "en-US",
-                "pt": "pt-PT",
-                "es": "es-ES",
-                "fr": "fr-FR",
-                "de": "de-DE",
-                "it": "it-IT",
-            }
-            if token_lower in preferred and preferred[token_lower] in mm_supported_codes:
-                return preferred[token_lower]
-
-            for code in mm_supported_codes:
-                if code.lower().startswith(f"{token_lower}-"):
-                    return code
-            return None
-
-        def normalize_google_lang(code: str):
-            return code.split("-")[0] if code else code
-
-        def is_lang(token: str) -> bool:
-            token_lower = token.lower()
-            return token_lower in mm_supported_names or token in mm_supported_codes
-
-        if len(args) >= 3 and is_lang(args[0]) and is_lang(args[1]):
-            source_lang = args[0]
-            target_lang = args[1]
-            text = " ".join(args[2:])
-        else:
-            source_lang = "auto"
-            target_lang = args[0]
-            text = " ".join(args[1:])
-
-        target_code = normalize_mymemory_lang(target_lang)
-        if not target_code:
-            embed = discord.Embed(
-                title="❌ Idioma Inválido",
-                description=(
-                    "Idioma de destino inválido. Usa um código suportado (ex.: `en`, `pt`, `es`)."
-                ),
-                color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        source_code = normalize_mymemory_lang(source_lang) if source_lang != "auto" else None
-        if source_lang != "auto" and not source_code:
-            embed = discord.Embed(
-                title="❌ Idioma Inválido",
-                description=(
-                    "Idioma de origem inválido. Usa um código suportado (ex.: `pt`, `en`)."
-                ),
-                color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        if source_lang == "auto":
-            if detect:
-                try:
-                    detected = detect(text)
-                    source_code = normalize_mymemory_lang(detected) or detected
-                except Exception:
-                    source_code = None
-
-        translated = None
-        engine = "MyMemory"
-        try:
-            if not source_code:
-                raise ValueError("source language not detected")
-            translated = MyMemoryTranslator(source=source_code, target=target_code).translate(text)
-        except Exception as e:
-            try:
-                engine = "Google"
-                g_source = normalize_google_lang(source_code) if source_code else "auto"
-                g_target = normalize_google_lang(target_code) if target_code else target_lang
-                translated = GoogleTranslator(source=g_source, target=g_target).translate(text)
-            except Exception as e2:
-                embed = discord.Embed(
-                    title="❌ Erro na Tradução",
-                    description=f"Falha ao traduzir: {e2}",
-                    color=discord.Color.red()
-                )
-                await ctx.send(embed=embed)
-                return
-
-        embed = discord.Embed(
-            title="🌍 Tradução",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="Texto Original", value=text, inline=False)
-        embed.add_field(name="Texto Traduzido", value=translated, inline=False)
-        used_source = source_code or source_lang
-        embed.set_footer(text=f"{used_source} → {target_code} via {engine}")
-        await ctx.send(embed=embed)
-
     @commands.command()
     async def info(self, ctx, member: discord.Member = None):
         """Mostrar informações do utilizador"""
@@ -726,7 +526,8 @@ class Basic(commands.Cog):
             value=guild.created_at.strftime("%d/%m/%Y %H:%M:%S"),
             inline=False
         )
-        embed.set_thumbnail(url=guild.icon.url if guild.icon else discord.Embed.Empty)
+        if guild.icon:
+            embed.set_thumbnail(url=guild.icon.url)
         await ctx.send(embed=embed)
 
     @commands.command(name="clear")
@@ -840,79 +641,6 @@ class Basic(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="serverstatus", description="Verifica o status de servidores de jogos")
-    @discord.app_commands.describe(ip="IP/domínio com porta opcional (ex: 1.2.3.4:25565)")
-    async def serverstatus_cmd(self, ctx, ip: str):
-        if ctx.interaction:
-            await ctx.defer()
-
-        host, port = self._split_host_port(ip)
-
-        candidates = []
-        if port is None:
-            candidates.append(("minecraft", host, None))
-            candidates.append(("source", host, 27015))
-        else:
-            candidates.append(("minecraft", host, port))
-            candidates.append(("source", host, port))
-
-        result = None
-
-        for server_type, host, port in candidates:
-            try:
-                if server_type == "minecraft":
-                    result = await self._query_minecraft(host, port)
-                else:
-                    result = await self._query_source(host, port)
-                result["host"] = host
-                result["port"] = port
-                break
-            except Exception:
-                continue
-
-        if not result:
-            embed = discord.Embed(
-                title="🖥️ Status do Servidor",
-                description="Não foi possível contactar o servidor. Verifica o IP/porta.",
-                color=discord.Color.red(),
-            )
-            embed.add_field(name="Endereço", value=ip, inline=False)
-            await ctx.send(embed=embed)
-            return
-
-        embed = discord.Embed(
-            title="🖥️ Status do Servidor",
-            color=discord.Color.green(),
-        )
-        embed.add_field(name="Tipo", value=result.get("type", "Desconhecido"), inline=True)
-        address = result["host"] if result.get("port") is None else f"{result['host']}:{result['port']}"
-        embed.add_field(name="Endereço", value=address, inline=True)
-
-        players = result.get("players")
-        max_players = result.get("max_players")
-        if players is not None and max_players is not None:
-            embed.add_field(name="Jogadores", value=f"{players}/{max_players}", inline=True)
-
-        if result.get("type") == "Minecraft":
-            if result.get("version"):
-                embed.add_field(name="Versão", value=result["version"], inline=True)
-            if result.get("motd"):
-                motd = result["motd"]
-                if len(motd) > 200:
-                    motd = motd[:197] + "..."
-                embed.add_field(name="MOTD", value=motd, inline=False)
-            if result.get("latency") is not None:
-                embed.add_field(name="Latência", value=f"{int(result['latency'])} ms", inline=True)
-        else:
-            if result.get("game"):
-                embed.add_field(name="Jogo", value=result["game"], inline=True)
-            if result.get("map"):
-                embed.add_field(name="Mapa", value=result["map"], inline=True)
-            if result.get("name"):
-                embed.add_field(name="Nome", value=result["name"], inline=False)
-
-        await ctx.send(embed=embed)
-
     # ---------- helper: constrói as secções de ajuda ----------
 
     def _build_help_sections(self, is_admin: bool) -> list:
@@ -925,17 +653,12 @@ class Basic(commands.Cog):
             ("info [@user]", "mostrar informações do utilizador"),
             ("server / guild", "mostrar informações do servidor"),
             ("rules", "mostrar regras do servidor"),
-            ("serverstatus <ip>", "status de servidores (Minecraft/CS:GO)"),
         ]
  
         weather = [
             ("tempo <cidade>", "mostra o tempo atual"),
             ("hora <cidade>", "mostra a hora atual"),
             ("previsao <cidade>", "previsão para 7 dias"),
-        ]
- 
-        utils = [
-            ("traduzir <dest> <texto>", "traduz texto entre idiomas"),
         ]
  
         music = [
@@ -1003,7 +726,6 @@ class Basic(commands.Cog):
             ("⚙️ Básico", basic),
             ("ℹ️ Informação", info),
             ("🌤️ Meteorologia", weather),
-            ("🔧 Utilidades", utils),
             ("🎵 Música", music),
             ("📊 Níveis", levels),
             ("🎮 Jogos - Termo", games),
@@ -1063,15 +785,15 @@ class Basic(commands.Cog):
         prefix = ctx.prefix or "L!"
         is_admin = ctx.author.guild_permissions.administrator
         sections = self._build_help_sections(is_admin)
- 
+
         title = "📖 Ajuda (Admin)" if is_admin else "📖 Ajuda"
         color = discord.Color.red() if is_admin else discord.Color.blurple()
- 
+
         embeds = []
         for section_title, commands_list in sections:
             lines = [f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in commands_list]
             chunks = _chunk_lines(lines) or ["(sem comandos)"]
- 
+
             embed = discord.Embed(
                 title=title,
                 description="Escolhe uma categoria no menu abaixo 👇",
@@ -1080,14 +802,15 @@ class Basic(commands.Cog):
             for i, chunk in enumerate(chunks):
                 field_name = section_title if i == 0 else f"{section_title} (cont.)"
                 embed.add_field(name=field_name, value=chunk, inline=False)
- 
+
             embed.set_footer(text=f"{section_title} • L!help")
             embeds.append(embed)
- 
+
         section_titles = [s[0] for s in sections]
         view = HelpView(embeds, section_titles, author_id=ctx.author.id)
-        await ctx.send(embed=embeds[0], view=view)
+        message = await ctx.send(embed=embeds[0], view=view)
+        view.message = message
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Basic(bot))
+        await bot.add_cog(Basic(bot))
