@@ -58,7 +58,9 @@ intents.voice_states = True
 intents.members = True
 intents.presences = True
 
-bot = MyBot(command_prefix='L!', intents=intents, help_command=None)
+# Os comandos são expostos pela árvore de slash commands. A lista vazia mantém
+# o suporte interno do Bot sem aceitar comandos baseados em mensagens.
+bot = MyBot(command_prefix=lambda _bot, _message: [], intents=intents, help_command=None)
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:

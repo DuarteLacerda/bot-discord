@@ -346,7 +346,7 @@ class Tickets(commands.Cog):
 
     # ===== COMMANDS =====
 
-    @commands.command(name="ticketpanel")
+    @commands.hybrid_command(name="ticketpanel")
     @commands.has_permissions(manage_guild=True)
     async def ticketpanel(self, ctx: commands.Context):
         """Posta o painel de abertura de tickets neste canal (admin)"""
@@ -361,7 +361,7 @@ class Tickets(commands.Cog):
         except (discord.Forbidden, discord.NotFound):
             pass
 
-    @commands.command(name="ticket")
+    @commands.hybrid_command(name="ticket")
     async def ticket(self, ctx: commands.Context, *, reason: str = "Sem motivo especificado"):
         """Abre um ticket diretamente por comando"""
         await self.create_ticket(member=ctx.author, guild=ctx.guild, reason=reason, ctx=ctx)

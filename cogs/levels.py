@@ -146,7 +146,7 @@ class Levels(commands.Cog):
             # Save changes
             self.db.set_user_data(guild_id, user_id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
 
-    @commands.command(name="level")
+    @commands.hybrid_command(name="level")
     async def level(self, ctx, member: discord.Member = None):
         """Show user level and XP"""
         member = member or ctx.author
@@ -197,7 +197,7 @@ class Levels(commands.Cog):
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         await ctx.send(embed=embed)
 
-    @commands.command(name="rank")
+    @commands.hybrid_command(name="rank")
     async def rank(self, ctx):
         """Show top 10 leaderboard"""
         if not ctx.guild:
@@ -229,7 +229,7 @@ class Levels(commands.Cog):
         embed.description = "\n".join(lines) if lines else "Sem utilizadores no ranking."
         await ctx.send(embed=embed)
 
-    @commands.command(name="addxp")
+    @commands.hybrid_command(name="addxp")
     @commands.has_permissions(administrator=True)
     async def addxp(self, ctx, member: discord.Member, xp: int):
         """Add XP to a user (admin only)"""
@@ -291,7 +291,7 @@ class Levels(commands.Cog):
         elif isinstance(error, commands.BadArgument):
             embed = discord.Embed(
                 title="❌ Erro",
-                description="Uso: `l!addxp @user quantidade`",
+                description="Uso: `/addxp @user quantidade`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)

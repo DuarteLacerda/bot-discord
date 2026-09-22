@@ -44,7 +44,7 @@ class Events(commands.Cog):
         # Set Rich Presence (Bot Status)
         activity = discord.Activity(
             type=discord.ActivityType.listening,
-            name="L!help"
+            name="/help"
         )
         await self.bot.change_presence(activity=activity, status=discord.Status.online)
 
@@ -94,8 +94,7 @@ class Events(commands.Cog):
     async def on_error(self, event_method, *args, **kwargs):
         logging.exception("Unhandled error in %s", event_method)
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def _send_command_error(self, destination, error):
         logging.exception("Error during command: %s", error)
         try:
             embed = discord.Embed(
@@ -103,9 +102,23 @@ class Events(commands.Cog):
                 description="Ocorreu um erro ao executar o comando. Tenta novamente em breve.",
                 color=discord.Color.red()
             )
-            await ctx.send(embed=embed)
+            if isinstance(destination, discord.Interaction):
+                if destination.response.is_done():
+                    await destination.followup.send(embed=embed, ephemeral=True)
+                else:
+                    await destination.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await destination.send(embed=embed)
         except Exception:
             logging.exception("Failed to send error message to user")
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        await self._send_command_error(ctx, error)
+
+    @commands.Cog.listener()
+    async def on_app_command_error(self, interaction, error):
+        await self._send_command_error(interaction, error)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -161,7 +174,7 @@ class Events(commands.Cog):
             )
             embed.add_field(
                 name="ℹ️ Precisa de Ajuda?",
-                value="Digite `L!help` para ver todos os comandos disponíveis",
+                value="Digite `/help` para ver todos os comandos disponíveis",
                 inline=False
             )
             embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
@@ -187,7 +200,7 @@ class Events(commands.Cog):
             )
             welcome_dm.add_field(
                 name="💬 Dica",
-                value="Usa `L!help` para descobrir todos os comandos disponíveis!",
+                value="Usa `/help` para descobrir todos os comandos disponíveis!",
                 inline=False
             )
             await member.send(embed=welcome_dm)

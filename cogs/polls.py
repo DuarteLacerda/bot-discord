@@ -5,17 +5,17 @@ Cria enquetes rápidas com reações. Fecham automaticamente ao fim de um
 tempo (por defeito 24h) e o bot publica os resultados sozinho.
 
 Comandos:
-    L!poll <pergunta>                                  -> sim/não, expira em 24h
-    L!poll <pergunta> | opção1 | opção2 | ...           -> até 10 opções, expira em 24h
-    L!poll <pergunta> | op1 | op2 | --tempo 2h          -> tempo customizado
-    L!poll_fechar <id_da_mensagem>                      -> fecha manualmente antes do tempo (autor ou admin)
+    /poll <pergunta>                                  -> sim/não, expira em 24h
+    /poll <pergunta> | opção1 | opção2 | ...          -> até 10 opções, expira em 24h
+    /poll <pergunta> | op1 | op2 | --tempo 2h         -> tempo customizado
+    /poll_fechar <id_da_mensagem>                     -> fecha manualmente antes do tempo (autor ou admin)
 
 Formatos de tempo aceites: combinações de número + unidade, ex: "30m", "2h", "3d".
 Mínimo 5 minutos, máximo 7 dias.
 
 Exemplos:
-    L!poll Devíamos jogar hoje à noite?
-    L!poll Qual jogo? | Valorant | LoL | Apex | CS2 | --tempo 1h
+    /poll Devíamos jogar hoje à noite?
+    /poll Qual jogo? | Valorant | LoL | Apex | CS2 | --tempo 1h
 """
 
 import re
@@ -107,7 +107,7 @@ class Polls(commands.Cog):
 
     # ---------- comandos ----------
 
-    @commands.command(name="poll", aliases=["enquete", "votacao", "votação"])
+    @commands.hybrid_command(name="poll", aliases=["enquete", "votacao", "votação"])
     async def poll(self, ctx: commands.Context, *, texto: str):
         texto, custom_seconds = parse_tempo_flag(texto)
 
@@ -164,7 +164,7 @@ class Polls(commands.Cog):
             "expires_at": expires_at,
         }
 
-    @commands.command(name="poll_fechar", aliases=["poll_close", "enquete_fechar"])
+    @commands.hybrid_command(name="poll_fechar", aliases=["poll_close", "enquete_fechar"])
     async def poll_fechar(self, ctx: commands.Context, message_id: int):
         poll = self.active_polls.get(message_id)
         if not poll:

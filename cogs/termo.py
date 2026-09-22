@@ -70,7 +70,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
             if self.user_id not in self.cog.active_games:
                 embed = discord.Embed(
                     title="❌ Sem Jogo Ativo",
-                    description="A tua sessão de jogo expirou. Começa um novo jogo com `L!termo`",
+                    description="A tua sessão de jogo expirou. Começa um novo jogo com `/termo`",
                     color=discord.Color.red()
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -372,7 +372,7 @@ class Termo(commands.Cog):
         except Exception as e:
             logging.exception(f"Error in _give_xp_reward: {e}")
 
-    @commands.command(name="termo")
+    @commands.hybrid_command(name="termo")
     async def termo(self, ctx):
         """Começa um novo jogo de adivinhação de palavras"""
         try:
@@ -420,7 +420,7 @@ class Termo(commands.Cog):
                 value="Usa o botão abaixo para enviar as tuas tentativas.",
                 inline=False
             )
-            embed.set_footer(text="Apenas o dono do jogo pode usar o botão. Usa 'L!termoexit' para sair.")
+            embed.set_footer(text="Apenas o dono do jogo pode usar o botão. Usa `/termo_quit` para sair.")
             
             # Create view with button
             view = TermoGameView(self, user_id, ctx.guild.id)
@@ -442,7 +442,7 @@ class Termo(commands.Cog):
             except:
                 pass
 
-    @commands.command(name="termo_quit")
+    @commands.hybrid_command(name="termo_quit")
     async def termo_exit(self, ctx):
         """Sai do jogo atual"""
         user_id = ctx.author.id
@@ -466,7 +466,7 @@ class Termo(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="termo_stats")
+    @commands.hybrid_command(name="termo_stats")
     async def termo_stats(self, ctx, member: discord.Member = None):
         """Mostra as estatísticas do jogo de um jogador"""
         member = member or ctx.author
@@ -504,7 +504,7 @@ class Termo(commands.Cog):
         
         await ctx.send(embed=embed)
 
-    @commands.command(name="termo_rank")
+    @commands.hybrid_command(name="termo_rank")
     async def termo_rank(self, ctx):
         """Mostra o ranking do jogo no servidor"""
         guild_stats = [s for s in self.db.get_termo_leaderboard(ctx.guild.id) if s["games"] > 0]

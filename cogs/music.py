@@ -295,7 +295,7 @@ class Music(commands.Cog):
 
     # ===== COMMANDS =====
 
-    @commands.command(name="join", aliases=["connect"])
+    @commands.hybrid_command(name="join", aliases=["connect"])
     async def join(self, ctx):
         """Join user's voice channel"""
         vc = await self._ensure_voice(ctx)
@@ -307,7 +307,7 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="play", aliases=["p"])
+    @commands.hybrid_command(name="play", aliases=["p"])
     async def play(self, ctx, *, query: str):
         """Play song from YouTube"""
         # Check if user is in AFK channel
@@ -379,7 +379,7 @@ class Music(commands.Cog):
 
 
 
-    @commands.command(name="skip", aliases=["sk"])
+    @commands.hybrid_command(name="skip", aliases=["sk"])
     async def skip(self, ctx):
         """Skip current song"""
         vc = ctx.voice_client
@@ -399,7 +399,7 @@ class Music(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="testtone", aliases=["tone"])
+    @commands.hybrid_command(name="testtone", aliases=["tone"])
     async def testtone(self, ctx):
         """Play a short test tone to validate voice output"""
         vc = await self._ensure_voice(ctx)
@@ -424,7 +424,7 @@ class Music(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="stop", aliases=["s"])
+    @commands.hybrid_command(name="stop", aliases=["s"])
     async def stop(self, ctx):
         """Stop music and leave channel"""
         vc = ctx.voice_client
@@ -448,7 +448,7 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="pause", aliases=["pz"])
+    @commands.hybrid_command(name="pause", aliases=["pz"])
     async def pause(self, ctx):
         """Pause music"""
         vc = ctx.voice_client
@@ -467,7 +467,7 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="resume", aliases=["r"])
+    @commands.hybrid_command(name="resume", aliases=["r"])
     async def resume(self, ctx):
         """Resume music"""
         vc = ctx.voice_client
@@ -486,7 +486,7 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="queue", aliases=["q"])
+    @commands.hybrid_command(name="queue", aliases=["q"])
     async def queue(self, ctx):
         """Show current queue"""
         queue = self._get_queue(ctx.guild.id)
@@ -542,7 +542,7 @@ class Music(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="music")
+    @commands.hybrid_command(name="music")
     async def music(self, ctx):
         """Mostrar comandos de música"""
         embed = discord.Embed(
@@ -564,7 +564,7 @@ class Music(commands.Cog):
         for cmd, desc in commands_list:
             embed.add_field(name=cmd, value=desc, inline=False)
         
-        embed.set_footer(text="Uso: L!<comando>")
+        embed.set_footer(text="Usa /<comando>")
         await ctx.send(embed=embed)
 
 

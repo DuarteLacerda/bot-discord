@@ -51,7 +51,7 @@ class HelpView(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author_id:
             await interaction.response.send_message(
-                "Usa `L!help` para abrires o teu próprio menu.", ephemeral=True
+                "Usa `/help` para abrires o teu próprio menu.", ephemeral=True
             )
             return False
         return True
@@ -282,7 +282,7 @@ class Basic(commands.Cog):
                 }
             }
 
-    @commands.command()
+    @commands.hybrid_command()
     async def ping(self, ctx):
         """Responde com pong"""
         embed = discord.Embed(
@@ -292,7 +292,7 @@ class Basic(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def write(self, ctx, *, message: str):
         """Ecoar mensagem (apenas admin)"""
@@ -312,7 +312,7 @@ class Basic(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def sum(self, ctx, a: int, b: int):
         """Somar dois números"""
         result = a + b
@@ -323,13 +323,13 @@ class Basic(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="tempo", aliases=["weather", "clima"])
+    @commands.hybrid_command(name="tempo", aliases=["weather", "clima"])
     async def tempo(self, ctx, *, city: str = None):
         """Mostra o tempo atual de uma cidade"""
         if not city:
             embed = discord.Embed(
                 title="❌ Sintaxe Inválida",
-                description="Uso: `L!tempo <cidade>`",
+                description="Uso: `/tempo <cidade>`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -371,13 +371,13 @@ class Basic(commands.Cog):
             embed.set_footer(text=f"Atualizado dia {data['time']}")
         await ctx.send(embed=embed)
 
-    @commands.command(name="hora", aliases=["time", "horario", "timezone"])
+    @commands.hybrid_command(name="hora", aliases=["time", "horario", "timezone"])
     async def hora(self, ctx, *, city: str = None):
         """Mostra a hora atual de uma cidade"""
         if not city:
             embed = discord.Embed(
                 title="❌ Sintaxe Inválida",
-                description="Uso: `L!hora <cidade>`",
+                description="Uso: `/hora <cidade>`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -430,13 +430,13 @@ class Basic(commands.Cog):
             embed.set_footer(text=f"Fuso horário: {tz_name}")
         await ctx.send(embed=embed)
 
-    @commands.command(name="previsao", aliases=["forecast", "previsão"])
+    @commands.hybrid_command(name="previsao", aliases=["forecast", "previsão"])
     async def previsao(self, ctx, *, city: str = None):
         """Mostra a previsão meteorológica para os próximos 7 dias"""
         if not city:
             embed = discord.Embed(
                 title="❌ Sintaxe Inválida",
-                description="Uso: `L!previsao <cidade>`",
+                description="Uso: `/previsao <cidade>`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -498,7 +498,7 @@ class Basic(commands.Cog):
         embed.set_footer(text="Fonte: Open-Meteo")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def info(self, ctx, member: discord.Member = None):
         """Mostrar informações do utilizador"""
         member = member or ctx.author
@@ -514,7 +514,7 @@ class Basic(commands.Cog):
         embed.set_thumbnail(url=avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["guild"])
+    @commands.hybrid_command(aliases=["guild"])
     async def server(self, ctx):
         """Mostrar informações do servidor"""
         guild = ctx.guild
@@ -530,7 +530,7 @@ class Basic(commands.Cog):
             embed.set_thumbnail(url=guild.icon.url)
         await ctx.send(embed=embed)
 
-    @commands.command(name="clear")
+    @commands.hybrid_command(name="clear")
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int = None):
         """Apagar mensagens do canal (apenas admin)"""
@@ -594,12 +594,12 @@ class Basic(commands.Cog):
         elif isinstance(error, commands.BadArgument):
             embed = discord.Embed(
                 title="❌ Sintaxe Inválida",
-                description="Uso: `l!clear [valor]`",
+                description="Uso: `/clear [valor]`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
 
-    @commands.command(name="rules")
+    @commands.hybrid_command(name="rules")
     async def rules(self, ctx):
         """Mostrar regras do servidor"""
         rules_file = "data/rules.json"
@@ -779,10 +779,10 @@ class Basic(commands.Cog):
  
         return sections
 
-    @commands.command(name="help")
+    @commands.hybrid_command(name="help")
     async def help_cmd(self, ctx):
         """Mostrar todos os comandos disponíveis"""
-        prefix = ctx.prefix or "L!"
+        prefix = "/"
         is_admin = ctx.author.guild_permissions.administrator
         sections = self._build_help_sections(is_admin)
 
@@ -803,7 +803,7 @@ class Basic(commands.Cog):
                 field_name = section_title if i == 0 else f"{section_title} (cont.)"
                 embed.add_field(name=field_name, value=chunk, inline=False)
 
-            embed.set_footer(text=f"{section_title} • L!help")
+            embed.set_footer(text=f"{section_title} • /help")
             embeds.append(embed)
 
         section_titles = [s[0] for s in sections]
