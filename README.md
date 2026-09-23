@@ -1,6 +1,6 @@
 # Bot Discord 🤖
 
-Um bot Discord completo com sistema de música, níveis/XP, jogos de palavras, lembretes, sondagens, moderação automática e ferramentas de moderação.
+Um bot Discord completo com sistema de música, níveis/XP, jogos, lembretes, sondagens, moderação automática e ferramentas de moderação.
 
 ## Funcionalidades ✨
 
