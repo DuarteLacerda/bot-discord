@@ -16,6 +16,7 @@ COOLDOWN_SEGUNDOS = 10  # Cooldown between XP-giving messages
 XP_BASE_NIVEL = 100     # XP needed to go from level 1 to 2
 XP_MULTIPLICADOR = 1.15 # Multiplicador de XP per level (progression)
 NIVEL_MAXIMO = 500      # Maximum level
+LEVEL_ROLE_INTERVAL = 10  # A cada quantos níveis se ganha uma role nova
 # ====================================
 
 # ===== CASE OPENING REWARDS =====
@@ -56,6 +57,42 @@ class Levels(commands.Cog):
         """Raffle a reward based on weights"""
         pesos = [p["peso"] for p in PREMIOS]
         return random.choices(PREMIOS, weights=pesos, k=1)[0]
+
+    def _milestones_atingidos(self, nivel_anterior: int, nivel_novo: int) -> list[int]:
+        """Devolve a lista de marcos (múltiplos de LEVEL_ROLE_INTERVAL) ultrapassados"""
+        primeiro_marco = ((nivel_anterior // LEVEL_ROLE_INTERVAL) + 1) * LEVEL_ROLE_INTERVAL
+        return list(range(primeiro_marco, nivel_novo + 1, LEVEL_ROLE_INTERVAL))
+
+    async def _get_or_create_level_role(self, guild: discord.Guild, nivel: int) -> discord.Role | None:
+        """Obtém (ou cria) a role visual correspondente a este marco de nível"""
+        nome_role = f"Nível {nivel}"
+        role = discord.utils.get(guild.roles, name=nome_role)
+        if role:
+            return role
+        try:
+            role = await guild.create_role(
+                name=nome_role,
+                permissions=discord.Permissions.none(),
+                color=discord.Color.gold(),
+                hoist=False,
+                mentionable=False,
+                reason="Criação automática de role de nível",
+            )
+            return role
+        except discord.Forbidden:
+            logging.warning(f"Sem permissão para criar a role '{nome_role}' em {guild.name}")
+            return None
+
+    async def _award_level_roles(self, member: discord.Member, nivel_anterior: int, nivel_novo: int):
+        """Atribui todas as roles de nível ultrapassadas entre nivel_anterior e nivel_novo"""
+        marcos = self._milestones_atingidos(nivel_anterior, nivel_novo)
+        for marco in marcos:
+            role = await self._get_or_create_level_role(member.guild, marco)
+            if role and role not in member.roles:
+                try:
+                    await member.add_roles(role, reason=f"Atingiu o nível {marco}")
+                except discord.Forbidden:
+                    logging.warning(f"Sem permissão para atribuir a role '{role.name}' a {member}")
 
     async def _abrir_case(self, channel: discord.TextChannel, member: discord.Member) -> Dict:
         """Simulate case opening and return reward"""
@@ -119,16 +156,16 @@ class Levels(commands.Cog):
         if nivel_novo > nivel_anterior and nivel_novo <= NIVEL_MAXIMO:
             user_data["level"] = nivel_novo
             self.db.set_user_data(guild_id, user_id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
+            await self._award_level_roles(message.author, nivel_anterior, nivel_novo)
             try:
-                # Open case and apply reward
                 premio = await self._abrir_case(message.channel, message.author)
                 
                 if premio["tipo"] == "xp":
                     user_data["xp"] += premio["valor"]
-                    # Recalculate level after bonus
                     nivel_pos_bonus = self._calcular_nivel(user_data["xp"])
                     if nivel_pos_bonus > nivel_novo:
                         user_data["level"] = nivel_pos_bonus
+                        await self._award_level_roles(message.author, nivel_novo, nivel_pos_bonus)
                         result_embed = discord.Embed(
                             title="🚀 Level Up!",
                             description=f"{message.author.mention} gained enough XP to level up again! Now at level **{nivel_pos_bonus}**!",
@@ -165,7 +202,6 @@ class Levels(commands.Cog):
         nivel = user_data["level"]
         xp_atual = user_data["xp"]
 
-        # Calculate cumulative XP up to current level
         xp_acumulado = 0
         for lvl in range(1, nivel):
             xp_acumulado += self._xp_para_proximo_nivel(lvl)
@@ -176,15 +212,19 @@ class Levels(commands.Cog):
         embed = discord.Embed(title=f"📊 Nível de {member.display_name}", color=discord.Color.gold())
         embed.add_field(name="Nível", value=f"{nivel}/{NIVEL_MAXIMO}", inline=True)
         embed.add_field(name="XP Total", value=f"{xp_atual}", inline=True)
-        
-        # Show active multiplier
+
+        # Mostra a role de nível mais alta já conquistada
+        role_marco = (nivel // LEVEL_ROLE_INTERVAL) * LEVEL_ROLE_INTERVAL
+        if role_marco > 0:
+            embed.add_field(name="🏅 Cargo", value=f"Nível {role_marco}", inline=True)
+
         if user_data.get("multiplicador", 1) > 1 and user_data.get("msgs_mult", 0) > 0:
             embed.add_field(
                 name="⚡ Multiplicador Ativo",
                 value=f"{user_data['multiplicador']}x ({user_data['msgs_mult']} msgs restantes)",
                 inline=False,
             )
-        
+
         if nivel < NIVEL_MAXIMO:
             embed.add_field(
                 name="Progresso",
@@ -258,10 +298,11 @@ class Levels(commands.Cog):
         nivel_anterior = user_data["level"]
         user_data["xp"] += xp
         nivel_novo = self._calcular_nivel(user_data["xp"])
-        
+
         if nivel_novo > nivel_anterior and nivel_novo <= NIVEL_MAXIMO:
             user_data["level"] = nivel_novo
-        
+            await self._award_level_roles(member, nivel_anterior, nivel_novo)
+
         self.db.set_user_data(ctx.guild.id, member.id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
         
         level_up_text = f"\nNovo nível: **{nivel_novo}**!" if nivel_novo > nivel_anterior else ""
@@ -296,7 +337,73 @@ class Levels(commands.Cog):
             )
             await ctx.send(embed=embed)
 
+    @commands.hybrid_command(name="syncroles")
+    @commands.has_permissions(administrator=True)
+    async def syncroles(self, ctx, member: discord.Member = None):
+        """Sincroniza os cargos de nível de um membro com o nível que já tem"""
+        member = member or ctx.author
+        if not ctx.guild:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Este comando está disponível apenas em servidores.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
 
+        user_data = self.db.get_user_data(ctx.guild.id, member.id)
+        if not user_data:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Sem dados de nível para este utilizador.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        nivel = user_data["level"]
+        marcos = range(LEVEL_ROLE_INTERVAL, nivel + 1, LEVEL_ROLE_INTERVAL)
+        atribuidas = []
+        falhas = []
+        for marco in marcos:
+            role = await self._get_or_create_level_role(ctx.guild, marco)
+            if role and role not in member.roles:
+                try:
+                    await member.add_roles(role, reason="Sincronização manual de roles de nível")
+                    atribuidas.append(role.name)
+                except discord.Forbidden:
+                    falhas.append(role.name)
+
+        if atribuidas:
+            desc = f"✅ Atribuídas: {', '.join(atribuidas)}"
+        else:
+            desc = "Já tinhas todas as roles correspondentes ao teu nível."
+        if falhas:
+            desc += f"\n⚠️ Sem permissão para atribuir: {', '.join(falhas)}"
+
+        embed = discord.Embed(
+            title="🔄 Sincronização de Cargos",
+            description=desc,
+            color=discord.Color.green() if atribuidas else discord.Color.blue()
+        )
+        await ctx.send(embed=embed)
+
+    @syncroles.error
+    async def syncroles_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            embed = discord.Embed(
+                title="❌ Permissão Negada",
+                description="Precisas de permissões de administrador para usar este comando.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+        elif isinstance(error, commands.MemberNotFound):
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Utilizador não encontrado.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            
 async def setup(bot: commands.Bot):
     await bot.add_cog(Levels(bot))
-

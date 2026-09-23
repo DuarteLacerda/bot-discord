@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import os
-import random
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
@@ -10,6 +9,12 @@ import discord
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, Button, button
 from database import Database
+from zoneinfo import ZoneInfo
+
+# Daily word tracking
+DAILY_FILE = "data/termo_daily.json"
+TIMEZONE = ZoneInfo("Europe/Lisbon")
+DAILY_EPOCH = datetime(2024, 1, 1, tzinfo=TIMEZONE).date()
 
 # Game configuration
 MAX_ATTEMPTS = 6
@@ -126,14 +131,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                 del self.cog.active_games[self.user_id]
                 
             elif num_attempts >= MAX_ATTEMPTS:
-                # Defeat
-                defeat_embed = discord.Embed(
-                    title="😢 Fim do Jogo",
-                    description=f"Mais sorte na próxima! A palavra era: **{secret_word}**",
-                    color=discord.Color.red()
-                )
-                await interaction.channel.send(embed=defeat_embed)
-                
+                # Defeat — o card já foi editado acima com o resultado final
                 # Update statistics
                 data = self.cog._get_player_data(self.guild_id, self.user_id)
                 data["games"] += 1
@@ -225,6 +223,39 @@ class Termo(commands.Cog):
             logging.warning(f"Words file not found at {WORDS_FILE}")
             self.words = []
 
+    def _load_daily(self) -> dict:
+        if not os.path.exists(DAILY_FILE):
+            return {}
+        try:
+            with open(DAILY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
+
+    def _save_daily(self, data: dict):
+        os.makedirs(os.path.dirname(DAILY_FILE), exist_ok=True)
+        with open(DAILY_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def _today_str(self) -> str:
+        return datetime.now(TIMEZONE).date().isoformat()
+
+    def _has_played_today(self, guild_id: int, user_id: int) -> bool:
+        daily = self._load_daily()
+        return daily.get(str(guild_id), {}).get(str(user_id)) == self._today_str()
+
+    def _mark_played_today(self, guild_id: int, user_id: int):
+        daily = self._load_daily()
+        daily.setdefault(str(guild_id), {})[str(user_id)] = self._today_str()
+        self._save_daily(daily)
+
+    def _next_reset_timestamp(self) -> int:
+        """Epoch (segundos) da próxima meia-noite em Europe/Lisbon"""
+        now = datetime.now(TIMEZONE)
+        tomorrow = now.date() + timedelta(days=1)
+        reset_dt = datetime.combine(tomorrow, datetime.min.time(), tzinfo=TIMEZONE)
+        return int(reset_dt.timestamp())
+
     def _migrate_legacy_data(self):
         """Migra dados antigos em JSON para SQLite, se existirem"""
         try:
@@ -249,10 +280,12 @@ class Termo(commands.Cog):
         )
 
     def _pick_word(self) -> str:
-        """Pick a random word from the list"""
+        """Escolhe a palavra do dia (mesma para todos, determinística pela data)"""
         if not self.words:
             return "termo"  # fallback
-        return random.choice(self.words).upper()
+        days_since_epoch = (datetime.now(TIMEZONE).date() - DAILY_EPOCH).days
+        index = days_since_epoch % len(self.words)
+        return self.words[index].upper()
 
     def _check_attempt(self, secret_word: str, attempt: str) -> list:
         """
@@ -374,24 +407,36 @@ class Termo(commands.Cog):
 
     @commands.hybrid_command(name="termo")
     async def termo(self, ctx):
-        """Começa um novo jogo de adivinhação de palavras"""
+        """Começa o desafio diário de adivinhação de palavras"""
         try:
             logging.info(f"=== TERMO COMMAND STARTED ===")
             user_id = ctx.author.id
             logging.info(f"User: {user_id}, Guild: {ctx.guild.id}")
-            
+
             # Check if already has an active game
             if user_id in self.active_games:
                 embed = discord.Embed(
                     title="❌ Jogo Ativo",
-                    description="Já tens um jogo ativo! Termina-o primeiro ou usa `termoexit` para sair.",
+                    description="Já tens um jogo ativo! Termina-o primeiro ou usa `/termo_quit` para sair.",
                     color=discord.Color.red()
                 )
                 await ctx.send(embed=embed)
                 return
-            
-            # Start new game
+
+            # Check if already played today's word
+            if self._has_played_today(ctx.guild.id, user_id):
+                reset_ts = self._next_reset_timestamp()
+                embed = discord.Embed(
+                    title="🕐 Já Jogaste Hoje",
+                    description=f"O Termo de hoje já foi jogado! Volta amanhã.\nPróximo desafio: <t:{reset_ts}:R>",
+                    color=discord.Color.orange()
+                )
+                await ctx.send(embed=embed)
+                return
+
+            # Start new game (marca logo o dia como usado, mesmo que o jogo seja abandonado)
             secret_word = self._pick_word()
+            self._mark_played_today(ctx.guild.id, user_id)
             logging.info(f"Secret word: {secret_word}")
             self.active_games[user_id] = {
                 "word": secret_word,

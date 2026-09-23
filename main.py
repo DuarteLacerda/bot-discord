@@ -45,6 +45,14 @@ class MyBot(commands.Bot):
             logging.info(f"✅ Synced {len(synced)} app commands")
         except Exception as e:
             logging.exception(f"❌ Falha ao sincronizar app commands: {e}")
+            
+        try:
+            guild = discord.Object(id=802883554080981022)  # o teu guild ID
+            self.tree.copy_global_to(guild=guild)   # ← esta linha faltava
+            guild_synced = await self.tree.sync(guild=guild)
+            logging.info(f"✅ Synced {len(guild_synced)} guild app commands")
+        except Exception as e:
+            logging.exception(f"❌ Falha ao sincronizar guild app commands: {e}")
         
         # Log all loaded commands
         logging.info(f"Total commands loaded: {len(self.commands)}")

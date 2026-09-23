@@ -769,6 +769,7 @@ class Basic(commands.Cog):
                 ("write <message>", "ecoar mensagem"),
                 ("clear [amount]", "apagar mensagens do canal"),
                 ("addxp @user <value>", "adicionar XP a um utilizador"),
+                ("syncroles [@user]", "sincroniza os cargos de nível com o nível atual"),
                 ("ticketpanel", "posta o painel de abertura de tickets"),
             ]
  
