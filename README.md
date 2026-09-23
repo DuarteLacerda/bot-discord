@@ -149,14 +149,19 @@ Ao convidar a aplicação, inclui os scopes `bot` e `applications.commands`. Os 
 Edita o início de `cogs/levels.py`:
 
 ```python
-XP_POR_CARACTERE = 0.5      # XP por carácter
-NIVEL_MAXIMO = 500           # Nível máximo
-XP_MULTIPLICADOR = 1.15      # Crescimento exponencial
+XP_POR_CARACTERE = 0.5  # XP gained per character
+XP_MIN_POR_MSG = 5      # Minimum XP per message
+XP_MAX_POR_MSG = 50     # Maximum XP per message (cap to prevent spam)
+COOLDOWN_SEGUNDOS = 10  # Cooldown between XP-giving messages
+XP_BASE_NIVEL = 100     # XP needed to go from level 1 to 2
+XP_MULTIPLICADOR = 1.15 # Multiplicador de XP per level (progression)
+NIVEL_MAXIMO = 500      # Maximum level
+LEVEL_ROLE_INTERVAL = 10  # A cada quantos níveis se ganha uma role nova
 ```
 
 ### Editar Regras
 
-Edita `data/rules.json` para adicionar/remover regras do servidor. Não é necessário reiniciar o bot!
+Edita `data/rules.json` para adicionar ou remover regras do servidor. Não é necessário reiniciar o bot!
 
 O ficheiro utiliza esta estrutura:
 
@@ -192,7 +197,7 @@ Edita `data/auto_responses.json` para personalizar as respostas ao calão:
 }
 ```
 
-O bot responde automaticamente quando deteta estas palavras-chave nas mensagens (sem distinção entre maiúsculas/minúsculas e acentos).
+O bot responde automaticamente quando deteta estas palavras-chave nas mensagens (sem distinção entre maiúsculas e minúsculas nem acentos).
 
 Reinicia o bot depois de alterares este ficheiro para que as novas respostas sejam carregadas.
 
@@ -268,7 +273,7 @@ Os comandos estão disponíveis através do menu de comandos slash do Discord. E
 
 ### ℹ️ Informações
 
-* `/info [@user]` - Informações do utilizador
+* `/info @user` - Informações do utilizador
 * `/server` - Informações do servidor
 * `/rules` - Mostra as regras do servidor
 
@@ -292,14 +297,15 @@ Os comandos estão disponíveis através do menu de comandos slash do Discord. E
 
 ### 📊 Níveis
 
-* `/level [@user]` - Mostra o nível e o XP
+* `/level @user` - Mostra o nível e o XP
 * `/rank` - Tabela de classificação dos 10 melhores do servidor
+* `/syncroles @user`- Sincroniza os cargos de nível com o nível atual *(requer Gerir Servidor)*
 
 ### 🎮 Jogo Termo
 
 * `/termo` - Inicia um novo jogo de Termo (Wordle português)
 * `/termo_quit` - Sai do jogo atual
-* `/termo_stats [@user]` - Mostra as estatísticas do Termo
+* `/termo_stats @user` - Mostra as estatísticas do Termo
 * `/termo_rank` - Mostra a classificação do Termo
 
 ### 🎲 Jogos Rápidos
@@ -353,7 +359,7 @@ Os comandos estão disponíveis através do menu de comandos slash do Discord. E
 ### 🔨 Moderação
 
 * `/warn @user <reason>` - Avisa um membro *(admin ou moderador de automod)*
-* `/warnings [@user]` - Mostra o histórico de avisos (omitir = os teus próprios avisos)
+* `/warnings @user` - Mostra o histórico de avisos (omitir = os teus próprios avisos)
 * `/warn_remove @user <id>` - Remove um aviso específico *(admin)*
 * `/kick @user [reason]` - Expulsa um membro *(requer a permissão Expulsar Membros)*
 * `/ban @user [reason]` - Bane um membro *(requer a permissão Banir Membros)*
