@@ -67,6 +67,14 @@ A complete Discord bot with music system, levels/XP, word games, reminders, poll
 - Manage and resolve tickets efficiently
 - Log all ticket interactions
 
+### 🚨 Anti-Raid
+- Detects join bursts and automatically triggers a server lockdown
+- Lockdown temporarily raises the server's verification level to Highest and kicks accounts younger than the configured minimum age
+- Automatically reverts after a configurable duration
+- Manual lockdown activation/deactivation available to admins
+- Configurable sensitivity (join count, time window, minimum account age)
+- Default: 5 joins in 10 seconds triggers lockdown; accounts under 7 days old are kicked during lockdown; lockdown lasts 15 minutes and reverts automatically
+
 ### 🔧 Others
 - Ping/pong
 - User information
@@ -297,6 +305,12 @@ Commands are available through Discord's slash-command menu. Type `/` in a chann
 - `/automod_addperm @user` - Grants automod moderator permission *(admin)*
 - `/automod_removeperm @user` - Revokes that permission *(admin)*
 
+### 🚨 Anti-Raid
+- `/antiraid` - Shows current anti-raid status
+- `/antiraid_on` / `/antiraid_off` - Enables/disables the system *(admin)*
+- `/antiraid_config <entradas> <segundos> <dias_conta>` - Configures sensitivity (join threshold, time window, minimum account age) *(admin)*
+- `/antiraid_lockdown_on` / `/antiraid_lockdown_off` - Manually activates/deactivates lockdown *(admin)*
+
 ### 🔨 Moderation
 - `/warn @user <reason>` - Warns a member *(admin or automod moderator)*
 - `/warnings [@user]` - Shows warning history (omit = your own)
@@ -308,7 +322,7 @@ Commands are available through Discord's slash-command menu. Type `/` in a chann
 
 ### 🎫 Tickets
 - `/ticket <reason>` - Opens a private ticket with the staff
-- `/ticketpanel` - Posts the ticket opening panel
+- `/ticketpanel` - Posts the ticket opening panel *(requires Manage Server)*
 
 ### 👑 Admin Commands
 - `/write <message>` - Echoes message
@@ -361,7 +375,9 @@ discord-bot/
 │   ├── reminders.py         # Reminders
 │   ├── polls.py             # Polls
 │   ├── automod.py           # Anti-spam / anti-links + permission system
-│   └── moderation.py        # Warns, kick, ban, mod-log
+│   ├── antiraid.py          # Anti-raid join detection and lockdown
+│   ├── moderation.py        # Warns, kick, ban, mod-log
+│   └── tickets.py           # Private support tickets
 ├── data/
 │   ├── antiraid.json         # Per-server anti-raid settings
 │   ├── auto_responses.json  # Slang auto-responses
@@ -407,11 +423,11 @@ pip install -r requirements.txt
 
 ### Database errors
 - Ensure the `database/` directory has write permissions
-- Check if Discord bot has proper guild permissions
+- Check if the Discord bot has proper guild permissions
 
 ### Bot doesn't respond to auto-responses
 - Verify `data/auto_responses.json` is properly formatted
-- Check if bot has message permissions in the channel
+- Check if the bot has message permissions in the channel
 - Ensure the keywords are in the JSON file
 
 ### Auto-mod timeout isn't working
