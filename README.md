@@ -1,147 +1,165 @@
-# Discord Bot 🤖
+# Bot Discord 🤖
 
-A complete Discord bot with music system, levels/XP, word games, reminders, polls, auto-moderation, and moderation tools.
+Um bot Discord completo com sistema de música, níveis/XP, jogos de palavras, lembretes, sondagens, moderação automática e ferramentas de moderação.
 
-## Features ✨
+## Funcionalidades ✨
 
-### 🎵 Music
-- YouTube playback
-- Queue system
-- Controls: play, skip, pause, resume, stop
-- Playlist support (maximum 100 tracks)
-- Case opening with rewards when playing music
+### 🎵 Música
 
-### 📊 Level System
-- Progression from 1 to 500 levels
-- XP gain per message
-- Leaderboard (top 10)
-- Automatic case opening on level up
-- Various rewards (XP, bonuses, etc.)
+* Reprodução a partir do YouTube
+* Sistema de fila
+* Controlos: reproduzir, saltar, pausar, retomar e parar
+* Suporte para playlists (máximo de 100 faixas)
+* Abertura de caixas com recompensas ao jogar música
 
-### 🌤️ Weather & Time
-- Current weather for any city worldwide
-- Local time for any city
-- 7-day weather forecast with detailed information
-- Temperature, precipitation, and wind speed data
+### 📊 Sistema de Níveis
 
-### 💬 Auto-Responses
-- Automatic detection of Portuguese slang (from Portugal)
-- Gaming terminology responses
-- Multiple random responses per keyword
-- Accent-insensitive detection (works with "bué" or "bue")
-- Easy to customize via JSON file
+* Progressão do nível 1 ao 500
+* Ganho de XP por mensagem
+* Tabela de classificação (top 10)
+* Abertura automática de caixas ao subir de nível
+* Várias recompensas (XP, bónus, etc.)
 
-### 🎮 Games
-- **Termo**: Portuguese Wordle with statistics and rankings
-- **Quick Games**: Rock-paper-scissors, dice, coin flip, 8-ball, number guessing
-- **Code Challenges**: Programming challenges to practice coding
+### 🌤️ Meteorologia e Hora
 
-### ⏰ Reminders
-- Set a reminder with a natural duration (`10m`, `2h`, `1d2h30m`)
-- Delivered by DM, falling back to the channel if DMs are closed
-- List and cancel your own pending reminders
-- Persists across restarts (`data/reminders.json`)
+* Meteorologia atual para qualquer cidade do mundo
+* Hora local de qualquer cidade
+* Previsão meteorológica de 7 dias com informações detalhadas
+* Dados de temperatura, precipitação e velocidade do vento
 
-### 📊 Polls
-- Quick yes/no polls or up to 10 custom options, voted on via reactions
-- Auto-close after a configurable time (24h by default, `--tempo` flag to customize)
-- Manual close available to the poll's author or an admin
-- Results posted automatically when a poll closes
+### 💬 Respostas Automáticas
 
-### 🛡️ Auto-Moderation
-- **Anti-spam**: rapid message bursts are deleted and the sender is timed out
-- **Anti-links**: messages containing non-whitelisted links are deleted automatically
-- Per-server on/off switches for the whole system or each check individually
-- Domain whitelist, fully configurable
-- Own permission system independent of Discord roles: grant/revoke an "automod moderator" status that exempts a user from checks and lets them view current settings
-- All settings persisted per server (`data/automod.json`)
+* Deteção automática de calão português (de Portugal)
+* Respostas relacionadas com terminologia de jogos
+* Várias respostas aleatórias por palavra-chave
+* Deteção sem distinção de acentos (funciona com "bué" ou "bue")
+* Fácil de personalizar através de um ficheiro JSON
 
-### 🔨 Moderation
-- Warn system with persistent per-user history (`data/warnings.json`)
-- Kick and ban (respecting real Discord permissions), with automatic DM to the affected user
-- Unban by user ID
-- Optional mod-log channel: every warn/kick/ban/unban is automatically logged there
+### 🎮 Jogos
+
+* **Termo**: Wordle português com estatísticas e classificações
+* **Jogos Rápidos**: Pedra-papel-tesoura, dado, moeda, 8-ball e adivinhação de números
+* **Desafios de Código**: Desafios de programação para praticar programação
+
+### ⏰ Lembretes
+
+* Definir um lembrete com uma duração natural (`10m`, `2h`, `1d2h30m`)
+* Enviado por mensagem privada (DM), utilizando o canal como alternativa caso as DMs estejam fechadas
+* Listar e cancelar os seus próprios lembretes pendentes
+* Mantém os dados após reinícios (`data/reminders.json`)
+
+### 📊 Sondagens
+
+* Sondagens rápidas de sim/não ou até 10 opções personalizadas, com votação através de reações
+* Fecho automático após um período configurável (24h por predefinição, com a opção `--tempo` para personalizar)
+* Fecho manual disponível para o autor da sondagem ou para um administrador
+* Resultados publicados automaticamente quando uma sondagem é encerrada
+
+### 🛡️ Moderação Automática
+
+* **Anti-spam**: rajadas rápidas de mensagens são eliminadas e o remetente recebe um timeout
+* **Anti-links**: mensagens que contenham links não incluídos na lista branca são eliminadas automaticamente
+* Ativação/desativação por servidor para todo o sistema ou para cada verificação individualmente
+* Lista branca de domínios, totalmente configurável
+* Sistema de permissões próprio, independente dos cargos do Discord: permite atribuir/remover o estado de "moderador de automod", que isenta um utilizador das verificações e permite consultar as definições atuais
+* Todas as definições são guardadas por servidor (`data/automod.json`)
+
+### 🔨 Moderação
+
+* Sistema de avisos com histórico persistente por utilizador (`data/warnings.json`)
+* Expulsão e banimento (respeitando as permissões reais do Discord), com DM automática para o utilizador afetado
+* Remoção de banimentos através do ID do utilizador
+* Canal opcional de registo de moderação: cada aviso/expulsão/banimento/remoção de banimento é automaticamente registado nesse canal
 
 ### 🎫 Tickets
-- Create private tickets with the staff
-- Manage and resolve tickets efficiently
-- Log all ticket interactions
+
+* Criar tickets privados com a equipa de suporte
+* Gerir e resolver tickets de forma eficiente
+* Registar todas as interações dos tickets
 
 ### 🚨 Anti-Raid
-- Detects join bursts and automatically triggers a server lockdown
-- Lockdown temporarily raises the server's verification level to Highest and kicks accounts younger than the configured minimum age
-- Automatically reverts after a configurable duration
-- Manual lockdown activation/deactivation available to admins
-- Configurable sensitivity (join count, time window, minimum account age)
-- Default: 5 joins in 10 seconds triggers lockdown; accounts under 7 days old are kicked during lockdown; lockdown lasts 15 minutes and reverts automatically
 
-### 🔧 Others
-- Ping/pong
-- User information
-- Server information
-- Context-aware help (shows different commands to admins)
+* Deteta entradas em massa e ativa automaticamente um bloqueio do servidor
+* O bloqueio aumenta temporariamente o nível de verificação do servidor para o nível Máximo e expulsa contas com menos da idade mínima configurada
+* Reverte automaticamente após uma duração configurável
+* Ativação/desativação manual do bloqueio disponível para administradores
+* Sensibilidade configurável (número de entradas, intervalo de tempo e idade mínima da conta)
+* Predefinição: 5 entradas em 10 segundos ativam o bloqueio; contas com menos de 7 dias são expulsas durante o bloqueio; o bloqueio dura 15 minutos e é revertido automaticamente
 
-## Installation 🚀
+### 🔧 Outros
 
-### Prerequisites
-- Python 3.8+
-- FFmpeg
-- Node.js (for yt-dlp)
+* Ping/pong
+* Informações do utilizador
+* Informações do servidor
+* Ajuda contextual (apresenta comandos diferentes aos administradores)
 
-### Step by step
+## Instalação 🚀
+
+### Pré-requisitos
+
+* Python 3.8+
+* FFmpeg
+* Node.js (para o yt-dlp)
+
+### Passo a passo
 
 ```bash
-# 1. Clone the repository
+# 1. Clonar o repositório
 git clone git@github.com:DuarteLacerda/bot-discord.git
 cd bot-discord
 
-# 2. Create the .env file
+# 2. Criar o ficheiro .env
 cp .env.example .env
-# Edit .env and add:
-# - DISCORD_BOT_TOKEN (required)
-# - AUTO_ROLE_NAME (optional)
+# Editar o .env e adicionar:
+# - DISCORD_BOT_TOKEN (obrigatório)
+# - AUTO_ROLE_NAME (opcional)
 
-# 3. Create the virtual environment
+# 3. Criar o ambiente virtual
 python3 -m venv Venv
 source Venv/bin/activate  # Linux/Mac
-# or
+# ou
 Venv\Scripts\activate  # Windows
 
-# 4. Install dependencies
+# 4. Instalar as dependências
 pip install -r requirements.txt
 
-# 5. Run the bot
+# 5. Executar o bot
 python main.py
 ```
 
-## Configuration ⚙️
+## Configuração ⚙️
 
-### Environment Variables (.env)
+### Variáveis de Ambiente (.env)
+
 ```env
-# Discord Bot Token
+# Token do Bot Discord
 DISCORD_BOT_TOKEN=your_discord_bot_token_here
 
-# Ticket Configuration
+# Configuração dos Tickets
 TICKET_CATEGORY_NAME=your_ticket_category_name_here
 TICKET_STAFF_ROLE_NAME=your_staff_role_name_here
 TICKET_LOG_CHANNEL_NAME=your_log_channel_name_here
 
 ```
 
-When inviting the application, include the `bot` and `applications.commands` scopes. Slash commands are synchronized globally at startup and can take a while to appear in Discord.
+Ao convidar a aplicação, inclui os scopes `bot` e `applications.commands`. Os comandos slash são sincronizados globalmente ao iniciar o bot e podem demorar algum tempo a aparecer no Discord.
 
-### XP Balancing
-Edit the top of `cogs/levels.py`:
+### Balanceamento de XP
+
+Edita o início de `cogs/levels.py`:
+
 ```python
-XP_POR_CARACTERE = 0.5      # XP per character
-NIVEL_MAXIMO = 500           # Maximum level
-XP_MULTIPLICADOR = 1.15      # Exponential growth
+XP_POR_CARACTERE = 0.5      # XP por carácter
+NIVEL_MAXIMO = 500           # Nível máximo
+XP_MULTIPLICADOR = 1.15      # Crescimento exponencial
 ```
 
-### Edit Rules
-Edit `data/rules.json` to add/remove server rules. No need to restart the bot!
+### Editar Regras
 
-The file uses this structure:
+Edita `data/rules.json` para adicionar/remover regras do servidor. Não é necessário reiniciar o bot!
+
+O ficheiro utiliza esta estrutura:
+
 ```json
 {
     "title": "📜 Regras do Servidor",
@@ -157,8 +175,10 @@ The file uses this structure:
 }
 ```
 
-### Auto-Responses
-Edit `data/auto_responses.json` to customize slang responses:
+### Respostas Automáticas
+
+Edita `data/auto_responses.json` para personalizar as respostas ao calão:
+
 ```json
 {
     "bué": [
@@ -171,12 +191,15 @@ Edit `data/auto_responses.json` to customize slang responses:
     ]
 }
 ```
-The bot automatically responds when it detects these keywords in messages (case and accent insensitive).
 
-Restart the bot after changing this file so the new responses are loaded.
+O bot responde automaticamente quando deteta estas palavras-chave nas mensagens (sem distinção entre maiúsculas/minúsculas e acentos).
 
-### Termo Words
-Edit `data/termo_palavras.json` to add or remove valid five-letter words from Termo. The file must contain a JSON array of words:
+Reinicia o bot depois de alterares este ficheiro para que as novas respostas sejam carregadas.
+
+### Palavras do Termo
+
+Edita `data/termo_palavras.json` para adicionar ou remover palavras válidas de cinco letras do Termo. O ficheiro deve conter um array JSON de palavras:
+
 ```json
 [
     "carro",
@@ -185,10 +208,12 @@ Edit `data/termo_palavras.json` to add or remove valid five-letter words from Te
 ]
 ```
 
-Use lowercase words without accents and restart the bot after changing the file.
+Utiliza palavras em minúsculas e sem acentos e reinicia o bot depois de alterares o ficheiro.
 
-### Code Challenges
-Edit `data/code_challenges.json` to add challenges. Organize them by language and difficulty (`facil`, `medio` or `dificil`):
+### Desafios de Código
+
+Edita `data/code_challenges.json` para adicionar desafios. Organiza-os por linguagem e dificuldade (`facil`, `medio` ou `dificil`):
+
 ```json
 {
     "python": {
@@ -204,249 +229,274 @@ Edit `data/code_challenges.json` to add challenges. Organize them by language an
 }
 ```
 
-Each challenge needs `titulo`, `descricao`, `exemplo` and `dica`. Restart the bot after changing this file.
+Cada desafio precisa de `titulo`, `descricao`, `exemplo` e `dica`. Reinicia o bot depois de alterares este ficheiro.
 
-### Auto-Moderation
-Configured per server via commands (see below), not a file to edit by hand. Defaults:
-- Anti-spam: 5 messages in 6 seconds triggers a 5-minute timeout
-- Anti-links: any link outside the whitelist is deleted
+### Moderação Automática
 
-Adjust the thresholds by editing the constants at the top of `cogs/automod.py` (`SPAM_MSG_LIMIT`, `SPAM_WINDOW_SECONDS`, `SPAM_TIMEOUT_MINUTES`).
+Configurada por servidor através de comandos (ver abaixo), não através de um ficheiro que deva ser editado manualmente. Valores predefinidos:
 
-### Data Files
+* Anti-spam: 5 mensagens em 6 segundos ativam um timeout de 5 minutos
+* Anti-links: qualquer link que não esteja na lista branca é eliminado
 
-| File | Purpose | Manual editing |
-| --- | --- | --- |
-| `data/rules.json` | Server rules shown by `/rules`. | Yes |
-| `data/auto_responses.json` | Keywords and automatic responses. | Yes, then restart the bot |
-| `data/termo_palavras.json` | Valid five-letter words for Termo. | Yes, then restart the bot |
-| `data/code_challenges.json` | Programming challenges grouped by language and difficulty. | Yes, then restart the bot |
-| `data/automod.json` | Per-server auto-moderation settings. | Yes, but prefer the `/automod_*` commands; restart afterwards |
-| `data/antiraid.json` | Per-server anti-raid settings and lockdown state. | Yes, but prefer the `/antiraid_*` commands; restart afterwards |
-| `data/tickets.json` | Ticket records and configuration. | Yes, with care; prefer managing tickets through Discord |
-| `data/modlog.json` | Configured moderation log channels. | Yes, but `/modlog_canal` is safer; restart afterwards |
-| `data/reminders.json` | Pending reminders. Created when the first reminder is saved. | Yes, with care; prefer `/lembrar` and `/lembrete_cancelar` |
-| `data/warnings.json` | Warning history. Created when the first warning is saved. | Yes, with care; prefer the moderation commands |
+Ajusta os limites editando as constantes no início de `cogs/automod.py` (`SPAM_MSG_LIMIT`, `SPAM_WINDOW_SECONDS`, `SPAM_TIMEOUT_MINUTES`).
 
-All JSON files can be edited manually, but configuration and runtime files must keep their existing structure. Stop the bot before editing them, make a backup first and restart it afterwards. Changes made through commands are safer because they are validated and saved automatically.
+### Ficheiros de Dados
 
-## Commands 📝
+| Ficheiro                    | Finalidade                                                         | Edição manual                                                              |
+| --------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| `data/rules.json`           | Regras do servidor apresentadas por `/rules`.                      | Sim                                                                        |
+| `data/auto_responses.json`  | Palavras-chave e respostas automáticas.                            | Sim, depois reiniciar o bot                                                |
+| `data/termo_palavras.json`  | Palavras válidas de cinco letras para o Termo.                     | Sim, depois reiniciar o bot                                                |
+| `data/code_challenges.json` | Desafios de programação agrupados por linguagem e dificuldade.     | Sim, depois reiniciar o bot                                                |
+| `data/automod.json`         | Definições de moderação automática por servidor.                   | Sim, mas é preferível utilizar os comandos `/automod_*`; reiniciar depois  |
+| `data/antiraid.json`        | Definições de anti-raid por servidor e estado do bloqueio.         | Sim, mas é preferível utilizar os comandos `/antiraid_*`; reiniciar depois |
+| `data/tickets.json`         | Registos e configuração dos tickets.                               | Sim, com cuidado; é preferível gerir os tickets através do Discord         |
+| `data/modlog.json`          | Canais de registo de moderação configurados.                       | Sim, mas `/modlog_canal` é mais seguro; reiniciar depois                   |
+| `data/reminders.json`       | Lembretes pendentes. Criado quando o primeiro lembrete é guardado. | Sim, com cuidado; é preferível utilizar `/lembrar` e `/lembrete_cancelar`  |
+| `data/warnings.json`        | Histórico de avisos. Criado quando o primeiro aviso é guardado.    | Sim, com cuidado; é preferível utilizar os comandos de moderação           |
 
-Commands are available through Discord's slash-command menu. Type `/` in a channel to browse them and select the command you need.
+Todos os ficheiros JSON podem ser editados manualmente, mas os ficheiros de configuração e de execução devem manter a estrutura existente. Para os editar, para o bot, faz primeiro uma cópia de segurança e reinicia-o depois. As alterações feitas através dos comandos são mais seguras porque são validadas e guardadas automaticamente.
 
-### ⚙️ Basic
-- `/ping` - Shows bot latency
-- `/sum <a> <b>` - Adds two numbers
+## Comandos 📝
 
-### ℹ️ Information
-- `/info [@user]` - User information
-- `/server` - Server information
-- `/rules` - Shows server rules
+Os comandos estão disponíveis através do menu de comandos slash do Discord. Escreve `/` num canal para os consultar e selecionar o comando necessário.
 
-### 🌤️ Weather
-- `/tempo <city>` - Shows current weather for a city
-- `/hora <city>` - Shows the current time for a city
-- `/previsao <city>` - 7-day weather forecast
+### ⚙️ Básicos
 
-### 🎵 Music
-- `/join` - Joins your voice channel
-- `/play <term|link>` - Plays from YouTube or Spotify
-- `/skip` - Skips the current track
-- `/stop` - Stops playback and leaves
-- `/pause` - Pauses playback
-- `/resume` - Resumes playback
-- `/queue` - Shows the queue
-- `/testtone` - Tests audio with a tone
-- `/music` - Shows music commands
+* `/ping` - Mostra a latência do bot
+* `/sum <a> <b>` - Soma dois números
 
-### 📊 Levels
-- `/level [@user]` - Shows level and XP
-- `/rank` - Server top 10 leaderboard
+### ℹ️ Informações
 
-### 🎮 Termo Game
-- `/termo` - Starts a new Termo game (Portuguese Wordle)
-- `/termo_quit` - Exits the current game
-- `/termo_stats [@user]` - Shows Termo statistics
-- `/termo_rank` - Shows the Termo ranking
+* `/info [@user]` - Informações do utilizador
+* `/server` - Informações do servidor
+* `/rules` - Mostra as regras do servidor
 
-### 🎲 Quick Games
-- `/ppt <rock|paper|scissors>` - Rock, paper, scissors
-- `/dado [sides]` - Rolls a dice with N sides
-- `/moeda` - Flips a coin
-- `/escolher <option1 | option2>` - Lets the bot choose for you
-- `/adivinhar <number>` - Guess the number between 1 and 10
-- `/8ball <question>` - Ask the magic 8-ball
-- `/jogos` - Shows all available games
+### 🌤️ Meteorologia
 
-### 💻 Code Challenges
-- `/code` - Starts a programming challenge
-- `/stats_code` - Shows code challenge statistics
+* `/tempo <city>` - Mostra a meteorologia atual de uma cidade
+* `/hora <city>` - Mostra a hora atual de uma cidade
+* `/previsao <city>` - Previsão meteorológica de 7 dias
 
-### ⏰ Reminders
-- `/lembrar <tempo> <mensagem>` - Creates a reminder (e.g. `10m`, `2h`, `1d`, `1d2h30m`)
-- `/lembretes` - Lists your pending reminders
-- `/lembrete_cancelar <id>` - Cancels a reminder
+### 🎵 Música
 
-### 📊 Polls
-- `/poll <question>` - Yes/no poll (👍/👎), expires in 24h by default
-- `/poll <question> | opt1 | opt2 | ...` - Multiple-choice poll (up to 10 options)
-- `/poll <question> | opt1 | opt2 | --tempo 2h` - Custom expiry (5 min to 7 days)
-- `/poll_fechar <message_id>` - Closes a poll early and shows results (author or admin)
+* `/join` - Entra no teu canal de voz
+* `/play <term|link>` - Reproduz conteúdo do YouTube ou Spotify
+* `/skip` - Salta a faixa atual
+* `/stop` - Para a reprodução e sai do canal
+* `/pause` - Pausa a reprodução
+* `/resume` - Retoma a reprodução
+* `/queue` - Mostra a fila
+* `/testtone` - Testa o áudio com um tom
+* `/music` - Mostra os comandos de música
 
-### 🛡️ Auto-Moderation
-- `/automod` - Shows current auto-moderation status
-- `/automod_whitelist` - Lists whitelisted domains
-- `/automod_perms` - Lists users with automod moderator permission
-- `/automod_on` / `/automod_off` - Enables/disables the whole system *(admin)*
-- `/automod_antispam <on|off>` - Toggles anti-spam only *(admin)*
-- `/automod_antilinks <on|off>` - Toggles anti-links only *(admin)*
-- `/automod_whitelist_add <domain>` - Allows a domain (e.g. `youtube.com`) *(admin)*
-- `/automod_whitelist_remove <domain>` - Removes a domain from the whitelist *(admin)*
-- `/automod_addperm @user` - Grants automod moderator permission *(admin)*
-- `/automod_removeperm @user` - Revokes that permission *(admin)*
+### 📊 Níveis
+
+* `/level [@user]` - Mostra o nível e o XP
+* `/rank` - Tabela de classificação dos 10 melhores do servidor
+
+### 🎮 Jogo Termo
+
+* `/termo` - Inicia um novo jogo de Termo (Wordle português)
+* `/termo_quit` - Sai do jogo atual
+* `/termo_stats [@user]` - Mostra as estatísticas do Termo
+* `/termo_rank` - Mostra a classificação do Termo
+
+### 🎲 Jogos Rápidos
+
+* `/ppt <rock|paper|scissors>` - Pedra, papel e tesoura
+* `/dado [sides]` - Lança um dado com N lados
+* `/moeda` - Lança uma moeda
+* `/escolher <option1 | option2>` - Deixa o bot escolher por ti
+* `/adivinhar <number>` - Adivinha o número entre 1 e 10
+* `/8ball <question>` - Faz uma pergunta à bola 8 mágica
+* `/jogos` - Mostra todos os jogos disponíveis
+
+### 💻 Desafios de Código
+
+* `/code` - Inicia um desafio de programação
+* `/stats_code` - Mostra as estatísticas dos desafios de código
+
+### ⏰ Lembretes
+
+* `/lembrar <tempo> <mensagem>` - Cria um lembrete (por exemplo, `10m`, `2h`, `1d`, `1d2h30m`)
+* `/lembretes` - Lista os teus lembretes pendentes
+* `/lembrete_cancelar <id>` - Cancela um lembrete
+
+### 📊 Sondagens
+
+* `/poll <question>` - Sondagem de sim/não (👍/👎), expira por predefinição após 24h
+* `/poll <question> | opt1 | opt2 | ...` - Sondagem de escolha múltipla (até 10 opções)
+* `/poll <question> | opt1 | opt2 | --tempo 2h` - Expiração personalizada (de 5 minutos a 7 dias)
+* `/poll_fechar <message_id>` - Fecha uma sondagem antecipadamente e mostra os resultados (autor ou administrador)
+
+### 🛡️ Moderação Automática
+
+* `/automod` - Mostra o estado atual da moderação automática
+* `/automod_whitelist` - Lista os domínios autorizados
+* `/automod_perms` - Lista os utilizadores com permissão de moderador de automod
+* `/automod_on` / `/automod_off` - Ativa/desativa todo o sistema *(admin)*
+* `/automod_antispam <on|off>` - Ativa/desativa apenas o anti-spam *(admin)*
+* `/automod_antilinks <on|off>` - Ativa/desativa apenas o anti-links *(admin)*
+* `/automod_whitelist_add <domain>` - Permite um domínio (por exemplo, `youtube.com`) *(admin)*
+* `/automod_whitelist_remove <domain>` - Remove um domínio da lista branca *(admin)*
+* `/automod_addperm @user` - Concede permissão de moderador de automod *(admin)*
+* `/automod_removeperm @user` - Remove essa permissão *(admin)*
 
 ### 🚨 Anti-Raid
-- `/antiraid` - Shows current anti-raid status
-- `/antiraid_on` / `/antiraid_off` - Enables/disables the system *(admin)*
-- `/antiraid_config <entradas> <segundos> <dias_conta>` - Configures sensitivity (join threshold, time window, minimum account age) *(admin)*
-- `/antiraid_lockdown_on` / `/antiraid_lockdown_off` - Manually activates/deactivates lockdown *(admin)*
 
-### 🔨 Moderation
-- `/warn @user <reason>` - Warns a member *(admin or automod moderator)*
-- `/warnings [@user]` - Shows warning history (omit = your own)
-- `/warn_remove @user <id>` - Removes a specific warning *(admin)*
-- `/kick @user [reason]` - Kicks a member *(requires Kick Members)*
-- `/ban @user [reason]` - Bans a member *(requires Ban Members)*
-- `/unban <user_id>` - Removes a ban *(requires Ban Members)*
-- `/modlog_canal [#channel]` - Sets or shows the mod-log channel *(admin)*
+* `/antiraid` - Mostra o estado atual do anti-raid
+* `/antiraid_on` / `/antiraid_off` - Ativa/desativa o sistema *(admin)*
+* `/antiraid_config <entradas> <segundos> <dias_conta>` - Configura a sensibilidade (limite de entradas, intervalo de tempo e idade mínima da conta) *(admin)*
+* `/antiraid_lockdown_on` / `/antiraid_lockdown_off` - Ativa/desativa manualmente o bloqueio *(admin)*
+
+### 🔨 Moderação
+
+* `/warn @user <reason>` - Avisa um membro *(admin ou moderador de automod)*
+* `/warnings [@user]` - Mostra o histórico de avisos (omitir = os teus próprios avisos)
+* `/warn_remove @user <id>` - Remove um aviso específico *(admin)*
+* `/kick @user [reason]` - Expulsa um membro *(requer a permissão Expulsar Membros)*
+* `/ban @user [reason]` - Bane um membro *(requer a permissão Banir Membros)*
+* `/unban <user_id>` - Remove um banimento *(requer a permissão Banir Membros)*
+* `/modlog_canal [#channel]` - Define ou mostra o canal de registo de moderação *(admin)*
 
 ### 🎫 Tickets
-- `/ticket <reason>` - Opens a private ticket with the staff
-- `/ticketpanel` - Posts the ticket opening panel *(requires Manage Server)*
 
-### 👑 Admin Commands
-- `/write <message>` - Echoes message
-- `/clear [amount]` - Deletes messages from the channel
-- `/addxp @user <value>` - Adds XP to a user
+* `/ticket <reason>` - Abre um ticket privado com a equipa
+* `/ticketpanel` - Publica o painel de abertura de tickets *(requer Gerir Servidor)*
 
-## Running in Background (Linux)
+### 👑 Comandos de Administrador
 
-### With systemd
+* `/write <message>` - Reenvia a mensagem
+* `/clear [amount]` - Elimina mensagens do canal
+* `/addxp @user <value>` - Adiciona XP a um utilizador
+
+## Executar em Segundo Plano (Linux)
+
+### Com systemd
+
 ```bash
-# The service is already configured in discord-bot.service
+# O serviço já está configurado no discord-bot.service
 
-# Start
+# Iniciar
 systemctl --user start discord-bot
 
-# Check status
+# Verificar estado
 systemctl --user status discord-bot
 
-# View logs
+# Consultar os registos
 journalctl --user -u discord-bot -f
 
-# Auto-start on boot
+# Iniciar automaticamente no arranque
 systemctl --user enable discord-bot
 ```
 
-### With screen
+### Com screen
+
 ```bash
 screen -S discordbot
 source Venv/bin/activate
 python main.py
-# Press Ctrl+A then D to detach
+# Pressiona Ctrl+A e depois D para sair sem terminar a sessão
 
-# Reconnect
+# Voltar a ligar
 screen -r discordbot
 ```
 
-## Project Structure 📂
+## Estrutura do Projeto 📂
 
-```
+```text
 discord-bot/
-├── main.py                  # Bot initialization
+├── main.py                  # Inicialização do bot
 ├── cogs/
-│   ├── bot_commands.py      # General commands and help
-│   ├── music.py             # Music cog
-│   ├── levels.py            # Levels cog
-│   ├── events.py            # Event listeners and auto-responses
-│   ├── termo.py             # Termo game
-│   ├── code_challenges.py   # Coding challenges
-│   ├── games.py             # Games
-│   ├── reminders.py         # Reminders
-│   ├── polls.py             # Polls
-│   ├── automod.py           # Anti-spam / anti-links + permission system
-│   ├── antiraid.py          # Anti-raid join detection and lockdown
-│   ├── moderation.py        # Warns, kick, ban, mod-log
-│   └── tickets.py           # Private support tickets
+│   ├── bot_commands.py      # Comandos gerais e ajuda
+│   ├── music.py             # Módulo de música
+│   ├── levels.py            # Módulo de níveis
+│   ├── events.py            # Eventos e respostas automáticas
+│   ├── termo.py             # Jogo Termo
+│   ├── code_challenges.py   # Desafios de programação
+│   ├── games.py             # Jogos
+│   ├── reminders.py         # Lembretes
+│   ├── polls.py             # Sondagens
+│   ├── automod.py           # Anti-spam / anti-links + sistema de permissões
+│   ├── antiraid.py          # Deteção de entradas em massa e bloqueio
+│   ├── moderation.py        # Avisos, expulsões, banimentos e registo de moderação
+│   └── tickets.py           # Tickets privados de suporte
 ├── data/
-│   ├── antiraid.json         # Per-server anti-raid settings
-│   ├── auto_responses.json  # Slang auto-responses
-│   ├── automod.json          # Per-server auto-mod settings
-│   ├── code_challenges.json  # Challenge data
-│   ├── modlog.json           # Moderation log channels
-│   ├── reminders.json        # Created at runtime for pending reminders
-│   ├── rules.json           # Server rules
-│   ├── termo_palavras.json  # Termo words
-│   ├── tickets.json          # Ticket records
-│   └── warnings.json         # Created at runtime for warning history
-├── database/                # Database module
-├── utils/                   # Utility components
-├── .env.example              # .env template
-├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+│   ├── antiraid.json         # Definições de anti-raid por servidor
+│   ├── auto_responses.json  # Respostas automáticas ao calão
+│   ├── automod.json          # Definições de automod por servidor
+│   ├── code_challenges.json  # Dados dos desafios
+│   ├── modlog.json           # Canais de registo de moderação
+│   ├── reminders.json        # Criado durante a execução para lembretes pendentes
+│   ├── rules.json            # Regras do servidor
+│   ├── termo_palavras.json  # Palavras do Termo
+│   ├── tickets.json          # Registos dos tickets
+│   └── warnings.json         # Criado durante a execução para o histórico de avisos
+├── database/                # Módulo da base de dados
+├── utils/                   # Componentes utilitários
+├── .env.example              # Modelo do .env
+├── requirements.txt          # Dependências Python
+└── README.md                 # Este ficheiro
 ```
 
-## Dependencies 📦
+## Dependências 📦
 
-- `discord.py` - Discord bot framework
-- `python-dotenv` - Environment variables management
-- `yt-dlp` - YouTube video downloader
-- `PyNaCl` - Voice support for Discord
-- `davey` - Discord voice encryption support
-- `aiohttp` - Async HTTP client
-- `audioop-lts` - Audio processing
+* `discord.py` - Framework para bots Discord
+* `python-dotenv` - Gestão de variáveis de ambiente
+* `yt-dlp` - Descarregador de vídeos do YouTube
+* `PyNaCl` - Suporte de voz para o Discord
+* `davey` - Suporte para encriptação de voz do Discord
+* `aiohttp` - Cliente HTTP assíncrono
+* `audioop-lts` - Processamento de áudio
 
-> Reminders, polls, auto-moderation and moderation use only the standard library plus `discord.py` — no extra dependencies needed.
+> Os lembretes, sondagens, moderação automática e moderação utilizam apenas a biblioteca padrão e `discord.py` — não são necessárias dependências adicionais.
 
-## Troubleshooting 🔧
+## Resolução de Problemas 🔧
 
 ### "ModuleNotFoundError: No module named 'discord'"
+
 ```bash
 source Venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Bot doesn't play music
-- Check if FFmpeg is installed: `ffmpeg -version`
-- Make sure you're in a voice channel
-- Check bot permissions in voice channels
+### O bot não reproduz música
 
-### Database errors
-- Ensure the `database/` directory has write permissions
-- Check if the Discord bot has proper guild permissions
+* Verifica se o FFmpeg está instalado: `ffmpeg -version`
+* Certifica-te de que estás num canal de voz
+* Verifica as permissões do bot nos canais de voz
 
-### Bot doesn't respond to auto-responses
-- Verify `data/auto_responses.json` is properly formatted
-- Check if the bot has message permissions in the channel
-- Ensure the keywords are in the JSON file
+### Erros da base de dados
 
-### Auto-mod timeout isn't working
-- Confirm the bot has the **Moderate Members** (Timeout Members) permission on the server
-- Deletion of spam messages will still work even if the timeout silently fails
+* Certifica-te de que o diretório `database/` tem permissões de escrita
+* Verifica se o bot Discord possui as permissões necessárias no servidor
 
-### Kick/ban commands say "permissões insuficientes"
-- Confirm the bot has **Kick Members** / **Ban Members** respectively
-- Confirm the bot's role is positioned above the target member's role in the role list
+### O bot não responde automaticamente
 
-## Contributing 🤝
+* Verifica se `data/auto_responses.json` está corretamente formatado
+* Verifica se o bot tem permissões para enviar mensagens no canal
+* Certifica-te de que as palavras-chave estão presentes no ficheiro JSON
 
-Feel free to suggest improvements or report bugs!
+### O timeout do automod não está a funcionar
 
-## License 📄
- 
-This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). See the [LICENSE](LICENSE) file for details.
- 
+* Confirma que o bot tem a permissão **Moderar Membros** (Timeout Members) no servidor
+* A eliminação das mensagens de spam continuará a funcionar mesmo que o timeout falhe silenciosamente
+
+### Os comandos de expulsão/banimento indicam "permissões insuficientes"
+
+* Confirma que o bot tem as permissões **Expulsar Membros** / **Banir Membros**, respetivamente
+* Confirma que o cargo do bot está acima do cargo do membro-alvo na lista de cargos
+
+## Contribuição 🤝
+
+Sente-te à vontade para sugerir melhorias ou comunicar erros!
+
+## Licença 📄
+
+Este projeto está licenciado ao abrigo da [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Consulta o ficheiro [LICENSE](LICENSE) para obter os detalhes.
+
 ---
 
-**Version:** 2.1  
-**Developed by:** Duarte Lacerda
+**Versão:** 2.1
+**Desenvolvido por:** Duarte Lacerda
