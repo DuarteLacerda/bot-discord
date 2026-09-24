@@ -68,7 +68,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                     description="Usa apenas letras!",
                     color=discord.Color.red()
                 )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+                await interaction.followup.send(embed=embed, ephemeral=True)
                 return
             
             # Check if user has active game
@@ -78,7 +78,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                     description="A tua sessão de jogo expirou. Começa um novo jogo com `/termo`",
                     color=discord.Color.red()
                 )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+                await interaction.followup.send(embed=embed, ephemeral=True)
                 return
             
             game = self.cog.active_games[self.user_id]
@@ -131,7 +131,12 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                 del self.cog.active_games[self.user_id]
                 
             elif num_attempts >= MAX_ATTEMPTS:
-                # Defeat — o card já foi editado acima com o resultado final
+                # Defeat — o card público já foi editado acima, sem revelar a palavra
+                # A palavra só é revelada em privado a quem jogou
+                await self.cog._reveal_word_privately(
+                    interaction, interaction.user, secret_word, discord.Color.red()
+                )
+
                 # Update statistics
                 data = self.cog._get_player_data(self.guild_id, self.user_id)
                 data["games"] += 1
@@ -248,6 +253,15 @@ class Termo(commands.Cog):
         daily = self._load_daily()
         daily.setdefault(str(guild_id), {})[str(user_id)] = self._today_str()
         self._save_daily(daily)
+        
+    def _unmark_played_today(self, guild_id: int, user_id: int):
+        """Remove a marca de 'jogou hoje', usado quando o jogador desiste sem terminar"""
+        daily = self._load_daily()
+        guild_key = str(guild_id)
+        user_key = str(user_id)
+        if daily.get(guild_key, {}).get(user_key) == self._today_str():
+            del daily[guild_key][user_key]
+            self._save_daily(daily)
 
     def _next_reset_timestamp(self) -> int:
         """Epoch (segundos) da próxima meia-noite em Europe/Lisbon"""
@@ -325,7 +339,7 @@ class Termo(commands.Cog):
             title = "🎉 Parabéns! Acertaste a palavra!"
         elif num_attempts >= MAX_ATTEMPTS:
             color = discord.Color.red()
-            title = f"😔 Fim do Jogo! A palavra era: **{secret_word}**"
+            title = "😔 Fim do Jogo!"
         else:
             color = discord.Color.blue()
             title = f"🎮 Jogo - Tentativa {num_attempts}/{MAX_ATTEMPTS}"
@@ -338,10 +352,10 @@ class Termo(commands.Cog):
             embed.set_author(name=f"Jogo de {player.display_name}", icon_url=avatar)
             embed.set_footer(text=f"Jogador: {player}")
         
-        # Show previous attempts
+        # Show previous attempts (nunca mostra a palavra em texto, só os quadrados de cor)
         if attempts:
             history = "\n".join([
-                f"{att['word']} {''.join(att['result'])}"
+                ''.join(att['result'])
                 for att in attempts
             ])
             embed.add_field(name="Tentativas", value=history, inline=False)
@@ -353,8 +367,40 @@ class Termo(commands.Cog):
                 value=f"Escreve uma palavra com {WORD_SIZE} letras.\n🟩 = Letra correta\n🟨 = Letra existe mas posição errada\n⬜ = Letra não está na palavra",
                 inline=False
             )
+        elif not word_termoed and num_attempts >= MAX_ATTEMPTS:
+            # A palavra nunca é revelada na mensagem pública, só em privado a quem jogou
+            embed.add_field(
+                name="Resultado",
+                value="A palavra foi enviada em privado a quem jogou.",
+                inline=False
+            )
         
         return embed
+
+    async def _reveal_word_privately(self, target, user: discord.abc.User, word: str, color: discord.Color):
+        """
+        Revela a palavra secreta apenas ao jogador que jogou, nunca a toda a gente.
+        `target` pode ser uma Interaction (usa followup ephemeral) ou um Context
+        (usa ephemeral se veio de slash command, senão cai para DM).
+        """
+        embed = discord.Embed(
+            title="📖 A Palavra Era...",
+            description=f"A palavra secreta era **{word}**.",
+            color=color
+        )
+        try:
+            if isinstance(target, discord.Interaction):
+                await target.followup.send(embed=embed, ephemeral=True)
+            elif getattr(target, "interaction", None) is not None:
+                # Hybrid command invocado como slash: dá para ser ephemeral
+                await target.send(embed=embed, ephemeral=True)
+            else:
+                # Comando de texto: não há ephemeral, então enviamos por DM
+                await user.send(embed=embed)
+        except discord.Forbidden:
+            logging.warning(f"Não foi possível enviar DM a {user.id} com a palavra secreta (DMs fechadas).")
+        except Exception:
+            logging.exception("Não foi possível revelar a palavra em privado")
 
     async def _give_xp_reward(self, interaction: discord.Interaction, num_attempts: int):
         """Give XP reward based on number of attempts"""
@@ -503,13 +549,19 @@ class Termo(commands.Cog):
         
         word = self.active_games[user_id]["word"]
         del self.active_games[user_id]
-        
+
+        # Desistir não conta como ter jogado — pode voltar a tentar hoje
+        self._unmark_played_today(ctx.guild.id, user_id)
+
         embed = discord.Embed(
             title="😔 Jogo Cancelado",
-            description=f"Cancelaste o jogo. A palavra era: **{word}**",
+            description="Cancelaste o jogo.",
             color=discord.Color.orange()
         )
         await ctx.send(embed=embed)
+
+        # A palavra nunca fica visível para todos, só para quem jogou
+        await self._reveal_word_privately(ctx, ctx.author, word, discord.Color.orange())
 
     @commands.hybrid_command(name="termo_stats")
     async def termo_stats(self, ctx, member: discord.Member = None):
