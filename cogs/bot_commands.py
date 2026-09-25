@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -9,6 +10,43 @@ import aiohttp
 from discord.ext import commands
 
 from utils.components import ConfirmView, PaginatedView
+
+# Exemplos de uso para comandos com parâmetros, mostrados em /help <comando>
+COMMAND_EXAMPLES = {
+    "play": "/play never gonna give you up",
+    "tempo": "/tempo Lisboa",
+    "hora": "/hora Tóquio",
+    "previsao": "/previsao Porto",
+    "warn": "/warn @Duarte Spam no chat",
+    "warn_remove": "/warn_remove @Duarte 2",
+    "kick": "/kick @Duarte Comportamento inadequado",
+    "ban": "/ban @Duarte Violações repetidas das regras",
+    "unban": "/unban 123456789012345678",
+    "clear": "/clear 20",
+    "lembrar": "/lembrar 2h Ir buscar a roupa à lavandaria",
+    "lembrete_cancelar": "/lembrete_cancelar 3",
+    "poll": "/poll Gostam do novo tema?\n/poll Qual o melhor dia? | Segunda | Quarta | Sexta",
+    "poll_fechar": "/poll_fechar 123456789012345678",
+    "escolher": "/escolher pizza sushi hambúrguer",
+    "ppt": "/ppt pedra",
+    "dado": "/dado 20",
+    "8ball": "/8ball Vou passar no exame?",
+    "adivinhar": "/adivinhar 7",
+    "addxp": "/addxp @Duarte 500",
+    "syncroles": "/syncroles @Duarte",
+    "automod_antispam": "/automod_antispam on",
+    "automod_antilinks": "/automod_antilinks off",
+    "automod_whitelist_add": "/automod_whitelist_add youtube.com",
+    "automod_whitelist_remove": "/automod_whitelist_remove youtube.com",
+    "automod_addperm": "/automod_addperm @Duarte",
+    "automod_removeperm": "/automod_removeperm @Duarte",
+    "antiraid_config": "/antiraid_config 5 10 7",
+    "modlog_canal": "/modlog_canal #logs-moderacao",
+    "info": "/info @Duarte",
+    "level": "/level @Duarte",
+    "ticket": "/ticket Preciso de ajuda com a minha encomenda",
+    "write": "/write Bem-vindos ao servidor!",
+}
 
 def _chunk_lines(lines: list, limit: int = 1024) -> list:
     """Divide as linhas em blocos que cabem num campo de embed (máx 1024 chars),
@@ -89,6 +127,14 @@ class HelpView(discord.ui.View):
 class Basic(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @staticmethod
+    def _guild_branding(guild: discord.Guild):
+        """Nome e ícone do servidor, para usar em set_author() nos embeds de ajuda"""
+        if guild is None:
+            return {"name": "Mensagens Diretas", "icon_url": None}
+        icon_url = guild.icon.url if guild.icon else None
+        return {"name": guild.name, "icon_url": icon_url}
 
     @staticmethod
     def _weather_description(code: int) -> str:
@@ -780,15 +826,68 @@ class Basic(commands.Cog):
  
         return sections
 
+    def _find_command_category(self, cmd: commands.Command, sections: list) -> str:
+        """Encontra em que secção do /help um comando está listado, comparando
+        pelo nome principal e pelos aliases."""
+        names = {cmd.name} | set(cmd.aliases)
+        for section_title, commands_list in sections:
+            for key, _desc in commands_list:
+                tokens = set(re.split(r'[ /<\[\]]+', key)) - {""}
+                if names & tokens:
+                    return section_title
+        return "—"
+
+    def _build_command_detail_embed(self, cmd: commands.Command, ctx, sections: list) -> discord.Embed:
+        """Constrói o embed de detalhe para /help <comando>: sintaxe, aliases, categoria e exemplo"""
+        usage = f"/{cmd.qualified_name}"
+        if cmd.signature:
+            usage += f" {cmd.signature}"
+
+        embed = discord.Embed(
+            title=f"📖 /{cmd.qualified_name}",
+            description=cmd.help or cmd.short_doc or "(sem descrição disponível)",
+            color=discord.Color.blurple(),
+        )
+        embed.set_author(**self._guild_branding(ctx.guild))
+        embed.add_field(name="Sintaxe", value=f"`{usage}`", inline=False)
+
+        if cmd.aliases:
+            aliases = ", ".join(f"`/{a}`" for a in cmd.aliases)
+            embed.add_field(name="Aliases", value=aliases, inline=False)
+
+        example = COMMAND_EXAMPLES.get(cmd.name)
+        if example:
+            embed.add_field(name="Exemplo", value=f"`{example}`", inline=False)
+
+        embed.add_field(name="Categoria", value=self._find_command_category(cmd, sections), inline=False)
+        embed.set_footer(text="/help para veres todos os comandos")
+        return embed
+
     @commands.hybrid_command(name="help")
-    async def help_cmd(self, ctx):
-        """Mostrar todos os comandos disponíveis"""
+    async def help_cmd(self, ctx, comando: str = None):
+        """Mostrar todos os comandos disponíveis, ou detalhes de um comando específico"""
         prefix = "/"
         is_admin = ctx.author.guild_permissions.administrator
         sections = self._build_help_sections(is_admin)
 
+        if comando:
+            cmd = self.bot.get_command(comando.lstrip("/"))
+            if cmd is None:
+                embed = discord.Embed(
+                    title="❌ Comando não encontrado",
+                    description=f"Não encontrei nenhum comando chamado `{comando}`.\nUsa `/help` sem argumentos para veres a lista completa.",
+                    color=discord.Color.red(),
+                )
+                await ctx.send(embed=embed)
+                return
+
+            embed = self._build_command_detail_embed(cmd, ctx, sections)
+            await ctx.send(embed=embed)
+            return
+
         title = "📖 Ajuda (Admin)" if is_admin else "📖 Ajuda"
         color = discord.Color.red() if is_admin else discord.Color.blurple()
+        branding = self._guild_branding(ctx.guild)
 
         embeds = []
         for section_title, commands_list in sections:
@@ -797,9 +896,10 @@ class Basic(commands.Cog):
 
             embed = discord.Embed(
                 title=title,
-                description="Escolhe uma categoria no menu abaixo 👇",
+                description="Escolhe uma categoria no menu abaixo 👇\nUsa `/help <comando>` para veres detalhes de um comando.",
                 color=color,
             )
+            embed.set_author(**branding)
             for i, chunk in enumerate(chunks):
                 field_name = section_title if i == 0 else f"{section_title} (cont.)"
                 embed.add_field(name=field_name, value=chunk, inline=False)

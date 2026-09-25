@@ -3,12 +3,19 @@ import json
 import logging
 import os
 import random
+from datetime import datetime, timedelta
 from typing import Dict, Optional
+from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, Button, button
 from database import Database
+
+# Palavra do dia: mesma para todos, muda à meia-noite em Portugal
+DAILY_FILE = "data/termo_daily.json"
+TIMEZONE = ZoneInfo("Europe/Lisbon")
+DAILY_EPOCH = datetime(2024, 1, 1, tzinfo=TIMEZONE).date()
 
 # Game configuration
 MAX_ATTEMPTS = 6
@@ -108,6 +115,21 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
             else:
                 # Fallback: send a new message if original is missing
                 await interaction.followup.send(embed=embed, view=view)
+
+            # Recapitulação privada: só o jogador vê as letras que já tentou
+            # (o quadro público mostra só os quadrados coloridos)
+            private_history = "\n".join(
+                f"{att['word']} {''.join(att['result'])}" for att in game["attempts"]
+            )
+            recap_embed = discord.Embed(
+                title="🔎 As Tuas Tentativas",
+                description=private_history,
+                color=discord.Color.blue()
+            )
+            try:
+                await interaction.followup.send(embed=recap_embed, ephemeral=True)
+            except Exception as e:
+                logging.warning(f"Could not send private attempt recap: {e}")
             
             # Check game end
             if word_termoed:
@@ -259,11 +281,46 @@ class Termo(commands.Cog):
             data.get("distribution", {}),
         )
 
+    def _load_daily(self) -> dict:
+        if not os.path.exists(DAILY_FILE):
+            return {}
+        try:
+            with open(DAILY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
+
+    def _save_daily(self, data: dict):
+        os.makedirs(os.path.dirname(DAILY_FILE), exist_ok=True)
+        with open(DAILY_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def _today_str(self) -> str:
+        return datetime.now(TIMEZONE).date().isoformat()
+
+    def _has_played_today(self, guild_id: int, user_id: int) -> bool:
+        daily = self._load_daily()
+        return daily.get(str(guild_id), {}).get(str(user_id)) == self._today_str()
+
+    def _mark_played_today(self, guild_id: int, user_id: int):
+        daily = self._load_daily()
+        daily.setdefault(str(guild_id), {})[str(user_id)] = self._today_str()
+        self._save_daily(daily)
+
+    def _next_reset_timestamp(self) -> int:
+        """Epoch (segundos) da próxima meia-noite em Europe/Lisbon"""
+        now = datetime.now(TIMEZONE)
+        tomorrow = now.date() + timedelta(days=1)
+        reset_dt = datetime.combine(tomorrow, datetime.min.time(), tzinfo=TIMEZONE)
+        return int(reset_dt.timestamp())
+
     def _pick_word(self) -> str:
-        """Escolhe uma palavra aleatória para o jogo"""
+        """Escolhe a palavra do dia — a mesma para todos, determinística pela data"""
         if not self.words:
             return "termo"  # fallback
-        return random.choice(self.words).upper()
+        days_since_epoch = (datetime.now(TIMEZONE).date() - DAILY_EPOCH).days
+        index = days_since_epoch % len(self.words)
+        return self.words[index].upper()
 
     def _check_attempt(self, secret_word: str, attempt: str) -> list:
         """
@@ -316,10 +373,10 @@ class Termo(commands.Cog):
             embed.set_author(name=f"Jogo de {player.display_name}", icon_url=avatar)
             embed.set_footer(text=f"Jogador: {player}")
         
-        # Show previous attempts
+        # Show previous attempts (só os quadrados coloridos, sem revelar as letras)
         if attempts:
             history = "\n".join([
-                f"{att['word']} {''.join(att['result'])}"
+                "".join(att['result'])
                 for att in attempts
             ])
             embed.add_field(name="Tentativas", value=history, inline=False)
@@ -402,7 +459,7 @@ class Termo(commands.Cog):
 
     @commands.hybrid_command(name="termo")
     async def termo(self, ctx):
-        """Começa um novo jogo de adivinhação de palavras"""
+        """Começa o desafio diário de adivinhação de palavras"""
         try:
             logging.info(f"=== TERMO COMMAND STARTED ===")
             user_id = ctx.author.id
@@ -418,8 +475,20 @@ class Termo(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-            # Start new game
+            # Check if already played today's word
+            if self._has_played_today(ctx.guild.id, user_id):
+                reset_ts = self._next_reset_timestamp()
+                embed = discord.Embed(
+                    title="🕐 Já Jogaste Hoje",
+                    description=f"O Termo de hoje já foi jogado! Volta amanhã.\nPróximo desafio: <t:{reset_ts}:R>",
+                    color=discord.Color.orange()
+                )
+                await ctx.send(embed=embed)
+                return
+
+            # Start new game (marca logo o dia como usado, mesmo que o jogo seja abandonado)
             secret_word = self._pick_word()
+            self._mark_played_today(ctx.guild.id, user_id)
             logging.info(f"Secret word: {secret_word}")
             self.active_games[user_id] = {
                 "word": secret_word,
