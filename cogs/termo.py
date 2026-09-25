@@ -2,19 +2,13 @@ import asyncio
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+import random
 from typing import Dict, Optional
 
 import discord
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, Button, button
 from database import Database
-from zoneinfo import ZoneInfo
-
-# Daily word tracking
-DAILY_FILE = "data/termo_daily.json"
-TIMEZONE = ZoneInfo("Europe/Lisbon")
-DAILY_EPOCH = datetime(2024, 1, 1, tzinfo=TIMEZONE).date()
 
 # Game configuration
 MAX_ATTEMPTS = 6
@@ -68,7 +62,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                     description="Usa apenas letras!",
                     color=discord.Color.red()
                 )
-                await interaction.followup.send(embed=embed, ephemeral=True)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
             
             # Check if user has active game
@@ -78,7 +72,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                     description="A tua sessão de jogo expirou. Começa um novo jogo com `/termo`",
                     color=discord.Color.red()
                 )
-                await interaction.followup.send(embed=embed, ephemeral=True)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
             
             game = self.cog.active_games[self.user_id]
@@ -126,20 +120,31 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                 data["games"] += 1
                 data["wins"] += 1
                 data["total_attempts"] += num_attempts
+                data["current_streak"] = data.get("current_streak", 0) + 1
+                data["best_streak"] = max(data.get("best_streak", 0), data["current_streak"])
+                distribution = data.get("distribution", {i: 0 for i in range(1, 7)})
+                distribution[num_attempts] = distribution.get(num_attempts, 0) + 1
+                data["distribution"] = distribution
                 self.cog._save_player_data(self.guild_id, self.user_id, data)
                 
                 del self.cog.active_games[self.user_id]
                 
             elif num_attempts >= MAX_ATTEMPTS:
-                # Defeat — o card público já foi editado acima, sem revelar a palavra
-                # A palavra só é revelada em privado a quem jogou
-                await self.cog._reveal_word_privately(
-                    interaction, interaction.user, secret_word, discord.Color.red()
+                # Defeat — o card público já foi editado acima sem revelar a palavra
+                reveal_embed = discord.Embed(
+                    title="😔 Fim do Jogo",
+                    description=f"Mais sorte na próxima! A palavra era: **{secret_word}**",
+                    color=discord.Color.red()
                 )
+                try:
+                    await interaction.followup.send(embed=reveal_embed, ephemeral=True)
+                except Exception as e:
+                    logging.warning(f"Could not send private word reveal: {e}")
 
                 # Update statistics
                 data = self.cog._get_player_data(self.guild_id, self.user_id)
                 data["games"] += 1
+                data["current_streak"] = 0
                 self.cog._save_player_data(self.guild_id, self.user_id, data)
                 
                 del self.cog.active_games[self.user_id]
@@ -228,48 +233,6 @@ class Termo(commands.Cog):
             logging.warning(f"Words file not found at {WORDS_FILE}")
             self.words = []
 
-    def _load_daily(self) -> dict:
-        if not os.path.exists(DAILY_FILE):
-            return {}
-        try:
-            with open(DAILY_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError):
-            return {}
-
-    def _save_daily(self, data: dict):
-        os.makedirs(os.path.dirname(DAILY_FILE), exist_ok=True)
-        with open(DAILY_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-
-    def _today_str(self) -> str:
-        return datetime.now(TIMEZONE).date().isoformat()
-
-    def _has_played_today(self, guild_id: int, user_id: int) -> bool:
-        daily = self._load_daily()
-        return daily.get(str(guild_id), {}).get(str(user_id)) == self._today_str()
-
-    def _mark_played_today(self, guild_id: int, user_id: int):
-        daily = self._load_daily()
-        daily.setdefault(str(guild_id), {})[str(user_id)] = self._today_str()
-        self._save_daily(daily)
-        
-    def _unmark_played_today(self, guild_id: int, user_id: int):
-        """Remove a marca de 'jogou hoje', usado quando o jogador desiste sem terminar"""
-        daily = self._load_daily()
-        guild_key = str(guild_id)
-        user_key = str(user_id)
-        if daily.get(guild_key, {}).get(user_key) == self._today_str():
-            del daily[guild_key][user_key]
-            self._save_daily(daily)
-
-    def _next_reset_timestamp(self) -> int:
-        """Epoch (segundos) da próxima meia-noite em Europe/Lisbon"""
-        now = datetime.now(TIMEZONE)
-        tomorrow = now.date() + timedelta(days=1)
-        reset_dt = datetime.combine(tomorrow, datetime.min.time(), tzinfo=TIMEZONE)
-        return int(reset_dt.timestamp())
-
     def _migrate_legacy_data(self):
         """Migra dados antigos em JSON para SQLite, se existirem"""
         try:
@@ -291,15 +254,16 @@ class Termo(commands.Cog):
             data.get("games", 0),
             data.get("wins", 0),
             data.get("total_attempts", 0),
+            data.get("current_streak", 0),
+            data.get("best_streak", 0),
+            data.get("distribution", {}),
         )
 
     def _pick_word(self) -> str:
-        """Escolhe a palavra do dia (mesma para todos, determinística pela data)"""
+        """Escolhe uma palavra aleatória para o jogo"""
         if not self.words:
             return "termo"  # fallback
-        days_since_epoch = (datetime.now(TIMEZONE).date() - DAILY_EPOCH).days
-        index = days_since_epoch % len(self.words)
-        return self.words[index].upper()
+        return random.choice(self.words).upper()
 
     def _check_attempt(self, secret_word: str, attempt: str) -> list:
         """
@@ -352,10 +316,10 @@ class Termo(commands.Cog):
             embed.set_author(name=f"Jogo de {player.display_name}", icon_url=avatar)
             embed.set_footer(text=f"Jogador: {player}")
         
-        # Show previous attempts (nunca mostra a palavra em texto, só os quadrados de cor)
+        # Show previous attempts
         if attempts:
             history = "\n".join([
-                ''.join(att['result'])
+                f"{att['word']} {''.join(att['result'])}"
                 for att in attempts
             ])
             embed.add_field(name="Tentativas", value=history, inline=False)
@@ -367,40 +331,25 @@ class Termo(commands.Cog):
                 value=f"Escreve uma palavra com {WORD_SIZE} letras.\n🟩 = Letra correta\n🟨 = Letra existe mas posição errada\n⬜ = Letra não está na palavra",
                 inline=False
             )
-        elif not word_termoed and num_attempts >= MAX_ATTEMPTS:
-            # A palavra nunca é revelada na mensagem pública, só em privado a quem jogou
+        elif num_attempts >= MAX_ATTEMPTS and not word_termoed:
             embed.add_field(
-                name="Resultado",
-                value="A palavra foi enviada em privado a quem jogou.",
+                name="Palavra",
+                value="A palavra só é revelada em privado ao jogador.",
                 inline=False
             )
-        
+
         return embed
 
-    async def _reveal_word_privately(self, target, user: discord.abc.User, word: str, color: discord.Color):
-        """
-        Revela a palavra secreta apenas ao jogador que jogou, nunca a toda a gente.
-        `target` pode ser uma Interaction (usa followup ephemeral) ou um Context
-        (usa ephemeral se veio de slash command, senão cai para DM).
-        """
-        embed = discord.Embed(
-            title="📖 A Palavra Era...",
-            description=f"A palavra secreta era **{word}**.",
-            color=color
-        )
-        try:
-            if isinstance(target, discord.Interaction):
-                await target.followup.send(embed=embed, ephemeral=True)
-            elif getattr(target, "interaction", None) is not None:
-                # Hybrid command invocado como slash: dá para ser ephemeral
-                await target.send(embed=embed, ephemeral=True)
-            else:
-                # Comando de texto: não há ephemeral, então enviamos por DM
-                await user.send(embed=embed)
-        except discord.Forbidden:
-            logging.warning(f"Não foi possível enviar DM a {user.id} com a palavra secreta (DMs fechadas).")
-        except Exception:
-            logging.exception("Não foi possível revelar a palavra em privado")
+    def _format_distribution(self, distribution: Dict[int, int], bar_width: int = 10) -> str:
+        """Formata a distribuição de tentativas como um pequeno gráfico de barras em texto"""
+        max_count = max(distribution.values()) if distribution.values() else 0
+        lines = []
+        for attempts in range(1, MAX_ATTEMPTS + 1):
+            count = distribution.get(attempts, 0)
+            filled = round((count / max_count) * bar_width) if max_count > 0 else 0
+            bar = "🟩" * filled + "⬛" * (bar_width - filled)
+            lines.append(f"`{attempts}` {bar} {count}")
+        return "\n".join(lines)
 
     async def _give_xp_reward(self, interaction: discord.Interaction, num_attempts: int):
         """Give XP reward based on number of attempts"""
@@ -453,7 +402,7 @@ class Termo(commands.Cog):
 
     @commands.hybrid_command(name="termo")
     async def termo(self, ctx):
-        """Começa o desafio diário de adivinhação de palavras"""
+        """Começa um novo jogo de adivinhação de palavras"""
         try:
             logging.info(f"=== TERMO COMMAND STARTED ===")
             user_id = ctx.author.id
@@ -469,20 +418,8 @@ class Termo(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-            # Check if already played today's word
-            if self._has_played_today(ctx.guild.id, user_id):
-                reset_ts = self._next_reset_timestamp()
-                embed = discord.Embed(
-                    title="🕐 Já Jogaste Hoje",
-                    description=f"O Termo de hoje já foi jogado! Volta amanhã.\nPróximo desafio: <t:{reset_ts}:R>",
-                    color=discord.Color.orange()
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # Start new game (marca logo o dia como usado, mesmo que o jogo seja abandonado)
+            # Start new game
             secret_word = self._pick_word()
-            self._mark_played_today(ctx.guild.id, user_id)
             logging.info(f"Secret word: {secret_word}")
             self.active_games[user_id] = {
                 "word": secret_word,
@@ -550,18 +487,31 @@ class Termo(commands.Cog):
         word = self.active_games[user_id]["word"]
         del self.active_games[user_id]
 
-        # Desistir não conta como ter jogado — pode voltar a tentar hoje
-        self._unmark_played_today(ctx.guild.id, user_id)
-
-        embed = discord.Embed(
+        public_embed = discord.Embed(
             title="😔 Jogo Cancelado",
-            description="Cancelaste o jogo.",
+            description="Cancelaste o jogo. A palavra foi revelada apenas para ti.",
             color=discord.Color.orange()
         )
-        await ctx.send(embed=embed)
+        await ctx.send(embed=public_embed)
 
-        # A palavra nunca fica visível para todos, só para quem jogou
-        await self._reveal_word_privately(ctx, ctx.author, word, discord.Color.orange())
+        reveal_embed = discord.Embed(
+            title="😔 Jogo Cancelado",
+            description=f"A palavra era: **{word}**",
+            color=discord.Color.orange()
+        )
+        if ctx.interaction:
+            # Comando de slash: resposta ephemeral, só o jogador vê
+            try:
+                await ctx.interaction.followup.send(embed=reveal_embed, ephemeral=True)
+            except Exception as e:
+                logging.warning(f"Could not send ephemeral word reveal: {e}")
+        else:
+            # Comando de prefixo: não há forma de responder em privado no canal,
+            # por isso envia por DM
+            try:
+                await ctx.author.send(embed=reveal_embed)
+            except Exception as e:
+                logging.warning(f"Could not DM word reveal: {e}")
 
     @commands.hybrid_command(name="termo_stats")
     async def termo_stats(self, ctx, member: discord.Member = None):
@@ -573,6 +523,9 @@ class Termo(commands.Cog):
         games = data["games"]
         wins = data["wins"]
         total_attempts = data["total_attempts"]
+        current_streak = data.get("current_streak", 0)
+        best_streak = data.get("best_streak", 0)
+        distribution = data.get("distribution", {i: 0 for i in range(1, 7)})
         
         if games == 0:
             embed = discord.Embed(
@@ -593,9 +546,16 @@ class Termo(commands.Cog):
         embed.add_field(name="🎮 Jogos", value=str(games), inline=True)
         embed.add_field(name="🏆 Vitórias", value=str(wins), inline=True)
         embed.add_field(name="📈 Taxa de Vitória", value=f"{win_rate:.1f}%", inline=True)
+        embed.add_field(name="🔥 Streak Atual", value=str(current_streak), inline=True)
+        embed.add_field(name="⭐ Melhor Streak", value=str(best_streak), inline=True)
         
         if wins > 0:
             embed.add_field(name="🎯 Média de Tentativas", value=f"{avg_attempts:.1f}", inline=True)
+            embed.add_field(
+                name="📊 Distribuição de Tentativas",
+                value=self._format_distribution(distribution),
+                inline=False
+            )
         
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         
@@ -640,12 +600,13 @@ class Termo(commands.Cog):
             games = data["games"]
             win_rate = (wins / games * 100) if games > 0 else 0
             avg = (data["total_attempts"] / wins) if wins > 0 else 0
+            best_streak = data.get("best_streak", 0)
             
             medal = ["🥇", "🥈", "🥉"][i-1] if i <= 3 else f"{i}."
             
             embed.add_field(
                 name=f"{medal} {name}",
-                value=f"🏆 {wins} vitórias | 📈 {win_rate:.0f}% | 🎯 {avg:.1f} méd",
+                value=f"🏆 {wins} vitórias | 📈 {win_rate:.0f}% | 🎯 {avg:.1f} méd | 🔥 {best_streak} melhor streak",
                 inline=False
             )
         

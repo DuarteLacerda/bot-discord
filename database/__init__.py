@@ -47,9 +47,18 @@ class Database:
                 games INTEGER DEFAULT 0,
                 wins INTEGER DEFAULT 0,
                 total_attempts INTEGER DEFAULT 0,
+                current_streak INTEGER DEFAULT 0,
+                best_streak INTEGER DEFAULT 0,
+                attempts_1 INTEGER DEFAULT 0,
+                attempts_2 INTEGER DEFAULT 0,
+                attempts_3 INTEGER DEFAULT 0,
+                attempts_4 INTEGER DEFAULT 0,
+                attempts_5 INTEGER DEFAULT 0,
+                attempts_6 INTEGER DEFAULT 0,
                 PRIMARY KEY (guild_id, user_id)
             )
         """)
+        self._ensure_termo_columns(cursor)
 
         # Tabela de regras (opcional, para futuro)
         cursor.execute("""
@@ -63,6 +72,24 @@ class Database:
 
         conn.commit()
         conn.close()
+
+    def _ensure_termo_columns(self, cursor):
+        """Adiciona colunas novas a bases de dados já existentes (streak, distribuição)"""
+        cursor.execute("PRAGMA table_info(termo_stats)")
+        existing = {row[1] for row in cursor.fetchall()}
+        new_columns = {
+            "current_streak": "INTEGER DEFAULT 0",
+            "best_streak": "INTEGER DEFAULT 0",
+            "attempts_1": "INTEGER DEFAULT 0",
+            "attempts_2": "INTEGER DEFAULT 0",
+            "attempts_3": "INTEGER DEFAULT 0",
+            "attempts_4": "INTEGER DEFAULT 0",
+            "attempts_5": "INTEGER DEFAULT 0",
+            "attempts_6": "INTEGER DEFAULT 0",
+        }
+        for column, declaration in new_columns.items():
+            if column not in existing:
+                cursor.execute(f"ALTER TABLE termo_stats ADD COLUMN {column} {declaration}")
 
     # ===== MÉTODOS DE NÍVEIS =====
 
@@ -301,35 +328,69 @@ class Database:
     # ===== MÉTODOS DO JOGO TERMO =====
 
     def get_termo_stats(self, guild_id: int, user_id: int) -> Dict:
-        """Lê estatísticas do jogo Termo"""
+        """Lê estatísticas do jogo Termo, incluindo streak e distribuição de tentativas"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT games, wins, total_attempts FROM termo_stats WHERE guild_id = ? AND user_id = ?",
+            """
+            SELECT games, wins, total_attempts, current_streak, best_streak,
+                   attempts_1, attempts_2, attempts_3, attempts_4, attempts_5, attempts_6
+            FROM termo_stats WHERE guild_id = ? AND user_id = ?
+            """,
             (guild_id, user_id)
         )
         row = cursor.fetchone()
         conn.close()
 
         if row:
-            return {"games": row[0], "wins": row[1], "total_attempts": row[2]}
+            return {
+                "games": row[0],
+                "wins": row[1],
+                "total_attempts": row[2],
+                "current_streak": row[3],
+                "best_streak": row[4],
+                "distribution": {i: row[4 + i] for i in range(1, 7)},
+            }
 
-        return {"games": 0, "wins": 0, "total_attempts": 0}
+        return {
+            "games": 0, "wins": 0, "total_attempts": 0,
+            "current_streak": 0, "best_streak": 0,
+            "distribution": {i: 0 for i in range(1, 7)},
+        }
 
-    def set_termo_stats(self, guild_id: int, user_id: int, games: int, wins: int, total_attempts: int):
-        """Grava estatísticas do jogo Termo"""
+    def set_termo_stats(
+        self, guild_id: int, user_id: int, games: int, wins: int, total_attempts: int,
+        current_streak: int = 0, best_streak: int = 0, distribution: Optional[Dict[int, int]] = None,
+    ):
+        """Grava estatísticas do jogo Termo, incluindo streak e distribuição de tentativas"""
+        distribution = distribution or {}
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO termo_stats (guild_id, user_id, games, wins, total_attempts)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO termo_stats (
+                guild_id, user_id, games, wins, total_attempts, current_streak, best_streak,
+                attempts_1, attempts_2, attempts_3, attempts_4, attempts_5, attempts_6
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(guild_id, user_id) DO UPDATE SET
                 games = excluded.games,
                 wins = excluded.wins,
-                total_attempts = excluded.total_attempts
+                total_attempts = excluded.total_attempts,
+                current_streak = excluded.current_streak,
+                best_streak = excluded.best_streak,
+                attempts_1 = excluded.attempts_1,
+                attempts_2 = excluded.attempts_2,
+                attempts_3 = excluded.attempts_3,
+                attempts_4 = excluded.attempts_4,
+                attempts_5 = excluded.attempts_5,
+                attempts_6 = excluded.attempts_6
             """,
-            (guild_id, user_id, games, wins, total_attempts)
+            (
+                guild_id, user_id, games, wins, total_attempts, current_streak, best_streak,
+                distribution.get(1, 0), distribution.get(2, 0), distribution.get(3, 0),
+                distribution.get(4, 0), distribution.get(5, 0), distribution.get(6, 0),
+            )
         )
         conn.commit()
         conn.close()
@@ -339,7 +400,7 @@ class Database:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT user_id, games, wins, total_attempts FROM termo_stats WHERE guild_id = ?",
+            "SELECT user_id, games, wins, total_attempts, current_streak, best_streak FROM termo_stats WHERE guild_id = ?",
             (guild_id,)
         )
         rows = cursor.fetchall()
@@ -351,6 +412,8 @@ class Database:
                 "games": row[1],
                 "wins": row[2],
                 "total_attempts": row[3],
+                "current_streak": row[4],
+                "best_streak": row[5],
             }
             for row in rows
         ]
