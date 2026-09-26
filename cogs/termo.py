@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import unicodedata
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 from zoneinfo import ZoneInfo
@@ -94,7 +95,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
             })
             
             num_attempts = len(game["attempts"])
-            word_termoed = attempt == secret_word
+            word_termoed = self.cog._normalize(attempt) == self.cog._normalize(secret_word)
             
             embed = self.cog._create_game_embed(
                 game["attempts"],
@@ -111,7 +112,11 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
 
             game_message = game.get("message")
             if game_message:
-                await game_message.edit(embed=embed, view=view)
+                try:
+                    await game_message.edit(embed=embed, view=view)
+                except discord.HTTPException:
+                    logging.warning("Failed to edit game message, sending new one")
+                    await interaction.followup.send(embed=embed, view=view)
             else:
                 # Fallback: send a new message if original is missing
                 await interaction.followup.send(embed=embed, view=view)
@@ -134,6 +139,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
             # Check game end
             if word_termoed:
                 # Victory!
+                self.cog._mark_played_today(self.guild_id, self.user_id)
                 await asyncio.sleep(0.5)  # Small delay to ensure response was processed
                 await self.cog._give_xp_reward(interaction, num_attempts)
                 
@@ -153,6 +159,7 @@ class TermoModal(Modal, title="Faz a Tua Tentativa"):
                 
             elif num_attempts >= MAX_ATTEMPTS:
                 # Defeat — o card público já foi editado acima sem revelar a palavra
+                self.cog._mark_played_today(self.guild_id, self.user_id)
                 reveal_embed = discord.Embed(
                     title="😔 Fim do Jogo",
                     description=f"Mais sorte na próxima! A palavra era: **{secret_word}**",
@@ -322,6 +329,12 @@ class Termo(commands.Cog):
         index = days_since_epoch % len(self.words)
         return self.words[index].upper()
 
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Remove acentos para efeitos de comparação (ex: 'É' e 'E' contam como iguais)"""
+        nfkd = unicodedata.normalize("NFKD", text)
+        return "".join(c for c in nfkd if not unicodedata.combining(c))
+
     def _check_attempt(self, secret_word: str, attempt: str) -> list:
         """
         Check the attempt and return list of results:
@@ -330,8 +343,8 @@ class Termo(commands.Cog):
         ⬜ = letter not in word
         """
         resultado = []
-        secret_word = secret_word.upper()
-        attempt = attempt.upper()
+        secret_word = self._normalize(secret_word.upper())
+        attempt = self._normalize(attempt.upper())
         
         # Count letter occurrences in secret word
         count = {}
@@ -488,7 +501,6 @@ class Termo(commands.Cog):
 
             # Start new game (marca logo o dia como usado, mesmo que o jogo seja abandonado)
             secret_word = self._pick_word()
-            self._mark_played_today(ctx.guild.id, user_id)
             logging.info(f"Secret word: {secret_word}")
             self.active_games[user_id] = {
                 "word": secret_word,
@@ -524,6 +536,14 @@ class Termo(commands.Cog):
             logging.info("About to send game message")
             msg = await ctx.send(embed=embed, view=view)
             logging.info(f"Game message sent: {msg.id}")
+
+            # Refetch como mensagem "normal": evita que a edição mais tarde
+            # dependa do webhook token da interação, que expira em 15 min
+            try:
+                msg = await ctx.channel.fetch_message(msg.id)
+            except discord.HTTPException:
+                logging.warning("Could not refetch game message; falling back to interaction message")
+
             # Keep reference to edit later instead of spamming new messages
             self.active_games[user_id]["message"] = msg
             logging.info(f"=== TERMO COMMAND COMPLETED ===")
@@ -553,34 +573,14 @@ class Termo(commands.Cog):
             await ctx.send(embed=embed)
             return
         
-        word = self.active_games[user_id]["word"]
         del self.active_games[user_id]
 
         public_embed = discord.Embed(
             title="😔 Jogo Cancelado",
-            description="Cancelaste o jogo. A palavra foi revelada apenas para ti.",
+            description="Cancelaste o jogo. Podes tentar novamente com `/termo`.",
             color=discord.Color.orange()
         )
         await ctx.send(embed=public_embed)
-
-        reveal_embed = discord.Embed(
-            title="😔 Jogo Cancelado",
-            description=f"A palavra era: **{word}**",
-            color=discord.Color.orange()
-        )
-        if ctx.interaction:
-            # Comando de slash: resposta ephemeral, só o jogador vê
-            try:
-                await ctx.interaction.followup.send(embed=reveal_embed, ephemeral=True)
-            except Exception as e:
-                logging.warning(f"Could not send ephemeral word reveal: {e}")
-        else:
-            # Comando de prefixo: não há forma de responder em privado no canal,
-            # por isso envia por DM
-            try:
-                await ctx.author.send(embed=reveal_embed)
-            except Exception as e:
-                logging.warning(f"Could not DM word reveal: {e}")
 
     @commands.hybrid_command(name="termo_stats")
     async def termo_stats(self, ctx, member: discord.Member = None):

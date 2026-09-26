@@ -33,6 +33,7 @@ COMMAND_EXAMPLES = {
     "8ball": "/8ball Vou passar no exame?",
     "adivinhar": "/adivinhar 7",
     "addxp": "/addxp @Duarte 500",
+    "removexp": "/removexp @Duarte 100",
     "syncroles": "/syncroles @Duarte",
     "automod_antispam": "/automod_antispam on",
     "automod_antilinks": "/automod_antilinks off",
@@ -43,48 +44,114 @@ COMMAND_EXAMPLES = {
     "antiraid_config": "/antiraid_config 5 10 7",
     "modlog_canal": "/modlog_canal #logs-moderacao",
     "info": "/info @Duarte",
-    "level": "/level @Duarte",
+    "nivel": "/nivel @Duarte",
     "ticket": "/ticket Preciso de ajuda com a minha encomenda",
+    "noticias": "/noticias tecnologia",
+    "news": "/news tecnologia",
     "write": "/write Bem-vindos ao servidor!",
+    "noticias_canal": "/noticias_canal #geral tecnologia",
 }
 
-def _chunk_lines(lines: list, limit: int = 1024) -> list:
-    """Divide as linhas em blocos que cabem num campo de embed (máx 1024 chars),
-    sem cortar nenhuma linha a meio."""
+# Uma cor distinta por categoria, para que cada página do /help se destaque
+# visualmente e seja fácil identificar em que secção se está, de relance.
+CATEGORY_COLORS = {
+    "⚙️ Básico": discord.Color.light_gray(),
+    "ℹ️ Informação": discord.Color.blue(),
+    "🌤️ Meteorologia": discord.Color.from_rgb(86, 180, 233),
+    "🎵 Música": discord.Color.purple(),
+    "📊 Níveis": discord.Color.gold(),
+    "🎮 Jogos - Termo": discord.Color.green(),
+    "🎲 Jogos Rápidos": discord.Color.from_rgb(46, 204, 113),
+    "💻 Desafios de Código": discord.Color.teal(),
+    "⏰ Lembretes": discord.Color.orange(),
+    "📊 Enquetes": discord.Color.from_rgb(155, 89, 182),
+    "🛡️ Auto-Moderação": discord.Color.dark_teal(),
+    "🎫 Tickets": discord.Color.from_rgb(52, 152, 219),
+    "📰 Notícias": discord.Color.from_rgb(230, 126, 34),
+    "🛡️ Auto-Moderação (Admin)": discord.Color.dark_red(),
+    "🔨 Moderação": discord.Color.red(),
+    "🚨 Anti-Raid": discord.Color.from_rgb(192, 57, 43),
+    "👑 Admin": discord.Color.dark_gold(),
+}
+DEFAULT_HELP_COLOR = discord.Color.blurple()
+DEFAULT_ADMIN_COLOR = discord.Color.red()
+
+
+def _chunk_lines(blocks: list, limit: int = 1000) -> list:
+    """Divide os blocos (cada um pode já conter \\n internos) em grupos que
+    cabem num campo de embed, sem nunca cortar um bloco a meio — garante
+    que um comando e a sua descrição ficam sempre juntos e nunca são
+    separados entre dois campos/páginas diferentes. Os blocos são juntos
+    com uma linha em branco entre eles para arejar a leitura. O limite é
+    propositadamente inferior a 1024 para sobrar espaço para as marcações
+    ``` do bloco de código."""
     chunks = []
     current = []
     current_len = 0
-    for line in lines:
-        line_len = len(line) + 1  # +1 pelo \n
-        if current and current_len + line_len > limit:
-            chunks.append("\n".join(current))
+    for block in blocks:
+        block_len = len(block) + 2  # +2 pela linha em branco separadora
+        if current and current_len + block_len > limit:
+            chunks.append("\n\n".join(current))
             current = []
             current_len = 0
-        current.append(line)
-        current_len += line_len
+        current.append(block)
+        current_len += block_len
     if current:
-        chunks.append("\n".join(current))
+        chunks.append("\n\n".join(current))
     return chunks
+
+
+def _format_section_lines(commands_list: list) -> list:
+    """Formata cada comando como um bloco de duas linhas (comando +
+    descrição indentada), prontas para ir dentro de um bloco de código
+    (```). Cada bloco é devolvido como um único elemento (com \\n interno)
+    para que _chunk_lines nunca separe o nome do comando da sua descrição
+    ao dividir por campos — e evita o desalinhamento que ocorria quando o
+    Discord fazia word-wrap de uma linha comando+descrição comprida num
+    ecrã estreito (telemóvel)."""
+    return [f"/{name}\n  → {desc}" for name, desc in commands_list]
+
+
+def _category_color(section_title: str, fallback: discord.Color) -> discord.Color:
+    return CATEGORY_COLORS.get(section_title, fallback)
+
 
 class HelpView(discord.ui.View):
     """Menu de ajuda com dropdown para saltar direto a uma categoria,
-    mais botões Anterior/Seguinte para quem prefere navegar em sequência."""
+    mais botões Início/Anterior/Seguinte para quem prefere navegar em sequência."""
 
     def __init__(self, embeds: list, section_titles: list, author_id: int, timeout: float = 60):
         super().__init__(timeout=timeout)
         self.embeds = embeds
+        self.section_titles = section_titles
         self.author_id = author_id
         self.index = 0
         self.message = None  # definido depois do ctx.send
 
-        options = [
-            discord.SelectOption(label=title[:100], value=str(i))
-            for i, title in enumerate(section_titles)
-        ]
-        # Discord só permite 25 opções por select — corta se algum dia crescer mais que isso
-        self.select = discord.ui.Select(placeholder="📂 Escolhe uma categoria...", options=options[:25])
+        self.select = discord.ui.Select(
+            placeholder="📂 Escolhe uma categoria...",
+            options=self._build_select_options(),
+        )
         self.select.callback = self._on_select
         self.add_item(self.select)
+
+    def _build_select_options(self) -> list:
+        # Discord só permite 25 opções por select — corta se algum dia crescer mais que isso.
+        # A opção da categoria atual fica marcada como "default" para se destacar no menu.
+        return [
+            discord.SelectOption(
+                label=title[:100],
+                value=str(i),
+                default=(i == self.index),
+            )
+            for i, title in enumerate(self.section_titles)
+        ][:25]
+
+    def _sync(self):
+        """Atualiza o placeholder do select e o estado dos botões para refletir a página atual."""
+        self.select.options = self._build_select_options()
+        self.select.placeholder = f"📂 {self.section_titles[self.index][:90]}"
+        self.home_button.disabled = self.index == 0
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author_id:
@@ -96,19 +163,28 @@ class HelpView(discord.ui.View):
 
     async def _on_select(self, interaction: discord.Interaction):
         self.index = int(self.select.values[0])
+        self._sync()
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    @discord.ui.button(label="◀ Anterior", style=discord.ButtonStyle.secondary, row=1)
+    @discord.ui.button(label="Início", emoji="🏠", style=discord.ButtonStyle.secondary, row=1)
+    async def home_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.index = 0
+        self._sync()
+        await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
+
+    @discord.ui.button(label="Anterior", emoji="◀", style=discord.ButtonStyle.secondary, row=1)
     async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.index = (self.index - 1) % len(self.embeds)
+        self._sync()
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    @discord.ui.button(label="Seguinte ▶", style=discord.ButtonStyle.secondary, row=1)
+    @discord.ui.button(label="Seguinte", emoji="▶", style=discord.ButtonStyle.secondary, row=1)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.index = (self.index + 1) % len(self.embeds)
+        self._sync()
         await interaction.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    @discord.ui.button(label="Fechar", style=discord.ButtonStyle.danger, row=1)
+    @discord.ui.button(label="Fechar", emoji="✖", style=discord.ButtonStyle.danger, row=1)
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await interaction.message.delete()
@@ -120,9 +196,10 @@ class HelpView(discord.ui.View):
             item.disabled = True
         if self.message:
             try:
-                await self.message.delete()
+                await self.message.edit(view=self)
             except discord.HTTPException:
                 pass
+
 
 class Basic(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -312,7 +389,7 @@ class Basic(commands.Cog):
 
             daily = forecast_data.get("daily") or {}
             daily_units = forecast_data.get("daily_units") or {}
-            
+
             return {
                 "location": location,
                 "dates": daily.get("time", []),
@@ -529,7 +606,7 @@ class Basic(commands.Cog):
                 date_obj = datetime.fromisoformat(date_str)
                 day_name = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"][date_obj.weekday()]
                 formatted_date = f"{day_name}, {date_obj.strftime('%d/%m')}"
-            except:
+            except Exception:
                 formatted_date = dates[i]
 
             weather_desc = self._weather_description(weather_codes[i]) if i < len(weather_codes) else "—"
@@ -580,6 +657,7 @@ class Basic(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int = None):
         """Apagar mensagens do canal (apenas admin)"""
+        await ctx.defer(ephemeral=True)
         if amount is None:
             embed = discord.Embed(
                 title="⚠️ Confirmação",
@@ -587,10 +665,10 @@ class Basic(commands.Cog):
                 color=discord.Color.orange()
             )
             msg = await ctx.send(embed=embed)
-            
+
             def check(m):
                 return m.author == ctx.author and m.channel == ctx.channel and m.content.lower() == "confirm"
-            
+
             try:
                 await self.bot.wait_for("message", timeout=10.0, check=check)
                 deleted = await ctx.channel.purge(limit=None)
@@ -645,11 +723,11 @@ class Basic(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="rules")
+    @commands.hybrid_command(name="regras")
     async def rules(self, ctx):
         """Mostrar regras do servidor"""
         rules_file = "data/rules.json"
-        
+
         if not os.path.exists(rules_file):
             embed = discord.Embed(
                 title="❌ Erro",
@@ -658,26 +736,26 @@ class Basic(commands.Cog):
             )
             await ctx.send(embed=embed)
             return
-        
+
         try:
             with open(rules_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             embed = discord.Embed(
                 title=data.get("title", "Regras do Servidor"),
                 color=int(data.get("color", "0x3498db").replace("0x", ""), 16),
             )
-            
+
             for rule in data.get("rules", []):
                 embed.add_field(
                     name=f"{rule['number']}. {rule['title']}",
                     value=rule['description'],
                     inline=False,
                 )
-            
+
             if "footer" in data:
                 embed.set_footer(text=data["footer"])
-            
+
             await ctx.send(embed=embed)
         except Exception as e:
             embed = discord.Embed(
@@ -694,19 +772,19 @@ class Basic(commands.Cog):
             ("ping", "responde com pong"),
             ("sum <a> <b>", "somar dois números"),
         ]
- 
+
         info = [
             ("info [@user]", "mostrar informações do utilizador"),
             ("server / guild", "mostrar informações do servidor"),
-            ("rules", "mostrar regras do servidor"),
+            ("regras", "mostrar regras do servidor"),
         ]
- 
+
         weather = [
             ("tempo <cidade>", "mostra o tempo atual"),
             ("hora <cidade>", "mostra a hora atual"),
             ("previsao <cidade>", "previsão para 7 dias"),
         ]
- 
+
         music = [
             ("join / connect / j", "juntar ao canal de voz"),
             ("play / p <term|link>", "tocar do YouTube ou Spotify"),
@@ -718,19 +796,19 @@ class Basic(commands.Cog):
             ("testtone / tone", "testar áudio com tom"),
             ("music", "mostrar comandos de música"),
         ]
- 
+
         levels = [
-            ("level [@user]", "mostrar nível e XP"),
+            ("nivel [@user]", "mostrar nível e XP"),
             ("rank", "mostrar top 10 do ranking"),
         ]
- 
+
         games = [
             ("termo", "começa um novo jogo de Termo"),
             ("termo_quit / quit", "sai do jogo atual"),
             ("termo_stats / stats [@user]", "estatísticas do Termo"),
             ("termo_rank", "ranking do Termo"),
         ]
- 
+
         quick_games = [
             ("ppt <pedra|papel|tesoura>", "pedra, papel ou tesoura"),
             ("dado [lados]", "rola um dado de N lados"),
@@ -740,34 +818,38 @@ class Basic(commands.Cog):
             ("adivinhar <número>", "adivinha o número (1-10)"),
             ("jogos", "mostra todos os jogos"),
         ]
- 
+
         code = [
             ("code / desafio", "desafio de programação"),
             ("stats_code", "estatísticas dos desafios"),
         ]
- 
+
         reminders = [
             ("lembrar <tempo> <mensagem>", "cria um lembrete (ex: 10m, 2h, 1d)"),
             ("lembretes", "lista os teus lembretes pendentes"),
             ("lembrete_cancelar <id>", "cancela um lembrete"),
         ]
- 
+
         polls = [
             ("poll <pergunta>", "cria enquete sim/não"),
             ("poll <pergunta> | op1 | op2 ...", "cria enquete de opções (até 10)"),
             ("poll_fechar <id_mensagem>", "fecha enquete e mostra resultados"),
         ]
- 
+
         automod_geral = [
             ("automod", "mostra o estado da auto-moderação"),
             ("automod_whitelist", "lista domínios permitidos"),
             ("automod_perms", "lista quem tem permissão de mod automod"),
         ]
- 
+
         tickets = [
             ("ticket <motivo>", "abre um ticket privado com a staff"),
         ]
- 
+
+        news = [
+            ("noticias [categoria]", "últimas notícias (geral, tecnologia, desporto, etc.)"),
+        ]
+
         sections = [
             ("⚙️ Básico", basic),
             ("ℹ️ Informação", info),
@@ -781,8 +863,9 @@ class Basic(commands.Cog):
             ("📊 Enquetes", polls),
             ("🛡️ Auto-Moderação", automod_geral),
             ("🎫 Tickets", tickets),
+            ("📰 Notícias", news),
         ]
- 
+
         if is_admin:
             automod_admin = [
                 ("automod_on / automod_off", "liga/desliga tudo"),
@@ -793,7 +876,7 @@ class Basic(commands.Cog):
                 ("automod_addperm @user", "dá permissão de mod automod"),
                 ("automod_removeperm @user", "remove essa permissão"),
             ]
- 
+
             moderation = [
                 ("warn @user <motivo>", "dá um aviso"),
                 ("warnings [@user]", "lista avisos"),
@@ -803,27 +886,29 @@ class Basic(commands.Cog):
                 ("unban <user_id>", "remove um ban"),
                 ("modlog_canal [#canal]", "define/mostra o canal de log"),
             ]
- 
+
             antiraid = [
                 ("antiraid", "mostra o estado do anti-raid"),
                 ("antiraid_on / antiraid_off", "liga/desliga"),
                 ("antiraid_config <n> <s> <dias>", "ajusta sensibilidade"),
                 ("antiraid_lockdown_on/off", "ativa/desativa lockdown manual"),
             ]
- 
+
             admin = [
                 ("write <message>", "ecoar mensagem"),
                 ("clear [amount]", "apagar mensagens do canal"),
                 ("addxp @user <value>", "adicionar XP a um utilizador"),
+                ("removexp @user <value>", "remover XP a um utilizador"),
                 ("syncroles [@user]", "sincroniza os cargos de nível com o nível atual"),
                 ("ticketpanel", "posta o painel de abertura de tickets"),
+                ("noticias_canal <#canal> [categoria]", "define o canal de notícias automáticas (8h, 13h, 20h)"),
             ]
- 
+
             sections.append(("🛡️ Auto-Moderação (Admin)", automod_admin))
             sections.append(("🔨 Moderação", moderation))
             sections.append(("🚨 Anti-Raid", antiraid))
             sections.append(("👑 Admin", admin))
- 
+
         return sections
 
     def _find_command_category(self, cmd: commands.Command, sections: list) -> str:
@@ -843,30 +928,34 @@ class Basic(commands.Cog):
         if cmd.signature:
             usage += f" {cmd.signature}"
 
+        category = self._find_command_category(cmd, sections)
+        color = _category_color(category, discord.Color.blurple())
+
         embed = discord.Embed(
             title=f"📖 /{cmd.qualified_name}",
-            description=cmd.help or cmd.short_doc or "(sem descrição disponível)",
-            color=discord.Color.blurple(),
+            description=f"*{cmd.help or cmd.short_doc or 'Sem descrição disponível.'}*",
+            color=color,
         )
         embed.set_author(**self._guild_branding(ctx.guild))
-        embed.add_field(name="Sintaxe", value=f"`{usage}`", inline=False)
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+
+        embed.add_field(name="📌 Categoria", value=category, inline=True)
+        embed.add_field(name="🧭 Sintaxe", value=f"```{usage}```", inline=False)
 
         if cmd.aliases:
-            aliases = ", ".join(f"`/{a}`" for a in cmd.aliases)
-            embed.add_field(name="Aliases", value=aliases, inline=False)
+            aliases = " • ".join(f"`/{a}`" for a in cmd.aliases)
+            embed.add_field(name="🔀 Aliases", value=aliases, inline=False)
 
         example = COMMAND_EXAMPLES.get(cmd.name)
         if example:
-            embed.add_field(name="Exemplo", value=f"`{example}`", inline=False)
+            embed.add_field(name="💡 Exemplo", value=f"```{example}```", inline=False)
 
-        embed.add_field(name="Categoria", value=self._find_command_category(cmd, sections), inline=False)
         embed.set_footer(text="/help para veres todos os comandos")
         return embed
 
     @commands.hybrid_command(name="help")
     async def help_cmd(self, ctx, comando: str = None):
         """Mostrar todos os comandos disponíveis, ou detalhes de um comando específico"""
-        prefix = "/"
         is_admin = ctx.author.guild_permissions.administrator
         sections = self._build_help_sections(is_admin)
 
@@ -885,33 +974,51 @@ class Basic(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        title = "📖 Ajuda (Admin)" if is_admin else "📖 Ajuda"
-        color = discord.Color.red() if is_admin else discord.Color.blurple()
+        title = "📖 Central de Ajuda — Admin" if is_admin else "📖 Central de Ajuda"
+        default_color = DEFAULT_ADMIN_COLOR if is_admin else DEFAULT_HELP_COLOR
         branding = self._guild_branding(ctx.guild)
 
+        total_categories = len(sections)
+        total_commands = sum(len(cmds) for _, cmds in sections)
+
         embeds = []
-        for section_title, commands_list in sections:
-            lines = [f"` {prefix}{cmd:<25}` {desc}" for cmd, desc in commands_list]
+        for page, (section_title, commands_list) in enumerate(sections, start=1):
+            lines = _format_section_lines(commands_list)
             chunks = _chunk_lines(lines) or ["(sem comandos)"]
+            color = _category_color(section_title, default_color)
 
             embed = discord.Embed(
                 title=title,
-                description="Escolhe uma categoria no menu abaixo 👇\nUsa `/help <comando>` para veres detalhes de um comando.",
+                description=(
+                    f"**{total_categories} categorias • {total_commands} comandos**\n"
+                    "Escolhe uma categoria no menu abaixo 👇 ou usa `/help <comando>` para detalhes.\n"
+                    "─────────────────────────"
+                ),
                 color=color,
             )
             embed.set_author(**branding)
-            for i, chunk in enumerate(chunks):
-                field_name = section_title if i == 0 else f"{section_title} (cont.)"
-                embed.add_field(name=field_name, value=chunk, inline=False)
+            embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
-            embed.set_footer(text=f"{section_title} • /help")
+            for i, chunk in enumerate(chunks):
+                field_name = (
+                    f"{section_title}  •  {len(commands_list)} comando(s)"
+                    if i == 0
+                    else f"{section_title} (cont.)"
+                )
+                embed.add_field(name=field_name, value=f"```{chunk}```", inline=False)
+
+            embed.set_footer(
+                text=f"📄 Categoria {page}/{total_categories}  •  {ctx.author.display_name}",
+                icon_url=ctx.author.display_avatar.url,
+            )
             embeds.append(embed)
 
         section_titles = [s[0] for s in sections]
         view = HelpView(embeds, section_titles, author_id=ctx.author.id)
+        view._sync()
         message = await ctx.send(embed=embeds[0], view=view)
         view.message = message
 
 
 async def setup(bot: commands.Bot):
-        await bot.add_cog(Basic(bot))
+    await bot.add_cog(Basic(bot))

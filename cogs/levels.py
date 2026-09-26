@@ -183,7 +183,7 @@ class Levels(commands.Cog):
             # Save changes
             self.db.set_user_data(guild_id, user_id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
 
-    @commands.hybrid_command(name="level")
+    @commands.hybrid_command(name="nivel")
     async def level(self, ctx, member: discord.Member = None):
         """Show user level and XP"""
         member = member or ctx.author
@@ -285,7 +285,7 @@ class Levels(commands.Cog):
         if xp <= 0:
             embed = discord.Embed(
                 title="❌ Erro",
-                description="O valor de XP deve ser positivo.",
+                description="A quantidade de XP a adicionar deve ser positiva.",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)
@@ -333,6 +333,71 @@ class Levels(commands.Cog):
             embed = discord.Embed(
                 title="❌ Erro",
                 description="Uso: `/addxp @user quantidade`",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            
+    @commands.hybrid_command(name="removexp")
+    @commands.has_permissions(administrator=True)
+    async def removexp(self, ctx, member: discord.Member, xp: int):
+        """Remove XP a um utilizador (apenas admin)"""
+        if not ctx.guild:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Este comando está disponível apenas em servidores.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        if xp <= 0:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="A quantidade de XP a remover deve ser positiva.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        user_data = self.db.get_user_data(ctx.guild.id, member.id)
+        if not user_data:
+            user_data = {"xp": 0, "level": 1, "multiplicador": 1, "msgs_mult": 0}
+
+        nivel_anterior = user_data["level"]
+        user_data["xp"] = max(0, user_data["xp"] - xp)
+        nivel_novo = self._calcular_nivel(user_data["xp"])
+        user_data["level"] = nivel_novo
+
+        self.db.set_user_data(ctx.guild.id, member.id, user_data["xp"], user_data["level"], user_data["multiplicador"], user_data["msgs_mult"])
+
+        level_down_text = f"\nNovo nível: **{nivel_novo}**." if nivel_novo < nivel_anterior else ""
+        embed = discord.Embed(
+            title="✅ XP Removido",
+            description=f"Removidos **{xp} XP** a {member.mention}.{level_down_text}",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed)
+
+    @removexp.error
+    async def removexp_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            embed = discord.Embed(
+                title="❌ Permissão Negada",
+                description="Precisas de permissões de administrador para usar este comando.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+        elif isinstance(error, commands.MemberNotFound):
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Utilizador não encontrado.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+        elif isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Uso: `/removexp @user quantidade`",
                 color=discord.Color.red()
             )
             await ctx.send(embed=embed)

@@ -4,9 +4,41 @@ import discord
 from discord.ext import commands
 from discord import ui
 
+LANG_EMOJI = {
+    "python": "🐍",
+    "javascript": "🟨",
+    "java": "☕",
+    "cpp": "⚡",
+    "csharp": "🎯",
+    "go": "🐹",
+    "php": "🐘",
+    "ruby": "💎",
+}
+
+LANG_DISPLAY_NAME = {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "java": "Java",
+    "cpp": "C++",
+    "csharp": "C#",
+    "go": "Go",
+    "php": "PHP",
+    "ruby": "Ruby",
+}
 
 class LanguageSelect(ui.Select):
     """Dropdown para selecionar a linguagem de programação"""
+    LANGUAGE_MAP = {
+        "Python": "python",
+        "JavaScript": "javascript",
+        "Java": "java",
+        "C++": "cpp",
+        "C#": "csharp",
+        "Go": "go",
+        "PHP": "php",
+        "Ruby": "ruby",
+    }
+
     def __init__(self):
         options = [
             discord.SelectOption(label="Python", emoji="🐍", description="Linguagem Python"),
@@ -14,13 +46,16 @@ class LanguageSelect(ui.Select):
             discord.SelectOption(label="Java", emoji="☕", description="Linguagem Java"),
             discord.SelectOption(label="C++", emoji="⚡", description="Linguagem C++"),
             discord.SelectOption(label="C#", emoji="🎯", description="Linguagem C#"),
+            discord.SelectOption(label="Go", emoji="🐹", description="Linguagem Go"),
+            discord.SelectOption(label="PHP", emoji="🐘", description="Linguagem PHP"),
+            discord.SelectOption(label="Ruby", emoji="💎", description="Linguagem Ruby"),
         ]
         super().__init__(placeholder="Escolhe a linguagem...", options=options)
-    
+
     async def callback(self, interaction: discord.Interaction):
-        # Guarda a linguagem escolhida
-        self.view.selected_language = self.values[0].lower()
-        
+        # Guarda a linguagem escolhida (mapeada para a chave correta do JSON)
+        self.view.selected_language = self.LANGUAGE_MAP[self.values[0]]
+
         # Atualiza a view para mostrar dificuldades
         await self.view.show_difficulty(interaction)
 
@@ -93,18 +128,9 @@ class ChallengeView(ui.View):
         self.add_item(DifficultySelect())
         self.add_item(BackButton())
         
-        # Emoji map para linguagens
-        lang_emoji = {
-            "python": "🐍",
-            "javascript": "🟨",
-            "java": "☕",
-            "c++": "⚡",
-            "csharp": "🎯"
-        }
-        
         embed = discord.Embed(
             title="💻 Desafio de Programação",
-            description=f"**Linguagem:** {lang_emoji.get(self.selected_language, '💻')} {self.selected_language.title()}\n\n**Passo 2:** Escolhe a dificuldade",
+            description=f"**Linguagem:** {LANG_EMOJI.get(self.selected_language, '💻')} {LANG_DISPLAY_NAME.get(self.selected_language, self.selected_language.title())}\n\n**Passo 2:** Escolhe a dificuldade",
             color=discord.Color.blue()
         )
         embed.set_footer(text="Seleciona a dificuldade no menu abaixo")
@@ -141,15 +167,6 @@ class ChallengeView(ui.View):
         
         config = difficulty_config[self.selected_difficulty]
         
-        # Emoji por linguagem
-        lang_emoji = {
-            "python": "🐍",
-            "javascript": "🟨",
-            "java": "☕",
-            "c++": "⚡",
-            "csharp": "🎯"
-        }
-        
         embed = discord.Embed(
             title=f"{config['emoji']} {challenge['titulo']}",
             description=challenge['descricao'],
@@ -169,7 +186,7 @@ class ChallengeView(ui.View):
         )
         
         embed.set_footer(
-            text=f"Linguagem: {lang_emoji.get(self.selected_language, '💻')} {self.selected_language.title()} | Dificuldade: {self.selected_difficulty.title()}"
+            text=f"Linguagem: {LANG_EMOJI.get(self.selected_language, '💻')} {LANG_DISPLAY_NAME.get(self.selected_language, self.selected_language.title())} | Dificuldade: {self.selected_difficulty.title()}"
         )
         
         await interaction.response.edit_message(embed=embed, view=self)
@@ -206,6 +223,9 @@ class CodeChallenges(commands.Cog):
         • ☕ Java
         • ⚡ C++
         • 🎯 C#
+        • 🐹 Go
+        • 🐘 PHP
+        • 💎 Ruby
         
         Dificuldades:
         • 🟢 Fácil
@@ -233,6 +253,9 @@ class CodeChallenges(commands.Cog):
                        "🟨 JavaScript\n"
                        "☕ Java\n"
                        "⚡ C++\n"
+                       "🐹 Go\n"
+                       "🐘 PHP\n"
+                       "💎 Ruby\n"
                        "🎯 C#",
             color=discord.Color.blue()
         )
@@ -259,14 +282,6 @@ class CodeChallenges(commands.Cog):
             color=discord.Color.purple()
         )
         
-        lang_emoji = {
-            "python": "🐍",
-            "javascript": "🟨",
-            "java": "☕",
-            "cpp": "⚡",
-            "csharp": "🎯"
-        }
-        
         total = 0
         for lang, difficulties in self.challenges_data.items():
             facil = len(difficulties.get('facil', []))
@@ -276,7 +291,7 @@ class CodeChallenges(commands.Cog):
             total += lang_total
             
             embed.add_field(
-                name=f"{lang_emoji.get(lang, '💻')} {lang.title()}",
+                name=f"{LANG_EMOJI.get(lang, '💻')} {LANG_DISPLAY_NAME.get(lang, lang.title())}",
                 value=f"🟢 Fácil: {facil}\n🟡 Médio: {medio}\n🔴 Difícil: {dificil}\n**Total: {lang_total}**",
                 inline=True
             )

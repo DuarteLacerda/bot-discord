@@ -280,6 +280,12 @@
         "descricao": "Conta quantas vezes um elemento aparece num array.",
         "exemplo": "contar([1,2,2,3], 2) → 2",
         "dica": "Usa um loop for ou enhanced for"
+      },
+      {
+        "titulo": "Verificar Palíndromo",
+        "descricao": "Cria um método que verifica se uma String é um palíndromo, ignorando maiúsculas/minúsculas.",
+        "exemplo": "ehPalindromo(\"Arara\") → true",
+        "dica": "Usa toLowerCase() e compara com a versão invertida via StringBuilder"
       }
     ],
     "medio": [
@@ -312,6 +318,12 @@
         "descricao": "Usa Stream API para filtrar, mapear e coletar dados de uma lista.",
         "exemplo": "lista.stream().filter().map().collect()",
         "dica": "Combina filter(), map() e collect(Collectors.toList())"
+      },
+      {
+        "titulo": "Exceção Customizada",
+        "descricao": "Cria uma classe de exceção customizada e lança-a numa validação.",
+        "exemplo": "throw new SaldoInsuficienteException(\"Saldo insuficiente\")",
+        "dica": "Extende Exception ou RuntimeException e usa try/catch para apanhá-la"
       }
     ],
     "dificil": [
@@ -338,6 +350,12 @@
         "descricao": "Implementa uma cache LRU (Least Recently Used) genérica.",
         "exemplo": "Cache com capacidade máxima que remove itens menos usados",
         "dica": "Usa LinkedHashMap com removeEldestEntry"
+      },
+      {
+        "titulo": "Padrão Observer",
+        "descricao": "Implementa o padrão Observer com uma interface Observador e um Sujeito que notifica mudanças.",
+        "exemplo": "sujeito.notificarTodos() → chama update() em cada observador registado",
+        "dica": "Mantém uma List<Observador> no Sujeito e percorre-a ao notificar"
       }
     ]
   },
@@ -372,6 +390,12 @@
         "descricao": "Aloca um array dinamicamente com new e liberta com delete[].",
         "exemplo": "int* arr = new int[size]; ... delete[] arr;",
         "dica": "Sempre usa delete[] para arrays"
+      },
+      {
+        "titulo": "Bubble Sort",
+        "descricao": "Implementa o algoritmo Bubble Sort para ordenar um array de inteiros.",
+        "exemplo": "bubbleSort({5,2,4,1,3}) → {1,2,3,4,5}",
+        "dica": "Percorre o array várias vezes trocando elementos adjacentes fora de ordem"
       }
     ],
     "medio": [
@@ -404,6 +428,12 @@
         "descricao": "Implementa um copy constructor profundo para uma classe com ponteiros.",
         "exemplo": "MyClass(const MyClass& other) → deep copy",
         "dica": "Aloca nova memória e copia dados"
+      },
+      {
+        "titulo": "Pilha com Array",
+        "descricao": "Implementa uma Pilha (Stack) com push, pop e peek usando um array de tamanho fixo.",
+        "exemplo": "pilha.push(5); pilha.pop() → 5",
+        "dica": "Mantém um índice 'topo' que aponta para o último elemento inserido"
       }
     ],
     "dificil": [
@@ -430,6 +460,12 @@
         "descricao": "Implementa move constructor e move assignment operator para uma classe.",
         "exemplo": "MyClass(MyClass&& other) noexcept",
         "dica": "Usa std::move() e transfere recursos em vez de copiar"
+      },
+      {
+        "titulo": "Hash Table do Zero",
+        "descricao": "Implementa uma hash table simples com resolução de colisões por encadeamento.",
+        "exemplo": "tabela.insert(\"chave\", valor); tabela.get(\"chave\")",
+        "dica": "Usa um array de listas ligadas (buckets) e uma função de hash própria"
       }
     ]
   },
@@ -464,6 +500,12 @@
         "descricao": "Usa operadores ?? e ??= para lidar com nulls.",
         "exemplo": "string nome = input ?? \"default\";",
         "dica": "?? retorna o segundo valor se o primeiro for null"
+      },
+      {
+        "titulo": "Enum e Switch Expression",
+        "descricao": "Cria um enum DiaSemana e usa uma switch expression para devolver se é fim de semana.",
+        "exemplo": "EhFimDeSemana(DiaSemana.Sabado) → true",
+        "dica": "Usa switch (dia) { DiaSemana.Sabado or DiaSemana.Domingo => true, _ => false }"
       }
     ],
     "medio": [
@@ -496,6 +538,12 @@
         "descricao": "Implementa IEnumerable<T> numa classe customizada.",
         "exemplo": "Permite usar foreach na tua classe",
         "dica": "Implementa GetEnumerator() e retorna um IEnumerator"
+      },
+      {
+        "titulo": "Generics Básicos",
+        "descricao": "Cria uma classe genérica Caixa<T> que guarda e devolve um valor de qualquer tipo.",
+        "exemplo": "var caixa = new Caixa<int>(5); caixa.Obter() → 5",
+        "dica": "Usa class Caixa<T> { private T valor; ... }"
       }
     ],
     "dificil": [
@@ -522,6 +570,342 @@
         "descricao": "Usa Expression Trees para construir queries dinamicamente.",
         "exemplo": "Expression<Func<T, bool>> predicate = x => x.Id == id;",
         "dica": "Usa Expression.Lambda e Expression.Parameter"
+      },
+      {
+        "titulo": "Padrão Observer com Events",
+        "descricao": "Implementa o padrão Observer usando delegates e events nativos de C#.",
+        "exemplo": "estacaoMeteo.MudancaTemperatura += display.Atualizar;",
+        "dica": "Usa EventHandler<T> e invoca o evento com ?.Invoke(this, args)"
+      }
+    ]
+  },
+  "go": {
+    "facil": [
+      {
+        "titulo": "Soma de Slice",
+        "descricao": "Cria uma função que soma todos os elementos de um slice de inteiros.",
+        "exemplo": "somaSlice([]int{1,2,3,4}) → 10",
+        "dica": "Usa um for range para percorrer o slice"
+      },
+      {
+        "titulo": "Par ou Ímpar",
+        "descricao": "Cria uma função que verifica se um número é par ou ímpar.",
+        "exemplo": "ehPar(4) → true",
+        "dica": "Usa o operador % para verificar o resto da divisão por 2"
+      },
+      {
+        "titulo": "Inverter String",
+        "descricao": "Cria uma função que inverte uma string (tratando-a como runes).",
+        "exemplo": "inverter(\"golang\") → \"gnalog\"",
+        "dica": "Converte a string para []rune antes de inverter, para lidar bem com acentos"
+      },
+      {
+        "titulo": "Contar Palavras",
+        "descricao": "Cria uma função que conta o número de palavras numa frase.",
+        "exemplo": "contarPalavras(\"Olá mundo Go\") → 3",
+        "dica": "Usa strings.Fields() para dividir por espaços"
+      },
+      {
+        "titulo": "Struct Pessoa",
+        "descricao": "Cria uma struct Pessoa com Nome e Idade, e um método Apresentar().",
+        "exemplo": "p.Apresentar() → \"Olá, sou João e tenho 25 anos\"",
+        "dica": "Usa func (p Pessoa) Apresentar() string { ... }"
+      },
+      {
+        "titulo": "Maior de Três Números",
+        "descricao": "Cria uma função que retorna o maior de três números.",
+        "exemplo": "maior(5, 3, 8) → 8",
+        "dica": "Usa comparações if/else simples"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Goroutines Básicas",
+        "descricao": "Executa várias funções em paralelo usando goroutines e sincroniza com WaitGroup.",
+        "exemplo": "go processar(); wg.Wait()",
+        "dica": "Usa sync.WaitGroup com Add(), Done() e Wait()"
+      },
+      {
+        "titulo": "Channels para Comunicação",
+        "descricao": "Usa um channel para enviar resultados de uma goroutine de volta à main.",
+        "exemplo": "ch <- resultado; valor := <-ch",
+        "dica": "Cria o channel com make(chan int) e lembra-te de o fechar quando terminares"
+      },
+      {
+        "titulo": "Map de Frequências",
+        "descricao": "Cria um map que conta a frequência de cada palavra numa string.",
+        "exemplo": "\"a b a\" → map[a:2 b:1]",
+        "dica": "Usa map[string]int e incrementa com m[palavra]++"
+      },
+      {
+        "titulo": "Interfaces em Go",
+        "descricao": "Cria uma interface Forma com método Area(), implementada por Circulo e Retangulo.",
+        "exemplo": "var f Forma = Circulo{Raio: 5}; f.Area()",
+        "dica": "Uma struct implementa uma interface automaticamente ao definir os métodos exigidos"
+      },
+      {
+        "titulo": "Error Handling Custom",
+        "descricao": "Cria um tipo de erro customizado que implementa a interface error.",
+        "exemplo": "return nil, &SaldoError{Saldo: -10}",
+        "dica": "Implementa o método Error() string no teu tipo"
+      },
+      {
+        "titulo": "Slices vs Arrays",
+        "descricao": "Demonstra a diferença de comportamento entre arrays de tamanho fixo e slices em Go.",
+        "exemplo": "[5]int{} vs []int{} → slices são dinâmicos e passados por referência",
+        "dica": "Usa append() para veres o slice crescer e o array manter tamanho fixo"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Worker Pool com Goroutines",
+        "descricao": "Implementa um worker pool que processa tarefas de uma queue usando N goroutines fixas.",
+        "exemplo": "5 workers processam 100 tarefas de um channel de jobs",
+        "dica": "Usa um channel de jobs e um channel de resultados, com workers a consumir em loop"
+      },
+      {
+        "titulo": "Mutex para Concorrência",
+        "descricao": "Protege um contador partilhado entre goroutines usando sync.Mutex.",
+        "exemplo": "mu.Lock(); contador++; mu.Unlock()",
+        "dica": "Sem o mutex, incrementos concorrentes causam race conditions"
+      },
+      {
+        "titulo": "Context com Timeout",
+        "descricao": "Usa context.WithTimeout para cancelar uma operação demorada automaticamente.",
+        "exemplo": "ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)",
+        "dica": "Seleciona entre <-ctx.Done() e o resultado da operação com um select"
+      },
+      {
+        "titulo": "LRU Cache",
+        "descricao": "Implementa uma cache LRU (Least Recently Used) com capacidade fixa.",
+        "exemplo": "cache.Put(\"a\", 1); cache.Get(\"a\") → 1",
+        "dica": "Combina um map com uma lista duplamente ligada para acesso e remoção O(1)"
+      },
+      {
+        "titulo": "Graceful Shutdown",
+        "descricao": "Implementa um encerramento gracioso de um servidor, à escuta de sinais do sistema operativo.",
+        "exemplo": "Ao receber SIGINT, termina requests em curso antes de fechar",
+        "dica": "Usa signal.Notify e server.Shutdown(ctx) com um timeout"
+      }
+    ]
+  },
+  "php": {
+    "facil": [
+      {
+        "titulo": "Soma de Array",
+        "descricao": "Cria uma função que soma todos os elementos de um array.",
+        "exemplo": "somaArray([1, 2, 3, 4]) → 10",
+        "dica": "Usa array_sum() ou um loop foreach"
+      },
+      {
+        "titulo": "Par ou Ímpar",
+        "descricao": "Cria uma função que verifica se um número é par ou ímpar.",
+        "exemplo": "ehPar(4) → true",
+        "dica": "Usa o operador % para verificar o resto da divisão por 2"
+      },
+      {
+        "titulo": "Inverter String",
+        "descricao": "Cria uma função que inverte uma string.",
+        "exemplo": "inverter('hello') → 'olleh'",
+        "dica": "Usa a função nativa strrev()"
+      },
+      {
+        "titulo": "Contar Vogais",
+        "descricao": "Cria uma função que conta o número de vogais numa string.",
+        "exemplo": "contarVogais('php') → 0",
+        "dica": "Usa preg_match_all() com uma regex de vogais"
+      },
+      {
+        "titulo": "Maior de Três",
+        "descricao": "Cria uma função que retorna o maior de três números.",
+        "exemplo": "maior(5, 3, 8) → 8",
+        "dica": "Usa max() com os três valores"
+      },
+      {
+        "titulo": "Concatenar Strings",
+        "descricao": "Cria uma função que junta um array de strings com um separador.",
+        "exemplo": "juntar(['a','b','c'], '-') → 'a-b-c'",
+        "dica": "Usa a função nativa implode()"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Funções Anónimas e Closures",
+        "descricao": "Cria uma função de ordem superior que recebe uma closure e a aplica a um array.",
+        "exemplo": "aplicar([1,2,3], fn($x) => $x * 2) → [2,4,6]",
+        "dica": "Usa array_map() com uma arrow function ou closure"
+      },
+      {
+        "titulo": "Arrays Associativos",
+        "descricao": "Cria e manipula um array associativo que representa um inventário de produtos e quantidades.",
+        "exemplo": "$inventario['maçã'] += 5;",
+        "dica": "Usa isset() para verificar se a chave já existe antes de somar"
+      },
+      {
+        "titulo": "Classes e Objetos Básicos",
+        "descricao": "Cria uma classe Produto com propriedades e um método para aplicar desconto.",
+        "exemplo": "$produto->aplicarDesconto(10); // 10%",
+        "dica": "Usa propriedades private/public e um construtor __construct()"
+      },
+      {
+        "titulo": "Validação de Formulários",
+        "descricao": "Cria uma função que valida se um email e uma password cumprem regras básicas.",
+        "exemplo": "validar('a@b.com', '123456') → ['valido' => true]",
+        "dica": "Usa filter_var() com FILTER_VALIDATE_EMAIL para o email"
+      },
+      {
+        "titulo": "PDO e Prepared Statements",
+        "descricao": "Escreve uma query segura contra SQL injection usando PDO e parâmetros nomeados.",
+        "exemplo": "$stmt->execute(['id' => $id]);",
+        "dica": "Usa prepare() com placeholders (:nome) em vez de concatenar valores na query"
+      },
+      {
+        "titulo": "Ordenação Customizada",
+        "descricao": "Ordena um array de produtos por preço usando uma função de comparação customizada.",
+        "exemplo": "usort($produtos, fn($a,$b) => $a['preco'] <=> $b['preco']);",
+        "dica": "Usa usort() com o spaceship operator <=> na função de comparação"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Padrão Singleton",
+        "descricao": "Implementa o padrão Singleton para garantir uma única instância de uma classe de configuração.",
+        "exemplo": "Config::getInstance()->get('debug')",
+        "dica": "Construtor private, propriedade static e um método getInstance()"
+      },
+      {
+        "titulo": "Traits e Composição",
+        "descricao": "Usa traits para partilhar comportamento entre classes sem herança.",
+        "exemplo": "class Log { use Loggable; }",
+        "dica": "Define o trait com 'trait Loggable { ... }' e inclui-o com 'use'"
+      },
+      {
+        "titulo": "Autoloading com Namespaces",
+        "descricao": "Organiza classes em namespaces e configura autoloading via composer (PSR-4).",
+        "exemplo": "namespace App\\Models; class User {}",
+        "dica": "Define o mapeamento PSR-4 no composer.json e corre composer dump-autoload"
+      },
+      {
+        "titulo": "Middleware Simples",
+        "descricao": "Implementa um pipeline de middleware que processa um pedido através de várias camadas.",
+        "exemplo": "$pipeline->pipe($request, [AuthMiddleware::class, LogMiddleware::class]);",
+        "dica": "Cada middleware chama o próximo através de uma função 'next' encadeada"
+      },
+      {
+        "titulo": "Cache com APCu/Redis",
+        "descricao": "Implementa uma camada de cache que guarda o resultado de uma query cara por um tempo limitado.",
+        "exemplo": "$cache->remember('produtos', 60, fn() => $db->query(...));",
+        "dica": "Verifica se a chave existe na cache antes de correr a query; guarda o resultado com TTL"
+      }
+    ]
+  },
+  "ruby": {
+    "facil": [
+      {
+        "titulo": "Soma de Array",
+        "descricao": "Cria um método que soma todos os elementos de um array.",
+        "exemplo": "soma_array([1, 2, 3, 4]) → 10",
+        "dica": "Usa o método sum do Enumerable"
+      },
+      {
+        "titulo": "Par ou Ímpar",
+        "descricao": "Cria um método que verifica se um número é par ou ímpar.",
+        "exemplo": "par?(4) → true",
+        "dica": "Usa o método nativo .even? ou .odd?"
+      },
+      {
+        "titulo": "Inverter String",
+        "descricao": "Cria um método que inverte uma string.",
+        "exemplo": "'ruby'.reverse → 'ybur'",
+        "dica": "Usa o método nativo .reverse"
+      },
+      {
+        "titulo": "Contar Vogais",
+        "descricao": "Cria um método que conta o número de vogais numa string.",
+        "exemplo": "contar_vogais('ruby') → 1",
+        "dica": "Usa .count('aeiouAEIOU') na string"
+      },
+      {
+        "titulo": "Maior de Três",
+        "descricao": "Cria um método que retorna o maior de três números.",
+        "exemplo": "maior(5, 3, 8) → 8",
+        "dica": "Usa [a, b, c].max"
+      },
+      {
+        "titulo": "Capitalizar Palavras",
+        "descricao": "Cria um método que capitaliza a primeira letra de cada palavra numa frase.",
+        "exemplo": "capitalizar('olá mundo') → 'Olá Mundo'",
+        "dica": "Usa split, map com .capitalize e depois join(' ')"
+      }
+    ],
+    "medio": [
+      {
+        "titulo": "Blocos e Yield",
+        "descricao": "Cria um método que aceita um bloco e usa yield para executar código customizado por cada elemento.",
+        "exemplo": "cada_dobro([1,2,3]) { |n| puts n } → imprime 2, 4, 6",
+        "dica": "Usa 'yield valor' dentro do método para invocar o bloco passado"
+      },
+      {
+        "titulo": "Enumerable (map, select, reduce)",
+        "descricao": "Usa map, select e reduce para transformar e agregar uma lista de números.",
+        "exemplo": "[1,2,3,4].select(&:even?).reduce(:+) → 6",
+        "dica": "Encadeia os métodos do Enumerable diretamente sobre o array"
+      },
+      {
+        "titulo": "Classes e Módulos",
+        "descricao": "Cria uma classe Animal e um módulo Voador que é incluído em algumas subclasses.",
+        "exemplo": "class Pardal < Animal; include Voador; end",
+        "dica": "Usa 'include NomeDoModulo' dentro da classe para misturar (mixin) o comportamento"
+      },
+      {
+        "titulo": "Symbols vs Strings",
+        "descricao": "Demonstra a diferença de uso e performance entre Symbols e Strings como chaves de hash.",
+        "exemplo": "{ nome: 'Ana' } vs { 'nome' => 'Ana' }",
+        "dica": "Symbols (:nome) são imutáveis e reutilizados em memória, ao contrário de Strings"
+      },
+      {
+        "titulo": "Hash com Valor Padrão",
+        "descricao": "Cria um hash que tem um valor padrão para chaves inexistentes, útil para contadores.",
+        "exemplo": "contador = Hash.new(0); contador[:a] += 1 → {a: 1}",
+        "dica": "Usa Hash.new(0) para que chaves novas comecem em 0 automaticamente"
+      },
+      {
+        "titulo": "Metaprogramação Básica",
+        "descricao": "Usa method_missing para responder dinamicamente a chamadas de métodos não definidos.",
+        "exemplo": "objeto.nome_qualquer → intercetado por method_missing",
+        "dica": "Sobrescreve method_missing(nome, *args) e trata os casos que queres suportar"
+      }
+    ],
+    "dificil": [
+      {
+        "titulo": "Padrão Observer",
+        "descricao": "Implementa o padrão Observer usando o módulo nativo Observable de Ruby.",
+        "exemplo": "sujeito.add_observer(observador); sujeito.notify_observers",
+        "dica": "Inclui 'Observable' na classe sujeito e chama changed antes de notify_observers"
+      },
+      {
+        "titulo": "DSL Simples",
+        "descricao": "Cria uma pequena DSL (linguagem específica de domínio) para definir rotas usando blocos.",
+        "exemplo": "Router.draw { get '/home', to: 'home#index' }",
+        "dica": "Usa instance_eval para executar o bloco no contexto de um objeto construtor"
+      },
+      {
+        "titulo": "Concorrência com Threads",
+        "descricao": "Executa várias tarefas em paralelo usando Threads e sincroniza o acesso a um recurso partilhado com Mutex.",
+        "exemplo": "mutex.synchronize { contador += 1 }",
+        "dica": "Usa Thread.new para criar threads e Mutex#synchronize para proteger secções críticas"
+      },
+      {
+        "titulo": "Enumerable Customizado",
+        "descricao": "Cria uma classe que inclui o módulo Enumerable, implementando apenas each.",
+        "exemplo": "colecao.map { |x| x * 2 }; colecao.select { |x| x > 5 }",
+        "dica": "Ao definir 'each' e incluir Enumerable, ganhas map, select, reduce, etc. automaticamente"
+      },
+      {
+        "titulo": "Refinements",
+        "descricao": "Usa Refinements para adicionar um método a uma classe nativa apenas num âmbito limitado.",
+        "exemplo": "using MinhasExtensoes; 5.dobro → 10",
+        "dica": "Define o refinement com 'refine Integer do ... end' dentro de um módulo e ativa com 'using'"
       }
     ]
   }
